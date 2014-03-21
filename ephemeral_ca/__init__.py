@@ -4,6 +4,8 @@ FlaskCA
 """
 
 import M2Crypto
+import fcntl
+import os
 import sys
 import time
 import uuid
@@ -28,6 +30,14 @@ def sign(csr,encoding):
     if encoding != 'pem':
         return False
 
+    with open(CONFIG['serial_file'], 'a+') as f:
+        f.seek(0)
+        fcntl.lockf(f, fcntl.LOCK_EX)
+        serial = int(f.read() or "1")
+        f.seek(0)
+        f.truncate(0)
+        f.write(str(serial+1))
+
     ca = M2Crypto.X509.load_cert(CONFIG["ca_cert"])
     key = M2Crypto.EVP.load_key(CONFIG["ca_key"])
     req = M2Crypto.X509.load_request_string(csr.encode('ascii'))
@@ -47,11 +57,13 @@ def sign(csr,encoding):
     new_cert.set_pubkey(pkey=req.get_pubkey())
     new_cert.set_subject(req.get_subject())
     new_cert.set_issuer(ca.get_subject())
-    new_cert.set_serial_number(31337)
+    new_cert.set_serial_number(serial)
 
     new_cert.sign(key, CONFIG['signing_hash'])
 
-    new_cert.save("temp-" + str(uuid.uuid1()) + '.crt')
+    new_cert.save(os.path.join(
+        CONFIG['certs_directory'],
+        '%06i-%s.crt' % (serial, new_cert.get_fingerprint(CONFIG['signing_hash']))))
 
     return new_cert.as_pem()
 

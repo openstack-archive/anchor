@@ -4,3 +4,5 @@ config.yaml
 ephemeral_ca.egg-info
 .venv
 *.sw[op]
+certs/*.crt
+CA/serial

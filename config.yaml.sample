@@ -1,5 +1,7 @@
 ca_cert: "CA/root-ca.crt"
 ca_key: "CA/root-ca-unwrapped.key"
+serial_file: "CA/serial"
+certs_directory: "certs"
 valid_hours: 24
 signing_hash: "sha1"
 
