@@ -1,0 +1,9 @@
+ca_cert: "root-ca.crt"
+ca_key: "root-ca-unwrapped.key"
+valid_hours: 24
+signing_hash: "sha1"
+
+bind_host: "0.0.0.0"
+bind_port: 5000
+
+flask_debug: true

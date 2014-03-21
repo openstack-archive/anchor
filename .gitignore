@@ -1,0 +1,6 @@
+*.pyc
+temp-*.crt
+config.yaml
+ephemeral_ca.egg-info
+.venv
+*.sw[op]
