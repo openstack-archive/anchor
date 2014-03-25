@@ -1,0 +1,17 @@
+CA_CERT = "CA/root-ca.crt"
+CA_KEY = "CA/root-ca-unwrapped.key"
+SERIAL_FILE = "CA/serial"
+CERTS_DIRECTORY = "certs"
+VALID_HOURS = 24
+SIGNING_HASH = "sha1"
+
+BIND_HOST = "0.0.0.0"
+BIND_PORT = 5000
+
+DEBUG = True
+
+LDAP_HOST = "aw2clouddc01.hpcloud.ms"
+LDAP_DOMAIN = "hpcloud.ms"
+LDAP_BASE = "CN=Users,DC=hpcloud,DC=ms"
+
+BACKDOOR_AUTH = True

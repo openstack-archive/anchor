@@ -10,7 +10,7 @@ setup(
     install_requires=[
         'm2crypto',
         'flask',
-        'PyYAML',
+        'flask-ldap',
         'setuptools>=1.0',
     ],
     setup_requires=[

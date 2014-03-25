@@ -12,25 +12,24 @@ import uuid
 import yaml
 
 from flask import Flask, request, redirect, Response
+from flask.ext.ldap import LDAP
 
-CONFIG = {}
 app = Flask(__name__)
+app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
+ldap = LDAP(app)
 
+def auth(user, secret):
+    if app.config['BACKDOOR_AUTH']:
+        return secret=='woot' and user=='woot'
 
-#ToDo: Write some actual authentication routines.
-def auth(secret,user,authtype):
-    if authtype == 'bypass-backdoor':
-        if secret=='woot' and user=='woot':
-            return True
-
-        return False
+    return ldap.ldap_login(user, secret)
 
 
 def sign(csr,encoding):
     if encoding != 'pem':
         return False
 
-    with open(CONFIG['serial_file'], 'a+') as f:
+    with open(app.config['SERIAL_FILE'], 'a+') as f:
         f.seek(0)
         fcntl.lockf(f, fcntl.LOCK_EX)
         serial = int(f.read() or "1")
@@ -38,8 +37,8 @@ def sign(csr,encoding):
         f.truncate(0)
         f.write(str(serial+1))
 
-    ca = M2Crypto.X509.load_cert(CONFIG["ca_cert"])
-    key = M2Crypto.EVP.load_key(CONFIG["ca_key"])
+    ca = M2Crypto.X509.load_cert(app.config["CA_CERT"])
+    key = M2Crypto.EVP.load_key(app.config["CA_KEY"])
     req = M2Crypto.X509.load_request_string(csr.encode('ascii'))
 
     new_cert = M2Crypto.X509.X509()
@@ -49,7 +48,7 @@ def sign(csr,encoding):
     start_time = M2Crypto.ASN1.ASN1_UTCTIME()
     start_time.set_time(now)
     end_time = M2Crypto.ASN1.ASN1_UTCTIME()
-    end_time.set_time(now+(CONFIG['valid_hours']*60*60))
+    end_time.set_time(now+(app.config['VALID_HOURS']*60*60))
 
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
@@ -59,11 +58,11 @@ def sign(csr,encoding):
     new_cert.set_issuer(ca.get_subject())
     new_cert.set_serial_number(serial)
 
-    new_cert.sign(key, CONFIG['signing_hash'])
+    new_cert.sign(key, app.config['SIGNING_HASH'])
 
     new_cert.save(os.path.join(
-        CONFIG['certs_directory'],
-        '%06i-%s.crt' % (serial, new_cert.get_fingerprint(CONFIG['signing_hash']))))
+        app.config['CERTS_DIRECTORY'],
+        '%06i-%s.crt' % (serial, new_cert.get_fingerprint(app.config['SIGNING_HASH']))))
 
     return new_cert.as_pem()
 
@@ -89,7 +88,7 @@ def sign_request():
             return 'Request is missing keys!\n', 500
 
     """
-    if not auth(request.form['secret'],request.form['user'],request.form['authtype']):
+    if not auth(request.form['user'], request.form['secret']):
         return 'Authentication Failure\n', 403
 
     cert = sign(request.form['csr'],request.form['encoding'])
@@ -100,15 +99,7 @@ def sign_request():
     return cert, 200
 
 
-def read_config(path):
-    global CONFIG
-    with open(path, 'r') as f:
-        CONFIG = yaml.load(f)
-
-
 def run_server():
-    read_config(sys.argv[1] if len(sys.argv) > 1 else 'config.yaml')
     app.run(
-        debug=CONFIG['flask_debug'],
-        host=CONFIG['bind_host'],
-        port=CONFIG['bind_port'])
+        host=app.config['BIND_HOST'],
+        port=app.config['BIND_PORT'])
