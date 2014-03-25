@@ -12,6 +12,5 @@ DEBUG = True
 
 LDAP_HOST = "aw2clouddc01.hpcloud.ms"
 LDAP_DOMAIN = "hpcloud.ms"
-LDAP_BASE = "CN=Users,DC=hpcloud,DC=ms"
 
 BACKDOOR_AUTH = True

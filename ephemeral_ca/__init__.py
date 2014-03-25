@@ -10,19 +10,30 @@ import sys
 import time
 import uuid
 import yaml
+import ldap
 
 from flask import Flask, request, redirect, Response
-from flask.ext.ldap import LDAP
 
 app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
-ldap = LDAP(app)
+
+
+def ldap_login(user, secret):
+    ldo = ldap.initialize("ldap://%s" % (app.config['LDAP_HOST'],))
+    ldo.set_option(ldap.OPT_REFERRALS, 0)
+    try:
+        ldo.simple_bind_s("%s@%s" % (user, app.config['LDAP_DOMAIN']), secret)
+        return True
+    except ldap.INVALID_CREDENTIALS:
+        return False
+
 
 def auth(user, secret):
     if app.config['BACKDOOR_AUTH']:
-        return secret=='woot' and user=='woot'
+        if secret=='woot' and user=='woot':
+            return True
 
-    return ldap.ldap_login(user, secret)
+    return ldap_login(user, secret)
 
 
 def sign(csr,encoding):
