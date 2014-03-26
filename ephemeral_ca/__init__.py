@@ -66,6 +66,11 @@ def csr_get_cn(csr):
 
 
 def validate_server_name(csr):
+    """
+    Refuse requests for certificates if they contain multiple CN
+    entries, or the domain does not match the list of known suffixes.
+    """
+
     CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
     if len(CNs) != 1:
         raise ValidationError("There should be one CN in request")
@@ -76,6 +81,11 @@ def validate_server_name(csr):
 
 
 def validate_server_group(auth_result, csr):
+    """
+    Make sure that for server names containing a team prefix, the team is
+    verified against the groups the user is a member of.
+    """
+
     cn = csr_get_cn(csr)
     parts = cn.split('-')
     if len(parts) == 1 or '.' in parts[0]:
