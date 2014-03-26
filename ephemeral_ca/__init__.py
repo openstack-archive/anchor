@@ -10,7 +10,7 @@ import time
 import ldap
 from collections import namedtuple
 
-from flask import Flask, request, redirect, Response
+from flask import Flask, request
 
 app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
@@ -38,8 +38,7 @@ def ldap_login(user, secret):
         ldo.simple_bind_s("%s@%s" % (user, app.config['LDAP_DOMAIN']), secret)
 
         ret = ldo.search_s(app.config['LDAP_BASE'], ldap.SCOPE_SUBTREE,
-                     filterstr='(sAMAccountName=pitucha)',
-                     attrlist=['memberOf'])
+                           filterstr='(sAMAccountName=pitucha)', attrlist=['memberOf'])
         user_attrs = [x for x in ret if x[0] is not None][0][1]
         user_groups = ldap_user_get_groups(user_attrs)
         return AuthDetails(username=user, groups=user_groups)
@@ -49,7 +48,7 @@ def ldap_login(user, secret):
 
 def auth(user, secret):
     if app.config['BACKDOOR_AUTH']:
-        if secret=='woot' and user=='woot':
+        if secret == 'woot' and user == 'woot':
             return AuthDetails(username='woot', groups=[])
 
     return ldap_login(user, secret)
@@ -141,7 +140,7 @@ def robots():
     return txt, 200
 
 
-@app.route("/sign",methods=['POST'])
+@app.route("/sign", methods=['POST'])
 def sign_request():
     """
     for key in ('user','authtype','csr','encoding','secret'):
@@ -168,7 +167,7 @@ def sign_request():
     if not cert:
         return 'Signing Failure\n', 500
 
-    #TODO: Probably need some nice headers or some other schtuff
+    # TODO: Probably need some nice headers or some other schtuff
     return cert, 200
 
 
