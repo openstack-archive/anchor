@@ -21,6 +21,10 @@ app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
 AUTH_FAILED = object()
 
 
+class ValidationError(Exception):
+    pass
+
+
 def ldap_user_get_groups(attributes):
     groups = attributes.get('memberOf', [])
     group_dns = [ldap.dn.explode_dn(g, notypes=True) for g in groups]
