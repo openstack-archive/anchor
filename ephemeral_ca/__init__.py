@@ -18,14 +18,29 @@ app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
 
 
+AUTH_FAILED = object()
+
+
+def ldap_user_get_groups(attributes):
+    groups = attributes.get('memberOf', [])
+    group_dns = [ldap.dn.explode_dn(g, notypes=True) for g in groups]
+    return set(x[0] for x in group_dns if x[1] == 'Groups')
+
+
 def ldap_login(user, secret):
     ldo = ldap.initialize("ldap://%s" % (app.config['LDAP_HOST'],))
     ldo.set_option(ldap.OPT_REFERRALS, 0)
     try:
         ldo.simple_bind_s("%s@%s" % (user, app.config['LDAP_DOMAIN']), secret)
-        return True
+
+        ret = ldo.search_s('DC=hpcloud,DC=ms', ldap.SCOPE_SUBTREE,
+                     filterstr='(sAMAccountName=pitucha)',
+                     attrlist=['memberOf'])
+        user_attrs = [x for x in ret if x[0] is not None][0][1]
+        user_groups = ldap_user_get_groups(user_attrs)
+        return (user, user_groups)
     except ldap.INVALID_CREDENTIALS:
-        return False
+        return AUTH_FAILED
 
 
 def auth(user, secret):
@@ -36,10 +51,18 @@ def auth(user, secret):
     return ldap_login(user, secret)
 
 
-def sign(csr,encoding):
+def parse_csr(csr, encoding):
     if encoding != 'pem':
-        return False
+        return None
 
+    return M2Crypto.X509.load_request_string(csr.encode('ascii'))
+
+
+def validate_csr(auth_result, csr):
+    pass
+
+
+def sign(csr):
     with open(app.config['SERIAL_FILE'], 'a+') as f:
         f.seek(0)
         fcntl.lockf(f, fcntl.LOCK_EX)
@@ -50,7 +73,6 @@ def sign(csr,encoding):
 
     ca = M2Crypto.X509.load_cert(app.config["CA_CERT"])
     key = M2Crypto.EVP.load_key(app.config["CA_KEY"])
-    req = M2Crypto.X509.load_request_string(csr.encode('ascii'))
 
     new_cert = M2Crypto.X509.X509()
     new_cert.set_version(0)
@@ -64,8 +86,8 @@ def sign(csr,encoding):
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
-    new_cert.set_pubkey(pkey=req.get_pubkey())
-    new_cert.set_subject(req.get_subject())
+    new_cert.set_pubkey(pkey=csr.get_pubkey())
+    new_cert.set_subject(csr.get_subject())
     new_cert.set_issuer(ca.get_subject())
     new_cert.set_serial_number(serial)
 
@@ -99,10 +121,20 @@ def sign_request():
             return 'Request is missing keys!\n', 500
 
     """
-    if not auth(request.form['user'], request.form['secret']):
+    auth_result = auth(request.form['user'], request.form['secret'])
+    if auth_result is AUTH_FAILED:
         return 'Authentication Failure\n', 403
 
-    cert = sign(request.form['csr'],request.form['encoding'])
+    csr = parse_csr(request.form['csr'], request.form['encoding'])
+    if csr is None:
+        return 'CSR cannot be parsed\n', 400
+
+    try:
+        validate_csr(auth_result, csr)
+    except ValidationError as e:
+        return 'Validation failed: %s\n' % e, 409
+
+    cert = sign(csr)
     if not cert:
         return 'Signing Failure\n', 500
 
