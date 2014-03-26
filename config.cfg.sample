@@ -17,3 +17,13 @@ LDAP_BASE = "CN=Users,DC=hpcloud,DC=ms"
 BACKDOOR_AUTH = True
 
 ALLOWED_DOMAINS = ['.hpcloud.net', 'clark.com']
+GROUP_PREFIXES = {
+    'nv': 'Nova_Team',
+    'sw': 'Swift_Team',
+    'bk': 'Bock_Team',
+    'gl': 'Glance_Team',
+    'cs': 'CS_Team',
+    'mb': 'MB_Team',
+    'ops': 'SysEng_Team',
+    'qu': 'Neutron_Team',
+    }

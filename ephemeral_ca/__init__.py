@@ -61,17 +61,29 @@ def parse_csr(csr, encoding):
     return M2Crypto.X509.load_request_string(csr.encode('ascii'))
 
 
+def csr_get_cn(csr):
+    return str(csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])[0].get_data())
+
+
 def validate_server_name(csr):
     CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
     if len(CNs) != 1:
         raise ValidationError("There should be one CN in request")
 
-    if not any(str(CNs[0].get_data()).endswith(suffix) for suffix in app.config['ALLOWED_DOMAINS']):
+    cn = csr_get_cn(csr)
+    if not any(cn.endswith(suffix) for suffix in app.config['ALLOWED_DOMAINS']):
         raise ValidationError("Domain suffix not allowed")
 
 
 def validate_server_group(auth_result, csr):
-    pass
+    cn = csr_get_cn(csr)
+    parts = cn.split('-')
+    if len(parts) == 1 or '.' in parts[0]:
+        return  # no prefix
+
+    if parts[0] in app.config['GROUP_PREFIXES']:
+        if app.config['GROUP_PREFIXES'][parts[0]] not in auth_result[1]:
+            raise ValidationError("Server prefix doesn't match user groups")
 
 
 def validate_csr(auth_result, csr):
