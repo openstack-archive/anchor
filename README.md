@@ -18,7 +18,7 @@ For virtual environment run:
     . .venv/bin/activate
     ./setup.py develop
 
-The config file should be copied from `config.cfg.sample` to `ephemeral\_ca/config.cfg` with any details updated.
+The config file should be copied from `config.cfg.sample` to `ephemeral_ca/config.cfg` with any details updated.
 
 The service can be run with:
 
