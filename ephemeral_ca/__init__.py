@@ -33,7 +33,7 @@ def ldap_login(user, secret):
     try:
         ldo.simple_bind_s("%s@%s" % (user, app.config['LDAP_DOMAIN']), secret)
 
-        ret = ldo.search_s('DC=hpcloud,DC=ms', ldap.SCOPE_SUBTREE,
+        ret = ldo.search_s(app.config['LDAP_BASE'], ldap.SCOPE_SUBTREE,
                      filterstr='(sAMAccountName=pitucha)',
                      attrlist=['memberOf'])
         user_attrs = [x for x in ret if x[0] is not None][0][1]
