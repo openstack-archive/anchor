@@ -6,10 +6,7 @@ FlaskCA
 import M2Crypto
 import fcntl
 import os
-import sys
 import time
-import uuid
-import yaml
 import ldap
 from collections import namedtuple
 
