@@ -11,6 +11,7 @@ import time
 import uuid
 import yaml
 import ldap
+from collections import namedtuple
 
 from flask import Flask, request, redirect, Response
 
@@ -18,6 +19,9 @@ app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
 
 AUTH_FAILED = object()
+
+
+AuthDetails = namedtuple('AuthDetails', ['username', 'groups'])
 
 
 class ValidationError(Exception):
@@ -41,7 +45,7 @@ def ldap_login(user, secret):
                      attrlist=['memberOf'])
         user_attrs = [x for x in ret if x[0] is not None][0][1]
         user_groups = ldap_user_get_groups(user_attrs)
-        return (user, user_groups)
+        return AuthDetails(username=user, groups=user_groups)
     except ldap.INVALID_CREDENTIALS:
         return AUTH_FAILED
 
@@ -49,7 +53,7 @@ def ldap_login(user, secret):
 def auth(user, secret):
     if app.config['BACKDOOR_AUTH']:
         if secret=='woot' and user=='woot':
-            return True
+            return AuthDetails(username='woot', groups=[])
 
     return ldap_login(user, secret)
 
@@ -82,7 +86,7 @@ def validate_server_group(auth_result, csr):
         return  # no prefix
 
     if parts[0] in app.config['GROUP_PREFIXES']:
-        if app.config['GROUP_PREFIXES'][parts[0]] not in auth_result[1]:
+        if app.config['GROUP_PREFIXES'][parts[0]] not in auth_result.groups:
             raise ValidationError("Server prefix doesn't match user groups")
 
 
