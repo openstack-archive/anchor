@@ -15,3 +15,5 @@ LDAP_DOMAIN = "hpcloud.ms"
 LDAP_BASE = "CN=Users,DC=hpcloud,DC=ms"
 
 BACKDOOR_AUTH = True
+
+ALLOWED_DOMAINS = ['.hpcloud.net', 'clark.com']

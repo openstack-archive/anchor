@@ -17,7 +17,6 @@ from flask import Flask, request, redirect, Response
 app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
 
-
 AUTH_FAILED = object()
 
 
@@ -62,8 +61,22 @@ def parse_csr(csr, encoding):
     return M2Crypto.X509.load_request_string(csr.encode('ascii'))
 
 
-def validate_csr(auth_result, csr):
+def validate_server_name(csr):
+    CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
+    if len(CNs) != 1:
+        raise ValidationError("There should be one CN in request")
+
+    if not any(str(CNs[0].get_data()).endswith(suffix) for suffix in app.config['ALLOWED_DOMAINS']):
+        raise ValidationError("Domain suffix not allowed")
+
+
+def validate_server_group(auth_result, csr):
     pass
+
+
+def validate_csr(auth_result, csr):
+    validate_server_name(csr)
+    validate_server_group(auth_result, csr)
 
 
 def sign(csr):
