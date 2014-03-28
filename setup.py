@@ -7,6 +7,7 @@ setup(
     description="webservice to auto-sign certificates for short amount of time",
     version="0.1",
     packages=['ephemeral_ca'],
+    include_package_data=True,
     install_requires=[
         'm2crypto',
         'flask',
