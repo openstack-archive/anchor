@@ -6,6 +6,7 @@ FlaskCA
 import M2Crypto
 import fcntl
 import ldap
+import ldap.filter
 import os
 import time
 import uuid
@@ -38,8 +39,9 @@ def ldap_login(user, secret):
     try:
         ldo.simple_bind_s("%s@%s" % (user, app.config['LDAP_DOMAIN']), secret)
 
+        filter_str = '(sAMAccountName=%s)' % ldap.filter.escape_filter_chars(user)
         ret = ldo.search_s(app.config['LDAP_BASE'], ldap.SCOPE_SUBTREE,
-                           filterstr='(sAMAccountName=pitucha)', attrlist=['memberOf'])
+                           filterstr=filter_str, attrlist=['memberOf'])
         user_attrs = [x for x in ret if x[0] is not None][0][1]
         user_groups = ldap_user_get_groups(user_attrs)
         return AuthDetails(username=user, groups=user_groups)
