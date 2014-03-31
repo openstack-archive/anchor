@@ -1,6 +1,5 @@
 CA_CERT = "CA/root-ca.crt"
 CA_KEY = "CA/root-ca-unwrapped.key"
-SERIAL_FILE = "CA/serial"
 CERTS_DIRECTORY = "certs"
 VALID_HOURS = 24
 SIGNING_HASH = "sha1"
