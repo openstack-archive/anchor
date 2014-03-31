@@ -8,6 +8,7 @@ import fcntl
 import os
 import time
 import ldap
+import uuid
 from collections import namedtuple
 
 from flask import Flask, request
@@ -102,14 +103,6 @@ def validate_csr(auth_result, csr):
 
 
 def sign(csr):
-    with open(app.config['SERIAL_FILE'], 'a+') as f:
-        f.seek(0)
-        fcntl.lockf(f, fcntl.LOCK_EX)
-        serial = int(f.read() or "1")
-        f.seek(0)
-        f.truncate(0)
-        f.write(str(serial+1))
-
     ca = M2Crypto.X509.load_cert(app.config["CA_CERT"])
     key = M2Crypto.EVP.load_key(app.config["CA_KEY"])
 
@@ -128,13 +121,13 @@ def sign(csr):
     new_cert.set_pubkey(pkey=csr.get_pubkey())
     new_cert.set_subject(csr.get_subject())
     new_cert.set_issuer(ca.get_subject())
-    new_cert.set_serial_number(serial)
+    new_cert.set_serial_number(int(uuid.uuid4().get_hex(), 16))
 
     new_cert.sign(key, app.config['SIGNING_HASH'])
 
     new_cert.save(os.path.join(
         app.config['CERTS_DIRECTORY'],
-        '%06i-%s.crt' % (serial, new_cert.get_fingerprint(app.config['SIGNING_HASH']))))
+        '%s.crt' % new_cert.get_fingerprint(app.config['SIGNING_HASH'])))
 
     return new_cert.as_pem()
 
