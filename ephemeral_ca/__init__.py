@@ -4,7 +4,6 @@ FlaskCA
 """
 
 import M2Crypto
-import fcntl
 import ldap
 import ldap.filter
 import os
