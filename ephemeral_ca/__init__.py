@@ -5,9 +5,9 @@ FlaskCA
 
 import M2Crypto
 import fcntl
+import ldap
 import os
 import time
-import ldap
 import uuid
 from collections import namedtuple
 
