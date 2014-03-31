@@ -14,6 +14,8 @@ from collections import namedtuple
 
 from flask import Flask, request
 
+from . import validators
+
 app = Flask(__name__)
 app.config.from_pyfile(os.environ.get('EPHEMERAL_CA_SETTINGS', 'config.cfg'))
 
@@ -21,10 +23,6 @@ AUTH_FAILED = object()
 
 
 AuthDetails = namedtuple('AuthDetails', ['username', 'groups'])
-
-
-class ValidationError(Exception):
-    pass
 
 
 def ldap_user_get_groups(attributes):
@@ -64,44 +62,10 @@ def parse_csr(csr, encoding):
     return M2Crypto.X509.load_request_string(csr.encode('ascii'))
 
 
-def csr_get_cn(csr):
-    return str(csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])[0].get_data())
-
-
-def validate_server_name(csr):
-    """
-    Refuse requests for certificates if they contain multiple CN
-    entries, or the domain does not match the list of known suffixes.
-    """
-
-    CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
-    if len(CNs) != 1:
-        raise ValidationError("There should be one CN in request")
-
-    cn = csr_get_cn(csr)
-    if not any(cn.endswith(suffix) for suffix in app.config['ALLOWED_DOMAINS']):
-        raise ValidationError("Domain suffix not allowed")
-
-
-def validate_server_group(auth_result, csr):
-    """
-    Make sure that for server names containing a team prefix, the team is
-    verified against the groups the user is a member of.
-    """
-
-    cn = csr_get_cn(csr)
-    parts = cn.split('-')
-    if len(parts) == 1 or '.' in parts[0]:
-        return  # no prefix
-
-    if parts[0] in app.config['GROUP_PREFIXES']:
-        if app.config['GROUP_PREFIXES'][parts[0]] not in auth_result.groups:
-            raise ValidationError("Server prefix doesn't match user groups")
-
-
 def validate_csr(auth_result, csr):
-    validate_server_name(csr)
-    validate_server_group(auth_result, csr)
+    args = {'auth_result': auth_result, 'csr': csr, 'app': app}
+    validators.server_name(**args)
+    validators.server_group(**args)
 
 
 def sign(csr):
@@ -165,7 +129,7 @@ def sign_request():
 
     try:
         validate_csr(auth_result, csr)
-    except ValidationError as e:
+    except validators.ValidationError as e:
         return 'Validation failed: %s\n' % e, 409
 
     cert = sign(csr)
