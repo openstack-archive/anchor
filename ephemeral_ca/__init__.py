@@ -63,8 +63,11 @@ def parse_csr(csr, encoding):
 
 def validate_csr(auth_result, csr):
     args = {'auth_result': auth_result, 'csr': csr, 'app': app}
-    validators.server_name(**args)
+    validators.common_name(**args)
+    validators.alternative_names(**args)
     validators.server_group(**args)
+    validators.extensions(**args)
+    validators.key_usage(**args)
 
 
 def sign(csr):

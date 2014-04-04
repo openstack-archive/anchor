@@ -26,3 +26,5 @@ GROUP_PREFIXES = {
     'ops': 'SysEng_Team',
     'qu': 'Neutron_Team',
     }
+ALLOWED_EXTENSIONS = ['keyUsage', 'subjectAltName']
+ALLOWED_USAGE = ['Digital Signature', 'Key Encipherment', 'Non Repudiation']
