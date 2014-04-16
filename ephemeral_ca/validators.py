@@ -20,7 +20,7 @@ def common_name(csr=None, app=None, **kwargs):
     entries, or the domain does not match the list of known suffixes.
     """
 
-    alt_present = any(ext.get_name() == "subjectAltName" for ext in csr.get_extensions())
+    alt_present = any(ext.get_name() == "subjectAltName" for ext in (csr.get_extensions() or []))
     CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
 
     if alt_present:
