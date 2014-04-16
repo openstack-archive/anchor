@@ -6,4 +6,6 @@ ephemeral_ca.egg-info
 *.sw[op]
 certs/*.crt
 CA/serial
+CA/*.key
+CA/*.crt
 dist/*
