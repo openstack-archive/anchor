@@ -9,3 +9,4 @@ CA/serial
 CA/*.key
 CA/*.crt
 dist/*
+build/*
