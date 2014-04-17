@@ -28,3 +28,11 @@ GROUP_PREFIXES = {
     }
 ALLOWED_EXTENSIONS = ['keyUsage', 'subjectAltName']
 ALLOWED_USAGE = ['Digital Signature', 'Key Encipherment', 'Non Repudiation']
+
+VALIDATORS = [
+    ('common_name',),
+    ('alternative_names',),
+    ('server_group',),
+    ('extensions',),
+    ('key_usage',),
+    ]
