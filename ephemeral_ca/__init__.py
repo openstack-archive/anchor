@@ -101,6 +101,9 @@ def sign(csr):
     new_cert.set_issuer(ca.get_subject())
     new_cert.set_serial_number(int(uuid.uuid4().get_hex(), 16))
 
+    for ext in (csr.get_extensions() or []):
+        new_cert.add_ext(ext)
+
     new_cert.sign(key, app.config['SIGNING_HASH'])
 
     new_cert.save(os.path.join(
