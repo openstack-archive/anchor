@@ -87,4 +87,33 @@ def key_usage(csr=None, app=None, **kwargs):
         if ext.get_name() == 'keyUsage':
             usages = set(usage.strip() for usage in ext.get_value().split(','))
             if usages & allowed != usages:
-                raise ValidationError("Found some not allowed key usages")
+                raise ValidationError("Found some not allowed key usages: %s" % (usages - allowed))
+
+def ca_status(csr=None, app=None, ca_requested=False, **kwargs):
+    """
+    Ensure the request has/hasn't got the CA flag
+    """
+
+    for ext in (csr.get_extensions() or []):
+        ext_name = ext.get_name()
+        if ext_name == 'basicConstraints':
+            options = [opt.strip() for opt in ext.get_value().split(",")]
+            for option in options:
+                parts = option.split(":")
+                if len(parts) != 2:
+                    raise ValidationError("Invalid basic constraints flag")
+
+                if parts[0] == 'CA':
+                    if parts[1] != str(ca_requested).upper():
+                        raise ValidationError("Invalid CA status, 'CA:%s' requested" % parts[1])
+                elif parts[0] == 'pathlen':
+                    # errr.. it's ok, I guess
+                    pass
+                else:
+                    raise ValidationError("Invalid basic constraints option")
+        elif ext_name == 'keyUsage':
+            usages = set(usage.strip() for usage in ext.get_value().split(','))
+            has_cert_sign = ('Certificate Sign' in usages)
+            has_crl_sign = ('CRL Sign' in usages)
+            if ca_requested != has_cert_sign or ca_requested != has_crl_sign:
+                raise ValidationError("Key usage doesn't match requested CA status (keyCertSign/cRLSign: %s/%s)" % (has_cert_sign, has_crl_sign))

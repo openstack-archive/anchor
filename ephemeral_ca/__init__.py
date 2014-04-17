@@ -63,11 +63,21 @@ def parse_csr(csr, encoding):
 
 def validate_csr(auth_result, csr):
     args = {'auth_result': auth_result, 'csr': csr, 'app': app}
-    validators.common_name(**args)
-    validators.alternative_names(**args)
-    validators.server_group(**args)
-    validators.extensions(**args)
-    validators.key_usage(**args)
+    for validator in app.config['VALIDATORS']:
+        if not isinstance(validator, tuple):
+            raise Exception("Validator should be defined by a tuple (got '%s' instead)" % (validator,))
+        elif len(validator) == 1:
+            validator_name, params = validator[0], {}
+        elif len(validator) == 2:
+            validator_name, params = validator
+        elif len(validator) > 2:
+            raise Exception("Validator config incorrect: '%s'" % (validator,))
+
+        if not hasattr(validators, validator_name):
+            raise Exception("Could not find validator named '%s'" % (validator,))
+        new_kwargs = args.copy()
+        new_kwargs.update(params)
+        getattr(validators, validator_name)(**new_kwargs)
 
 
 def sign(csr):
