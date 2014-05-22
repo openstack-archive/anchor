@@ -26,7 +26,7 @@ GROUP_PREFIXES = {
     'ops': 'SysEng_Team',
     'qu': 'Neutron_Team',
     }
-ALLOWED_EXTENSIONS = ['keyUsage', 'subjectAltName', 'basicConstraints']
+ALLOWED_EXTENSIONS = ['keyUsage', 'subjectAltName', 'basicConstraints', 'subjectKeyIdentifier']
 ALLOWED_USAGE = ['Digital Signature', 'Key Encipherment', 'Non Repudiation', 'Certificate Sign', 'CRL Sign']
 
 VALIDATORS = [
