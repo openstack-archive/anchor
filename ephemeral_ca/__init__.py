@@ -134,7 +134,7 @@ def sign_request():
             return 'Request is missing keys!\n', 500
 
     """
-    auth_result = auth(request.form['user'], request.form['secret'])
+    auth_result = auth(request.form.get('user'), request.form.get('secret'))
     if auth_result is AUTH_FAILED:
         return 'Authentication Failure\n', 403
 
