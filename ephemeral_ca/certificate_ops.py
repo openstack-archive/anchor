@@ -4,7 +4,7 @@ import os
 import time
 import uuid
 from pecan import conf
-from ephemeral_ca import validators
+from . import validators
 
 logger = logging.getLogger(__name__)
 

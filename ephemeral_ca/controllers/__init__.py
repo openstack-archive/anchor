@@ -1,5 +1,5 @@
 from pecan import expose, request, response
-from ephemeral_ca import auth, certificate_ops, validators
+from .. import auth, certificate_ops, validators
 
 
 class RootController(object):
