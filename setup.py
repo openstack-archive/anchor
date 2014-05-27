@@ -10,15 +10,12 @@ setup(
     include_package_data=True,
     install_requires=[
         'm2crypto',
-        'flask',
+        'pecan',
         'python-ldap',
         'setuptools>=1.0',
     ],
     setup_requires=[
         'setuptools>=1.0',
     ],
-    zip_safe=False,
-    entry_points={
-        'console_scripts': ['ephemeral_ca_server=ephemeral_ca:run_server'],
-    }
+    zip_safe=False
 )

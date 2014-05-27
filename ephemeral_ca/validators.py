@@ -9,12 +9,12 @@ def csr_get_cn(csr):
     return str(csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])[0].get_data())
 
 
-def check_domain(app, domain):
-    if not any(domain.endswith(suffix) for suffix in app.config['ALLOWED_DOMAINS']):
+def check_domain(conf, domain):
+    if not any(domain.endswith(suffix) for suffix in conf.validator_options['allowed_domains']):
         raise ValidationError("Domain '%s' not allowed" % domain)
 
 
-def common_name(csr=None, app=None, **kwargs):
+def common_name(csr=None, conf=None, **kwargs):
     """
     Refuse requests for certificates if they contain multiple CN
     entries, or the domain does not match the list of known suffixes.
@@ -33,10 +33,10 @@ def common_name(csr=None, app=None, **kwargs):
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        check_domain(app, cn)
+        check_domain(conf, cn)
 
 
-def alternative_names(csr=None, app=None, **kwargs):
+def alternative_names(csr=None, conf=None, **kwargs):
     """
     Refuse requests for certificates if the domain does not match
     the list of known suffixes.
@@ -48,10 +48,10 @@ def alternative_names(csr=None, app=None, **kwargs):
                 parts = alternative.split(':', 1)
                 if len(parts) != 2 or parts[0] != 'DNS':
                     raise ValidationError("Alt name '%s' does not have a known type")
-                check_domain(app, parts[1])
+                check_domain(conf, parts[1])
 
 
-def server_group(auth_result=None, csr=None, app=None, **kwargs):
+def server_group(auth_result=None, csr=None, conf=None, **kwargs):
     """
     Make sure that for server names containing a team prefix, the team is
     verified against the groups the user is a member of.
@@ -62,26 +62,26 @@ def server_group(auth_result=None, csr=None, app=None, **kwargs):
     if len(parts) == 1 or '.' in parts[0]:
         return  # no prefix
 
-    if parts[0] in app.config['GROUP_PREFIXES']:
-        if app.config['GROUP_PREFIXES'][parts[0]] not in auth_result.groups:
+    if parts[0] in conf.validator_options['group_prefixes']:
+        if conf.validator_options['group_prefixes'][parts[0]] not in auth_result.groups:
             raise ValidationError("Server prefix doesn't match user groups")
 
 
-def extensions(csr=None, app=None, **kwargs):
+def extensions(csr=None, conf=None, **kwargs):
     """
     Ensure only accepted extensions are used
     """
     exts = csr.get_extensions() or []
     for ext in exts:
-        if ext.get_name() not in app.config['ALLOWED_EXTENSIONS']:
+        if ext.get_name() not in conf.validator_options['allowed_extensions']:
             raise ValidationError("Extension '%s' not allowed" % ext.get_name())
 
 
-def key_usage(csr=None, app=None, **kwargs):
+def key_usage(csr=None, conf=None, **kwargs):
     """
     Ensure only accepted key usages are specified
     """
-    allowed = set(app.config['ALLOWED_USAGE'])
+    allowed = set(conf.validator_options['allowed_usage'])
 
     for ext in (csr.get_extensions() or []):
         if ext.get_name() == 'keyUsage':
@@ -89,7 +89,7 @@ def key_usage(csr=None, app=None, **kwargs):
             if usages & allowed != usages:
                 raise ValidationError("Found some not allowed key usages: %s" % (usages - allowed))
 
-def ca_status(csr=None, app=None, ca_requested=False, **kwargs):
+def ca_status(csr=None, ca_requested=False, **kwargs):
     """
     Ensure the request has/hasn't got the CA flag
     """
