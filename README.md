@@ -10,7 +10,7 @@ Currently some of the checks are: is the domain in CN ending with one of the suf
 Installation
 ============
 
-This service requires either a python virtual environment and python/ssl/ldap/sasl development system packages, or system python-ldap, python-flask packages.
+This service requires either a python virtual environment and python/ssl/ldap/sasl development system packages, or system python-ldap, python-pecan packages.
 
 For virtual environment run:
 
@@ -18,11 +18,11 @@ For virtual environment run:
     . .venv/bin/activate
     ./setup.py develop
 
-The config file should be copied from `config.cfg.sample` to `ephemeral_ca/config.cfg` with any details updated.
+The config file should be copied from `config.py` with any details updated.
 
 The service can be run with:
 
-    ephemeral_ca_server
+    .venv/bin/pecan serve --reload config.py
 
 To test the service, generate the certificate request and submit it using curl:
 
