@@ -12,6 +12,7 @@ setup(
         'm2crypto',
         'pecan',
         'python-ldap',
+        'requests',
         'setuptools>=1.0',
     ],
     setup_requires=[

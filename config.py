@@ -23,6 +23,9 @@ auth = {
 #        'domain': "hpcloud.ms",
 #        'base': "CN=Users,DC=hpcloud,DC=ms",
 #    },
+    'keystone': {
+        'url': 'https://region-b.geo-1.identity.hpcloudsvc.com:35357',
+    },
 }
 
 validators = [
