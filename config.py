@@ -24,7 +24,7 @@ auth = {
     #    'base': "CN=Users,DC=hpcloud,DC=ms",
     #},
     'keystone': {
-        'url': 'https://region-b.geo-1.identity.hpcloudsvc.com:35357',
+        'url': 'https://keystone.example.com:35357',
     },
 }
 
