@@ -11,10 +11,13 @@ setup(
     install_requires=[
         'm2crypto',
         'pecan',
-        'python-ldap',
-        'requests',
         'setuptools>=1.0',
     ],
+    extras_require={
+        'auth_ldap': ['python-ldap'],
+        'auth_keystone': ['requests'],
+        'develop': ['watchdog'],
+    },
     setup_requires=[
         'setuptools>=1.0',
     ],

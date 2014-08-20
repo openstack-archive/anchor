@@ -1,8 +1,13 @@
-from . import ldap
-from . import keystone
 from .results import AuthDetails, AUTH_FAILED
 
 from pecan import conf
+
+if conf.auth.get('ldap'):
+    from . import ldap
+
+if conf.auth.get('keystone'):
+    from . import keystone
+
 
 def validate(user, secret):
     if conf.auth['allow_backdoor']:

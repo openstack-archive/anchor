@@ -16,13 +16,22 @@ For virtual environment run:
 
     virtualenv .venv
     . .venv/bin/activate
-    ./setup.py develop
 
-The config file should be copied from `config.py` with any details updated.
+To install a development version, run:
 
-The service can be run with:
+    pip install -e '.[develop]'
+
+To install a production version with some authentication backend, run (where `auth_xxx` may be `auth_keystone` and/or `auth_ldap`):
+
+    pip install '.[auth_xxx]'
+
+The chosen authentication backend is only enabled if it's defined in the config file. The config file should be copied from `config.py` with any details updated.
+
+The service can be run during development with:
 
     .venv/bin/pecan serve --reload config.py
+
+In production, the `--reload` parameter is most likely unnecessary.
 
 To test the service, generate the certificate request and submit it using curl:
 

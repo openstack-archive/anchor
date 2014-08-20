@@ -23,9 +23,9 @@ auth = {
     #    'domain': "hpcloud.ms",
     #    'base': "CN=Users,DC=hpcloud,DC=ms",
     #},
-    'keystone': {
-        'url': 'https://keystone.example.com:35357',
-    },
+    #'keystone': {
+    #    'url': 'https://keystone.example.com:35357',
+    #},
 }
 
 validators = [
