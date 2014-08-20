@@ -89,6 +89,7 @@ def key_usage(csr=None, conf=None, **kwargs):
             if usages & allowed != usages:
                 raise ValidationError("Found some not allowed key usages: %s" % (usages - allowed))
 
+
 def ca_status(csr=None, ca_requested=False, **kwargs):
     """
     Ensure the request has/hasn't got the CA flag

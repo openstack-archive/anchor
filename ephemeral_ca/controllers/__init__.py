@@ -5,6 +5,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class RootController(object):
 
     @expose(content_type="text/plain")
@@ -44,5 +45,5 @@ class RootController(object):
             logger.error("certificate signing error")
             response.status_int = 500
             return 'Signing Failure\n'
-    
+
         return cert

@@ -7,8 +7,8 @@ server = {
 app = {
     'root': 'ephemeral_ca.controllers.RootController',
     'modules': ['ephemeral_ca'],
-#    'static_root': '%(confdir)s/public',
-#    'template_path': '%(confdir)s/${package}/templates',
+    #'static_root': '%(confdir)s/public',
+    #'template_path': '%(confdir)s/${package}/templates',
     'debug': True,
     'errors': {
         '404': '/error/404',
@@ -18,11 +18,11 @@ app = {
 
 auth = {
     'allow_backdoor': True,
-#    'ldap': {
-#        'host': "aw2clouddc01.hpcloud.ms",
-#        'domain': "hpcloud.ms",
-#        'base': "CN=Users,DC=hpcloud,DC=ms",
-#    },
+    #'ldap': {
+    #    'host': "aw2clouddc01.hpcloud.ms",
+    #    'domain': "hpcloud.ms",
+    #    'base': "CN=Users,DC=hpcloud,DC=ms",
+    #},
     'keystone': {
         'url': 'https://region-b.geo-1.identity.hpcloudsvc.com:35357',
     },
@@ -63,7 +63,7 @@ ca = {
 
 logging = {
     'loggers': {
-        'root' : {'level': 'INFO', 'handlers': ['console']},
+        'root': {'level': 'INFO', 'handlers': ['console']},
         'ephemeral_ca': {'level': 'DEBUG', 'handlers': ['console']}
     },
     'handlers': {
