@@ -7,8 +7,8 @@ server = {
 app = {
     'root': 'ephemeral_ca.controllers.RootController',
     'modules': ['ephemeral_ca'],
-    #'static_root': '%(confdir)s/public',
-    #'template_path': '%(confdir)s/${package}/templates',
+    # 'static_root': '%(confdir)s/public',
+    # 'template_path': '%(confdir)s/${package}/templates',
     'debug': True,
     'errors': {
         '404': '/error/404',
@@ -18,14 +18,14 @@ app = {
 
 auth = {
     'allow_backdoor': True,
-    #'ldap': {
-    #    'host': "aw2clouddc01.hpcloud.ms",
-    #    'domain': "hpcloud.ms",
-    #    'base': "CN=Users,DC=hpcloud,DC=ms",
-    #},
-    #'keystone': {
-    #    'url': 'https://keystone.example.com:35357',
-    #},
+    # 'ldap': {
+    #     'host': "aw2clouddc01.hpcloud.ms",
+    #     'domain': "hpcloud.ms",
+    #     'base': "CN=Users,DC=hpcloud,DC=ms",
+    # },
+    # 'keystone': {
+    #     'url': 'https://keystone.example.com:35357',
+    # },
 }
 
 validators = [

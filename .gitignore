@@ -10,3 +10,4 @@ CA/*.key
 CA/*.crt
 dist/*
 build/*
+.tox/*
