@@ -10,9 +10,9 @@ if conf.auth.get('keystone'):
 
 
 def validate(user, secret):
-    if conf.auth['allow_backdoor']:
-        if secret == 'woot' and user == 'woot':
-            return AuthDetails(username='woot', groups=[])
+    if conf.auth.get('static'):
+        if secret == conf.auth['static']['secret'] and user == conf.auth['static']['user']:
+            return AuthDetails(username=conf.auth['static']['user'], groups=[])
 
     if conf.auth.get('ldap'):
         res = ldap.login(user, secret)

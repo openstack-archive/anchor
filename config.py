@@ -17,7 +17,10 @@ app = {
 }
 
 auth = {
-    'allow_backdoor': True,
+    'static': {
+        'user': 'woot',
+        'secret': 'woot',
+    },
     # 'ldap': {
     #     'host': "aw2clouddc01.hpcloud.ms",
     #     'domain': "hpcloud.ms",
