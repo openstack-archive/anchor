@@ -20,8 +20,8 @@ def parse_csr(csr, encoding):
         return None
 
 
-def validate_csr(auth_result, csr):
-    args = {'auth_result': auth_result, 'csr': csr, 'conf': conf}
+def validate_csr(auth_result, csr, request):
+    args = {'auth_result': auth_result, 'csr': csr, 'conf': conf, 'request': request}
     for validator_steps in conf.validators:
         logger.debug("Checking validators set <%s>", validator_steps.get("name"))
         valid = True

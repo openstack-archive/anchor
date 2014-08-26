@@ -34,7 +34,7 @@ class RootController(object):
             return 'CSR cannot be parsed\n'
 
         try:
-            certificate_ops.validate_csr(auth_result, csr)
+            certificate_ops.validate_csr(auth_result, csr, request)
         except validators.ValidationError as e:
             logger.exception("csr failed validation")
             response.status_int = 409

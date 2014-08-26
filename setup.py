@@ -12,6 +12,7 @@ setup(
         'm2crypto',
         'pecan',
         'setuptools>=1.0',
+        'netaddr',
     ],
     extras_require={
         'auth_ldap': ['python-ldap'],

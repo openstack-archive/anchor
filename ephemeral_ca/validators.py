@@ -1,4 +1,5 @@
 import M2Crypto
+import netaddr
 
 
 class ValidationError(Exception):
@@ -118,3 +119,17 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
             has_crl_sign = ('CRL Sign' in usages)
             if ca_requested != has_cert_sign or ca_requested != has_crl_sign:
                 raise ValidationError("Key usage doesn't match requested CA status (keyCertSign/cRLSign: %s/%s)" % (has_cert_sign, has_crl_sign))
+
+
+def source_cidrs(request=None, cidrs=None, **kwargs):
+    """
+    Ensure that the request comes from a known source
+    """
+    for cidr in cidrs:
+        try:
+            r = netaddr.IPNetwork(cidr)
+            if request.client_addr in r:
+                return
+        except netaddr.AddrFormatError:
+            raise ValidationError("Cidr <%s> does not describe a valid network", cidr)
+    raise ValidationError("No network matched the request source <%s>", request.client_addr)
