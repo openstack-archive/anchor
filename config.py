@@ -35,31 +35,24 @@ validators = [
     {
         "name": "default",
         "steps": [
-            ('common_name',),
-            ('alternative_names',),
-            ('server_group',),
-            ('extensions',),
-            ('key_usage',),
+            ('common_name', {'allowed_domains': ['.hpcloud.net', 'clark.com']}),
+            ('alternative_names', {'allowed_domains': ['.hpcloud.net', 'clark.com']}),
+            ('server_group', {'group_prefixes': {
+                'nv': 'Nova_Team',
+                'sw': 'Swift_Team',
+                'bk': 'Bock_Team',
+                'gl': 'Glance_Team',
+                'cs': 'CS_Team',
+                'mb': 'MB_Team',
+                'ops': 'SysEng_Team',
+                'qu': 'Neutron_Team',
+                }}),
+            ('extensions', {'allowed_extensions': ['keyUsage', 'subjectAltName', 'basicConstraints', 'subjectKeyIdentifier']}),
+            ('key_usage', {'allowed_usage': ['Digital Signature', 'Key Encipherment', 'Non Repudiation', 'Certificate Sign', 'CRL Sign']}),
             ('ca_status', {'ca_requested': False}),
         ]
     },
 ]
-
-validator_options = {
-    'allowed_extensions': ['keyUsage', 'subjectAltName', 'basicConstraints', 'subjectKeyIdentifier'],
-    'allowed_usage': ['Digital Signature', 'Key Encipherment', 'Non Repudiation', 'Certificate Sign', 'CRL Sign'],
-    'allowed_domains': ['.hpcloud.net', 'clark.com'],
-    'group_prefixes': {
-        'nv': 'Nova_Team',
-        'sw': 'Swift_Team',
-        'bk': 'Bock_Team',
-        'gl': 'Glance_Team',
-        'cs': 'CS_Team',
-        'mb': 'MB_Team',
-        'ops': 'SysEng_Team',
-        'qu': 'Neutron_Team',
-    },
-}
 
 ca = {
     'cert_path': "CA/root-ca.crt",
