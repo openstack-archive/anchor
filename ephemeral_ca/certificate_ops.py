@@ -22,21 +22,42 @@ def parse_csr(csr, encoding):
 
 def validate_csr(auth_result, csr):
     args = {'auth_result': auth_result, 'csr': csr, 'conf': conf}
-    for validator in conf.validators:
-        if not isinstance(validator, tuple):
-            raise Exception("Validator should be defined by a tuple (got '%s' instead)" % (validator,))
-        elif len(validator) == 1:
-            validator_name, params = validator[0], {}
-        elif len(validator) == 2:
-            validator_name, params = validator
-        elif len(validator) > 2:
-            raise Exception("Validator config incorrect: '%s'" % (validator,))
+    for validator_steps in conf.validators:
+        logger.debug("Checking validators set <%s>", validator_steps.get("name"))
+        valid = True
 
-        if not hasattr(validators, validator_name):
-            raise Exception("Could not find validator named '%s'" % (validator,))
-        new_kwargs = args.copy()
-        new_kwargs.update(params)
-        getattr(validators, validator_name)(**new_kwargs)
+        for validator in validator_steps['steps']:
+            if not isinstance(validator, tuple):
+                logger.error("Validator should be defined by a tuple (got '%s' instead)", validator)
+                break
+            elif len(validator) == 1:
+                validator_name, params = validator[0], {}
+            elif len(validator) == 2:
+                validator_name, params = validator
+            elif len(validator) > 2:
+                logger.error("Validator config incorrect: '%s'", validator)
+                break
+
+            if not hasattr(validators, validator_name):
+                logger.error("Could not find validator named '%s'", validator)
+                break
+
+            logger.debug("Checking step <%s>", validator_name)
+
+            new_kwargs = args.copy()
+            new_kwargs.update(params)
+            try:
+                getattr(validators, validator_name)(**new_kwargs)
+            except validators.ValidationError as e:
+                logger.debug("Validation failed: %s", e)
+                valid = False
+                break
+
+        if valid:
+            # request passed all the tests here
+            return
+
+    raise validators.ValidationError("All validator sets failed")
 
 
 def sign(csr):

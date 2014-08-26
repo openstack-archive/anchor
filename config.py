@@ -32,12 +32,17 @@ auth = {
 }
 
 validators = [
-    ('common_name',),
-    ('alternative_names',),
-    ('server_group',),
-    ('extensions',),
-    ('key_usage',),
-    ('ca_status', {'ca_requested': False}),
+    {
+        "name": "default",
+        "steps": [
+            ('common_name',),
+            ('alternative_names',),
+            ('server_group',),
+            ('extensions',),
+            ('key_usage',),
+            ('ca_status', {'ca_requested': False}),
+        ]
+    },
 ]
 
 validator_options = {
