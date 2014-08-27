@@ -31,7 +31,13 @@ The service can be run during development with:
 
     .venv/bin/pecan serve --reload config.py
 
-In production, the `--reload` parameter is most likely unnecessary.
+In production, the package should be instead installed using:
+
+    pip install '.[production]'
+
+And the debug option in `config.py` has to be turned off. Service can be started via the uwsgi server, for example (with 4 processes):
+
+    uwsgi --http-socket :5000 --venv /path/to/the/virtualenv --pecan /path/to/config.py -p 4
 
 To test the service, generate the certificate request and submit it using curl:
 

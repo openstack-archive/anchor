@@ -19,6 +19,7 @@ setup(
         'auth_ldap': ['python-ldap'],
         'auth_keystone': ['requests'],
         'develop': ['watchdog'],
+        'production': ['uwsgi'],
     },
     setup_requires=[
         'setuptools>=1.0',
