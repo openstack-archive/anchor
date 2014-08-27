@@ -1,4 +1,5 @@
 from pecan import make_app
+import paste.translogger
 from . import validators
 
 
@@ -37,8 +38,9 @@ def setup_app(config):
 
     validate_config(config)
 
-    return make_app(
+    app = make_app(
         app_conf.pop('root'),
         logging=getattr(config, 'logging', {}),
         **app_conf
     )
+    return paste.translogger.TransLogger(app, setup_console_handler=False)

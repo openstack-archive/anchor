@@ -11,6 +11,7 @@ setup(
     install_requires=[
         'm2crypto',
         'pecan',
+        'paste',
         'setuptools>=1.0',
         'netaddr',
     ],
