@@ -53,6 +53,15 @@ validators = [
             ('source_cidrs', {'cidrs': ["127.0.0.0/8"]}),
         ]
     },
+    {
+        "name": "ip",
+        "steps": [
+            ('common_name', {'allowed_networks': ['127/8']}),
+            ('alternative_names', {'allowed_networks': ['127/8']}),
+            ('ca_status', {'ca_requested': False}),
+            ('source_cidrs', {'cidrs': ["127.0.0.0/8"]}),
+        ]
+    },
 ]
 
 ca = {

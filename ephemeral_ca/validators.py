@@ -1,5 +1,8 @@
 import M2Crypto
 import netaddr
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):
@@ -10,15 +13,31 @@ def csr_get_cn(csr):
     return str(csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])[0].get_data())
 
 
-def check_domain(domain, allowed_domains):
+def check_domains(domain, allowed_domains):
     if not any(domain.endswith(suffix) for suffix in allowed_domains):
-        raise ValidationError("Domain '%s' not allowed" % domain)
+        # no domain matched
+        return False
+    return True
 
 
-def common_name(csr=None, allowed_domains=[], **kwargs):
+def check_networks(domain, allowed_networks):
+    try:
+        netaddr.IPAddress(domain)
+    except netaddr.AddrFormatError:
+        # the domain is not a valid ip address
+        return False
+
+    if not any(domain in netaddr.IPNetwork(net) for net in allowed_networks):
+        # no network matched
+        return False
+    return True
+
+
+def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
     """
     Refuse requests for certificates if they contain multiple CN
-    entries, or the domain does not match the list of known suffixes.
+    entries, or the domain does not match the list of known suffixes
+    or network ranges.
     """
 
     alt_present = any(ext.get_name() == "subjectAltName" for ext in (csr.get_extensions() or []))
@@ -34,14 +53,16 @@ def common_name(csr=None, allowed_domains=[], **kwargs):
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        check_domain(cn, allowed_domains)
+        if not (check_domains(cn, allowed_domains) or check_networks(cn, allowed_networks)):
+            raise ValidationError("Domain '%s' not allowed (doesn't match known domains or networks)" % cn)
 
 
-def alternative_names(csr=None, allowed_domains=[], **kwargs):
+def alternative_names(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
     """
     Refuse requests for certificates if the domain does not match
-    the list of known suffixes.
+    the list of known suffixes, or network ranges.
     """
+
     for ext in (csr.get_extensions() or []):
         if ext.get_name() == "subjectAltName":
             alternatives = [alt.strip() for alt in ext.get_value().split(',')]
@@ -49,7 +70,8 @@ def alternative_names(csr=None, allowed_domains=[], **kwargs):
                 parts = alternative.split(':', 1)
                 if len(parts) != 2 or parts[0] != 'DNS':
                     raise ValidationError("Alt name '%s' does not have a known type")
-                check_domain(parts[1], allowed_domains)
+                if not (check_domains(parts[1], allowed_domains) or check_networks(parts[1], allowed_networks)):
+                    raise ValidationError("Domain '%s' not allowed (doesn't match known domains or networks)" % parts[1])
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
