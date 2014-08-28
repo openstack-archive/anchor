@@ -75,8 +75,8 @@ ca = {
 logging = {
     'root': {'level': 'INFO', 'handlers': ['console']},
     'loggers': {
-        'ephemeral_ca': {'level': 'DEBUG',},
-        'wsgi': {'level': 'INFO',},
+        'ephemeral_ca': {'level': 'DEBUG'},
+        'wsgi': {'level': 'INFO'},
     },
     'handlers': {
         'console': {
