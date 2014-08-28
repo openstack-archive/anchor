@@ -5,7 +5,7 @@ from setuptools import setup
 setup(
     name="ephemeral_ca",
     description="webservice to auto-sign certificates for short amount of time",
-    version="0.1",
+    version="1.0.0",
     packages=['ephemeral_ca'],
     include_package_data=True,
     install_requires=[
