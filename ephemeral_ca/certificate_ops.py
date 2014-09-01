@@ -63,14 +63,20 @@ def validate_csr(auth_result, csr, request):
 def sign(csr):
     try:
         ca = M2Crypto.X509.load_cert(conf.ca["cert_path"])
-    except IOError:
+    except (IOError, M2Crypto.BIO.BIOError):
         logger.exception("Cannot load the signing CA")
+        return None
+    except M2Crypto.X509.X509Error:
+        logger.exception("Signing CA file is not a valid certificate")
         return None
 
     try:
         key = M2Crypto.EVP.load_key(conf.ca["key_path"])
-    except IOError:
-        logger.exception("Cannot load the signing CA")
+    except (IOError, M2Crypto.BIO.BIOError):
+        logger.exception("Cannot load the signing CA key")
+        return None
+    except M2Crypto.EVP.EVPError:
+        logger.exception("Signing CA key file is not a valid key")
         return None
 
     new_cert = M2Crypto.X509.X509()
