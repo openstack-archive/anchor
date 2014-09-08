@@ -1,0 +1,48 @@
+#include <tunables/global>
+
+@{ECA_BASE}="/replace/with/path/to/ephemeral-ca"
+@{ECA_VENV}="@{ECA_BASE}/.venv"
+@{ECA_CA_DIR}="@{ECA_BASE}/CA"
+@{ECA_CERTS_DIR}="@{ECA_BASE}/certs"
+
+/replace/with/path/to/ephemeral-ca/bin/ephemeral_ca_debug {
+  #include <abstractions/base>
+  #include <abstractions/bash>
+
+  /bin/dash ix,
+  @{ECA_BASE}/ r,
+  @{ECA_BASE}/bin/ephemeral_ca_debug mixr,
+
+  @{ECA_VENV}/bin/pecan cix,
+
+  profile /replace/with/path/to/bin/pecan {
+    #include <abstractions/base>
+    #include <abstractions/python>
+    #include <abstractions/bash>
+    #include <abstractions/nameservice>
+    #include <abstractions/user-tmp>
+
+    network inet  stream,
+
+    /bin/dash ix,
+    /bin/uname ix,
+    /etc/mime.types r,
+
+    /sbin/ldconfig mUxr,
+
+    @{ECA_CA_DIR}/* r,
+    @{ECA_CERTS_DIR}/{,*.crt} w,
+
+    @{ECA_BASE}/ r,
+    @{ECA_BASE}/ephemeral_ca/**.py{,c} r,
+    @{ECA_BASE}/ephemeral_ca/{,**/} r,
+    @{ECA_BASE}/config.py r,
+
+    @{ECA_VENV}/bin/python mixr,
+    @{ECA_VENV}/bin/pecan mixr,
+    @{ECA_VENV}/bin/ r,
+    @{ECA_VENV}/lib/python2.7/ r,
+    @{ECA_VENV}/lib/python2.7/** r,
+    @{ECA_VENV}/lib/python2.7/**/*.so m,
+  }
+}

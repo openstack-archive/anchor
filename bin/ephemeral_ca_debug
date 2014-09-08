@@ -1,0 +1,6 @@
+#!/bin/sh
+VENV=$1
+
+[ -n "$VENV" ] || ( echo "provide virtual env path as parameter" && exit 1 )
+
+"$VENV/bin/pecan" serve --reload config.py
