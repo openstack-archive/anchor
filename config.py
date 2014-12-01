@@ -5,8 +5,8 @@ server = {
 
 # Pecan Application Configurations
 app = {
-    'root': 'ephemeral_ca.controllers.RootController',
-    'modules': ['ephemeral_ca'],
+    'root': 'anchor.controllers.RootController',
+    'modules': ['anchor'],
     # 'static_root': '%(confdir)s/public',
     # 'template_path': '%(confdir)s/${package}/templates',
     'debug': True,
@@ -22,9 +22,9 @@ auth = {
         'secret': 'woot',
     },
     # 'ldap': {
-    #     'host': "aw2clouddc01.hpcloud.ms",
-    #     'domain': "hpcloud.ms",
-    #     'base': "CN=Users,DC=hpcloud,DC=ms",
+    #     'host': "ldap.host.com",
+    #     'domain': "host.com",
+    #     'base': "CN=Users,DC=host,DC=com",
     # },
     # 'keystone': {
     #     'url': 'https://keystone.example.com:35357',
@@ -75,7 +75,7 @@ ca = {
 logging = {
     'root': {'level': 'INFO', 'handlers': ['console']},
     'loggers': {
-        'ephemeral_ca': {'level': 'DEBUG'},
+        'anchor': {'level': 'DEBUG'},
         'wsgi': {'level': 'INFO'},
     },
     'handlers': {

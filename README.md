@@ -1,7 +1,7 @@
-Ephemeral CA
+Anchor
 ============
 
-This service generates quickly expiring certificates for a given CA.
+Anchor is an ephemeral PKI service that, based on certain conditions, automates the verification of CSRs and signs certificates for clients
 The validity period can be set in the config file with hour resolution.
 
 There are checks done against the certificate inside of the validate() function.

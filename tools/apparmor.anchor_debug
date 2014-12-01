@@ -1,17 +1,30 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 #include <tunables/global>
 
-@{ECA_BASE}="/replace/with/path/to/ephemeral-ca"
+@{ECA_BASE}="/replace/with/path/to/anchor"
 @{ECA_VENV}="@{ECA_BASE}/.venv"
 @{ECA_CA_DIR}="@{ECA_BASE}/CA"
 @{ECA_CERTS_DIR}="@{ECA_BASE}/certs"
 
-/replace/with/path/to/ephemeral-ca/bin/ephemeral_ca_debug {
+/replace/with/path/to/anchor/bin/anchor_debug {
   #include <abstractions/base>
   #include <abstractions/bash>
 
   /bin/dash ix,
   @{ECA_BASE}/ r,
-  @{ECA_BASE}/bin/ephemeral_ca_debug mixr,
+  @{ECA_BASE}/bin/anchor_debug mixr,
 
   @{ECA_VENV}/bin/pecan cix,
 
@@ -34,8 +47,8 @@
     @{ECA_CERTS_DIR}/{,*.crt} w,
 
     @{ECA_BASE}/ r,
-    @{ECA_BASE}/ephemeral_ca/**.py{,c} r,
-    @{ECA_BASE}/ephemeral_ca/{,**/} r,
+    @{ECA_BASE}/anchor/**.py{,c} r,
+    @{ECA_BASE}/anchor/{,**/} r,
     @{ECA_BASE}/config.py r,
 
     @{ECA_VENV}/bin/python mixr,

@@ -3,10 +3,10 @@
 from setuptools import setup
 
 setup(
-    name="ephemeral_ca",
+    name="anchor",
     description="webservice to auto-sign certificates for short amount of time",
     version="1.0.0",
-    packages=['ephemeral_ca'],
+    packages=['anchor'],
     include_package_data=True,
     install_requires=[
         'm2crypto',
