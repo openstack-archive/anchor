@@ -1,8 +1,7 @@
 Anchor
 ============
 
-Anchor is an ephemeral PKI service that, based on certain conditions, automates the verification of CSRs and signs certificates for clients
-The validity period can be set in the config file with hour resolution.
+Anchor is an ephemeral PKI service that, based on certain conditions, automates the verification of CSRs and signs certificates for clients. The validity period can be set in the config file with hour resolution.
 
 There are checks done against the certificate inside of the validate() function.
 Currently some of the checks are: is the domain in CN ending with one of the suffixes allowed n the config file and does the server prefix match the ldap user's team (for example is "nv-..." requested by a member of "Nova\_Team".
