@@ -1,4 +1,4 @@
 [gerrit]
-host=review.hpcloud.net
+host=review.openstack.org
 port=29418
-project=hp/ephemeral-ca.git
+project=stackforge/anchor.git
