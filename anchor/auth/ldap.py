@@ -21,12 +21,23 @@ from pecan import conf
 
 
 def user_get_groups(attributes):
+    """Retrieve the group membership
+
+    :param attributes: LDAP attributes for user
+    :returns: List -- A list of groups that the user is a member of
+    """
     groups = attributes.get('memberOf', [])
     group_dns = [ldap.dn.explode_dn(g, notypes=True) for g in groups]
     return set(x[0] for x in group_dns if x[1] == 'Groups')
 
 
 def login(user, secret):
+    """Attempt to Authenitcate user using LDAP
+
+    :param user: Username
+    :param secret: Secret/Passphrase
+    :returns: AuthDetails -- Class used for authentication information
+    """
     ldo = ldap.initialize("ldap://%s" % (conf.auth['ldap']['host'],))
     ldo.set_option(ldap.OPT_REFERRALS, 0)
     try:
