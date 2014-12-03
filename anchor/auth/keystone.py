@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 def login(token):
+    """Authenticate with the keystone endpoint from configuration file
+
+    :param token: A Keystone Token
+    :returns: AuthDetails -- Class used for authentication information
+    """
     data = json.dumps({"auth": {
         "identity": {
             "methods": ["token"],
