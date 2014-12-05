@@ -25,16 +25,25 @@ logger = logging.getLogger(__name__)
 def parse_csr(csr, encoding):
     try:
         if encoding != 'pem' or csr is None:
+            logger.error("Parsing CSR failed due to non-pem encoding type or"
+                         " null CSR.")
             return None
 
         return M2Crypto.X509.load_request_string(csr.encode('ascii'))
     except Exception:
-        logger.exception("failed while parsing the CSR")
+        logger.exception("Exception while parsing the CSR")
         return None
 
 
 def validate_csr(auth_result, csr, request):
     args = {'auth_result': auth_result, 'csr': csr, 'conf': conf, 'request': request}
+    #Check that M2crypto supports get_extensions()
+    try:
+        csr.get_extensions()
+    except AttributeError:
+        raise validators.ValidationError("Incorrect M2Crypto library version,"
+                                         " cannot perform csr.get_extensions")
+
     for validator_steps in conf.validators:
         logger.debug("Checking validators set <%s>", validator_steps.get("name"))
         valid = True
