@@ -35,8 +35,8 @@ validators = [
     {
         "name": "default",
         "steps": [
-            ('common_name', {'allowed_domains': ['.hpcloud.net', 'clark.com']}),
-            ('alternative_names', {'allowed_domains': ['.hpcloud.net', 'clark.com']}),
+            ('common_name', {'allowed_domains': ['.hpcloud.net','anchor.test']}),
+            ('alternative_names', {'allowed_domains': ['.hpcloud.net','anchor.test']}),
             ('server_group', {'group_prefixes': {
                 'nv': 'Nova_Team',
                 'sw': 'Swift_Team',
