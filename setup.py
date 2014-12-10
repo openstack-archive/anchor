@@ -9,7 +9,6 @@ setup(
     packages=['anchor'],
     include_package_data=True,
     install_requires=[
-        'm2crypto',
         'pecan',
         'paste',
         'setuptools>=1.0',
