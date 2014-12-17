@@ -1,7 +1,6 @@
 *.pyc
 temp-*.crt
 config.cfg
-ephemeral_ca.egg-info
 .venv
 *.sw[op]
 certs/*.crt
@@ -11,3 +10,12 @@ CA/*.crt
 dist/*
 build/*
 .tox/*
+.DS_Store
+*.egg
+*.egg-info
+.testrepository
+build/*
+cover/*
+.cover
+
+
