@@ -11,7 +11,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import M2Crypto
 import netaddr
 import logging
 
@@ -23,7 +22,9 @@ class ValidationError(Exception):
 
 
 def csr_get_cn(csr):
-    return str(csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])[0].get_data())
+    name = csr.get_subject()
+    data = name.get_entries_by_nid_name('CN')
+    return data[0].get_value()
 
 
 def check_domains(domain, allowed_domains):
@@ -53,8 +54,10 @@ def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
     or network ranges.
     """
 
-    alt_present = any(ext.get_name() == "subjectAltName" for ext in (csr.get_extensions() or []))
-    CNs = csr.get_subject().get_entries_by_nid(M2Crypto.X509.X509_Name.nid['CN'])
+    alt_present = any(ext.get_name() == "subjectAltName"
+                      for ext in csr.get_extensions())
+
+    CNs = csr.get_subject().get_entries_by_nid_name('CN')
 
     if alt_present:
         if len(CNs) > 1:
@@ -62,15 +65,19 @@ def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
     else:
         # rfc5280#section-4.2.1.6 says so
         if len(csr.get_subject()) == 0:
-            raise ValidationError("Alt subjects have to exist if the main subject doesn't")
+            raise ValidationError("Alt subjects have to exist if the main"
+                                  " subject doesn't")
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        if not (check_domains(cn, allowed_domains) or check_networks(cn, allowed_networks)):
-            raise ValidationError("Domain '%s' not allowed (doesn't match known domains or networks)" % cn)
+        if not (check_domains(cn, allowed_domains) or
+                check_networks(cn, allowed_networks)):
+            raise ValidationError("Domain '%s' not allowed (doesn't match"
+                                  " known domains or networks)" % cn)
 
 
-def alternative_names(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
+def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
+                      **kwargs):
     """
     Refuse requests for certificates if the domain does not match
     the list of known suffixes, or network ranges.
@@ -82,9 +89,13 @@ def alternative_names(csr=None, allowed_domains=[], allowed_networks=[], **kwarg
             for alternative in alternatives:
                 parts = alternative.split(':', 1)
                 if len(parts) != 2 or parts[0] != 'DNS':
-                    raise ValidationError("Alt name '%s' does not have a known type")
-                if not (check_domains(parts[1], allowed_domains) or check_networks(parts[1], allowed_networks)):
-                    raise ValidationError("Domain '%s' not allowed (doesn't match known domains or networks)" % parts[1])
+                    raise ValidationError("Alt name '%s' does not have a "
+                                          "known type")
+                if not (check_domains(parts[1], allowed_domains) or
+                   check_networks(parts[1], allowed_networks)):
+                    raise ValidationError("Domain '%s' not allowed (doesn't"
+                                          " match known domains or networks)"
+                                          % parts[1])
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
@@ -110,7 +121,8 @@ def extensions(csr=None, allowed_extensions=[], **kwargs):
     exts = csr.get_extensions() or []
     for ext in exts:
         if ext.get_name() not in allowed_extensions:
-            raise ValidationError("Extension '%s' not allowed" % ext.get_name())
+            raise ValidationError("Extension '%s' not allowed"
+                                  % ext.get_name())
 
 
 def key_usage(csr=None, allowed_usage=None, **kwargs):
@@ -123,7 +135,8 @@ def key_usage(csr=None, allowed_usage=None, **kwargs):
         if ext.get_name() == 'keyUsage':
             usages = set(usage.strip() for usage in ext.get_value().split(','))
             if usages & allowed != usages:
-                raise ValidationError("Found some not allowed key usages: %s" % (usages - allowed))
+                raise ValidationError("Found some not allowed key usages: %s"
+                                      % (usages - allowed))
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
@@ -142,7 +155,8 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
 
                 if parts[0] == 'CA':
                     if parts[1] != str(ca_requested).upper():
-                        raise ValidationError("Invalid CA status, 'CA:%s' requested" % parts[1])
+                        raise ValidationError("Invalid CA status, 'CA:%s'"
+                                              " requested" % parts[1])
                 elif parts[0] == 'pathlen':
                     # errr.. it's ok, I guess
                     pass
@@ -153,7 +167,9 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
             has_cert_sign = ('Certificate Sign' in usages)
             has_crl_sign = ('CRL Sign' in usages)
             if ca_requested != has_cert_sign or ca_requested != has_crl_sign:
-                raise ValidationError("Key usage doesn't match requested CA status (keyCertSign/cRLSign: %s/%s)" % (has_cert_sign, has_crl_sign))
+                raise ValidationError("Key usage doesn't match requested CA"
+                                      " status (keyCertSign/cRLSign: %s/%s)"
+                                      % (has_cert_sign, has_crl_sign))
 
 
 def source_cidrs(request=None, cidrs=None, **kwargs):
@@ -166,5 +182,7 @@ def source_cidrs(request=None, cidrs=None, **kwargs):
             if request.client_addr in r:
                 return
         except netaddr.AddrFormatError:
-            raise ValidationError("Cidr <%s> does not describe a valid network", cidr)
-    raise ValidationError("No network matched the request source <%s>", request.client_addr)
+            raise ValidationError("Cidr <%s> does not describe a valid"
+                                  " network", cidr)
+    raise ValidationError("No network matched the request source <%s>",
+                          request.client_addr)
