@@ -11,9 +11,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import M2Crypto
+from X509 import certificate
+from X509 import signing_request
+from X509 import utils as X509_utils
+
 import logging
 import os
+import sys
 import time
 import uuid
 from pecan import conf
@@ -29,28 +33,30 @@ def parse_csr(csr, encoding):
                          " null CSR.")
             return None
 
-        return M2Crypto.X509.load_request_string(csr.encode('ascii'))
-    except Exception:
-        logger.exception("Exception while parsing the CSR")
+        out_req = signing_request.X509Csr()
+        out_req.from_buffer(csr)
+        return out_req
+
+    except Exception as e:
+        logger.exception("Exception while parsing the CSR: %s", e)
         return None
 
 
 def validate_csr(auth_result, csr, request):
-    args = {'auth_result': auth_result, 'csr': csr, 'conf': conf, 'request': request}
-    #Check that M2crypto supports get_extensions()
-    try:
-        csr.get_extensions()
-    except AttributeError:
-        raise validators.ValidationError("Incorrect M2Crypto library version,"
-                                         " cannot perform csr.get_extensions")
+    args = {'auth_result': auth_result,
+            'csr': csr,
+            'conf': conf,
+            'request': request}
 
     for validator_steps in conf.validators:
-        logger.debug("Checking validators set <%s>", validator_steps.get("name"))
+        logger.debug("Checking validators set <%s>",
+                     validator_steps.get("name"))
         valid = True
 
         for validator in validator_steps['steps']:
             if not isinstance(validator, tuple):
-                logger.error("Validator should be defined by a tuple (got '%s' instead)", validator)
+                logger.error("Validator should be defined by a tuple"
+                             " (got '%s' instead)", validator)
                 break
             elif len(validator) == 1:
                 validator_name, params = validator[0], {}
@@ -83,50 +89,57 @@ def validate_csr(auth_result, csr, request):
 
 
 def sign(csr):
+
     try:
-        ca = M2Crypto.X509.load_cert(conf.ca["cert_path"])
-    except (IOError, M2Crypto.BIO.BIOError):
-        logger.exception("Cannot load the signing CA")
-        return None
-    except M2Crypto.X509.X509Error:
-        logger.exception("Signing CA file is not a valid certificate")
+        ca = certificate.X509Certificate()
+        ca.from_file(conf.ca["cert_path"])
+    except Exception as e:
+        logger.exception("Cannot load the signing CA: %s", e)
         return None
 
     try:
-        key = M2Crypto.EVP.load_key(conf.ca["key_path"])
-    except (IOError, M2Crypto.BIO.BIOError):
-        logger.exception("Cannot load the signing CA key")
-        return None
-    except M2Crypto.EVP.EVPError:
-        logger.exception("Signing CA key file is not a valid key")
+        key_data = None
+        with open(conf.ca["key_path"]) as f:
+            key_data = f.read()
+        key = X509_utils.load_pem_private_key(key_data)
+    except Exception as e:
+        logger.exception("Cannot load the signing CA key: %s", e)
         return None
 
-    new_cert = M2Crypto.X509.X509()
+    new_cert = certificate.X509Certificate()
     new_cert.set_version(0)
 
-    now = int(time.time())
-    start_time = M2Crypto.ASN1.ASN1_UTCTIME()
-    start_time.set_time(now)
-    end_time = M2Crypto.ASN1.ASN1_UTCTIME()
-    end_time.set_time(now+(conf.ca['valid_hours']*60*60))
-
+    start_time = int(time.time())
+    end_time = start_time+(conf.ca['valid_hours']*60*60)
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
     new_cert.set_pubkey(pkey=csr.get_pubkey())
     new_cert.set_subject(csr.get_subject())
     new_cert.set_issuer(ca.get_subject())
-    serial = uuid.uuid4().get_hex()
-    new_cert.set_serial_number(int(serial, 16))
 
-    for ext in (csr.get_extensions() or []):
-        new_cert.add_ext(ext)
+    # NOTE(tkelsey): this needs to be in the range of an int
+    serial = int(int(uuid.uuid4().get_hex(), 16) % sys.maxsize)
+    new_cert.set_serial_number(serial)
 
-    logger.info("Signing certificate for <%s> with serial <%s>", csr.get_subject(), serial)
+    exts = csr.get_extensions()
+    for i, ext in enumerate(exts):
+        logger.info("Adding certificate extension: %i %s", i, str(ext))
+        new_cert.add_extension(ext, i)
+
+    logger.info("Signing certificate for <%s> with serial <%s>",
+                csr.get_subject(), serial)
+
     new_cert.sign(key, conf.ca['signing_hash'])
 
-    new_cert.save(os.path.join(
+    path = os.path.join(
         conf.ca['output_path'],
-        '%s.crt' % new_cert.get_fingerprint(conf.ca['signing_hash'])))
+        '%s.crt' % new_cert.get_fingerprint(conf.ca['signing_hash']))
 
-    return new_cert.as_pem()
+    logger.info("Saving certificate to: %s", path)
+    new_cert.save(path)
+
+    with open(path) as f:
+        return f.read()
+
+    # return new_cert.as_pem()
