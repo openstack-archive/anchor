@@ -17,37 +17,17 @@ For virtual environment run:
     virtualenv .venv
     . .venv/bin/activate
 
-Currently Anchor requires a modified varient of M2Crypto, which must be
-installed manually. Prior to installing M2Crypto, SWIG must be
-installed if this is not already present on your system. Test with:
-
-    swig
-
-If this results with 'command not found' or similar, then install swig
-by downloading from http://www.swig.org/download.html or using your
-preferred package manager. Download and install the modified M2crypto:
-
-    git clone https://github.com/viraptor/M2Crypto.git
-    cd M2Crypto
-    python setup.py build && python setup.py install
-    cd ..
-
- Depending on your platform, you may need to add a link between the
- location of your openssl libraries and the path used by swig:
- (/usr/include)
-
 To install a development version of Anchor, run:
 
-    pip install -e '.[develop]'
+    python setup.py develop
+    pip install watchdog
 
-To install a production version with some authentication backend, run
-(where `auth_xxx` may be `auth_keystone` and/or `auth_ldap`):
+Note that watchdog is needed only when running with the --reload option used
+later. To install a production version, run:
 
-    pip install '.[auth_xxx]'
+    python setup.py install
 
-The chosen authentication backend is only enabled if it's defined in
-the config file. The config file should be copied from `config.py` with
-any details updated.
+The config file should be copied from `config.py` with any details updated.
 
 Anchor requires you to provide a CA signing certificate and private key
 which is stored in the CA subdirectory by default (as specified in
