@@ -38,16 +38,15 @@ preferred package manager. Download and install the modified M2crypto:
 
 To install a development version of Anchor, run:
 
-    pip install -e '.[develop]'
+    python setup.py develop
+    pip install watchdog
 
-To install a production version with some authentication backend, run
-(where `auth_xxx` may be `auth_keystone` and/or `auth_ldap`):
+Note that watchdog is needed only when running with the --reload option used
+later. To install a production version, run:
 
-    pip install '.[auth_xxx]'
+    python setup.py install
 
-The chosen authentication backend is only enabled if it's defined in
-the config file. The config file should be copied from `config.py` with
-any details updated.
+The config file should be copied from `config.py` with any details updated.
 
 Anchor requires you to provide a CA signing certificate and private key
 which is stored in the CA subdirectory by default (as specified in
