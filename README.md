@@ -25,12 +25,11 @@ installed if this is not already present on your system. Test with:
 
 If this results with 'command not found' or similar, then install swig
 by downloading from http://www.swig.org/download.html or using your
-preferred package manager. Download and install the modified M2crypto:
+preferred package manager.
 
-    git clone https://github.com/viraptor/M2Crypto.git
-    cd M2Crypto
-    python setup.py build && python setup.py install
-    cd ..
+Install the modified M2Crypto:
+
+    pip install git+git://github.com/viraptor/M2Crypto
 
  Depending on your platform, you may need to add a link between the
  location of your openssl libraries and the path used by swig:
@@ -63,6 +62,7 @@ Create a private key:
 
 Then create a CSR from that key, specify 'Test Anchor CA' or similar as
 the Common Name for the certificate:
+
     openssl req -new -key root-ca-unwrapped.key -out ca.csr
     openssl x509 -req -days 365 -in ca.csr \
     -signkey root-ca-unwrapped.key -out root-ca.crt
@@ -105,4 +105,3 @@ check that it is issued, by specifying a common name of
     -F encoding=pem -F 'csr=<valid.cert.anchor.test'
 
 If Anchor is correctly configured, the CA will return a certificate.
-
