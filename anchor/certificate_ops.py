@@ -37,7 +37,7 @@ def parse_csr(csr, encoding):
 
 def validate_csr(auth_result, csr, request):
     args = {'auth_result': auth_result, 'csr': csr, 'conf': conf, 'request': request}
-    #Check that M2crypto supports get_extensions()
+    # Check that M2crypto supports get_extensions()
     try:
         csr.get_extensions()
     except AttributeError:
