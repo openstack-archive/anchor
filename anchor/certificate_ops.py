@@ -102,7 +102,7 @@ def sign(csr):
         return None
 
     new_cert = M2Crypto.X509.X509()
-    new_cert.set_version(0)
+    new_cert.set_version(2)
 
     now = int(time.time())
     start_time = M2Crypto.ASN1.ASN1_UTCTIME()
