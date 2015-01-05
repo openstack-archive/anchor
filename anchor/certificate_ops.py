@@ -107,7 +107,7 @@ def sign(csr):
         return None
 
     new_cert = certificate.X509Certificate()
-    new_cert.set_version(0)
+    new_cert.set_version(2)
 
     start_time = int(time.time())
     end_time = start_time+(conf.ca['valid_hours']*60*60)
