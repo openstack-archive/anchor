@@ -17,7 +17,7 @@ import errors
 
 
 class X509Name(object):
-    """An X509 Name object"""
+    """An X509 Name object."""
 
     # NOTE(tkelsey): this is not exhaustive
     nid = {'C': backend._lib.NID_countryName,
@@ -42,7 +42,7 @@ class X509Name(object):
            }
 
     class Entry():
-        """An X509 Name sub-entry object"""
+        """An X509 Name sub-entry object."""
         def __init__(self, obj):
             self._lib = backend._lib
             self._ffi = backend._ffi
@@ -63,7 +63,8 @@ class X509Name(object):
             raise errors.X509Error("Could not setup ASN1 string data.")
 
         def get_name(self):
-            """Get the name of this entry
+            """Get the name of this entry.
+
             :return: entry name as a python string
             """
             asn1_obj = self._lib.X509_NAME_ENTRY_get_object(self._entry)
@@ -75,7 +76,8 @@ class X509Name(object):
             return self._ffi.string(buf)
 
         def get_value(self):
-            """Get the value of this entry
+            """Get the value of this entry.
+
             :return: entry value as a python string
             """
             val = self._lib.X509_NAME_ENTRY_get_data(self._entry)
@@ -116,11 +118,12 @@ class X509Name(object):
             yield self[i]
 
     def entry_count(self):
-        """Get the number of entries in the name object"""
+        """Get the number of entries in the name object."""
         return self._lib.X509_NAME_entry_count(self._name_obj)
 
     def get_entries_by_nid_name(self, nid_name):
-        """Get a name entry corresponding to an NID name
+        """Get a name entry corresponding to an NID name.
+
         :param nid_name: an NID name, chosen from the X509Name.nid table
         :return: An X509Name.Entry object
         """

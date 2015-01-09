@@ -11,8 +11,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import netaddr
 import logging
+
+import netaddr
+
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +50,8 @@ def check_networks(domain, allowed_networks):
 
 
 def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
-    """
+    """Check CN entire is a known domain.
+
     Refuse requests for certificates if they contain multiple CN
     entries, or the domain does not match the list of known suffixes
     or network ranges.
@@ -78,7 +81,8 @@ def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
 
 def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
                       **kwargs):
-    """
+    """Check known domain alternative names.
+
     Refuse requests for certificates if the domain does not match
     the list of known suffixes, or network ranges.
     """
@@ -99,7 +103,8 @@ def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
-    """
+    """Check Team prefix.
+
     Make sure that for server names containing a team prefix, the team is
     verified against the groups the user is a member of.
     """
@@ -115,9 +120,7 @@ def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
 
 
 def extensions(csr=None, allowed_extensions=[], **kwargs):
-    """
-    Ensure only accepted extensions are used
-    """
+    """Ensure only accepted extensions are used."""
     exts = csr.get_extensions() or []
     for ext in exts:
         if ext.get_name() not in allowed_extensions:
@@ -126,9 +129,7 @@ def extensions(csr=None, allowed_extensions=[], **kwargs):
 
 
 def key_usage(csr=None, allowed_usage=None, **kwargs):
-    """
-    Ensure only accepted key usages are specified
-    """
+    """Ensure only accepted key usages are specified."""
     allowed = set(allowed_usage)
 
     for ext in (csr.get_extensions() or []):
@@ -140,9 +141,7 @@ def key_usage(csr=None, allowed_usage=None, **kwargs):
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
-    """
-    Ensure the request has/hasn't got the CA flag
-    """
+    """Ensure the request has/hasn't got the CA flag."""
 
     for ext in (csr.get_extensions() or []):
         ext_name = ext.get_name()
@@ -173,9 +172,7 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
 
 
 def source_cidrs(request=None, cidrs=None, **kwargs):
-    """
-    Ensure that the request comes from a known source
-    """
+    """Ensure that the request comes from a known source."""
     for cidr in cidrs:
         try:
             r = netaddr.IPNetwork(cidr)

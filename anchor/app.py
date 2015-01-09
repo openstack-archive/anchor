@@ -11,9 +11,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import paste
+from paste import translogger
 from pecan import make_app
-import paste.translogger
-from . import validators
+
+import validators
 
 
 class ConfigValidationException(Exception):
@@ -30,20 +32,28 @@ def validate_config(conf):
     for i, validators_list in enumerate(conf.validators):
         name = validators_list.get("name")
         if not name:
-            raise ConfigValidationException("Validator set %i is missing a name", i+1)
+            raise ConfigValidationException("Validator set %i is missing a "
+                                            "name", i + 1)
 
         if not validators_list.get("steps"):
-            raise ConfigValidationException("Validator set <%s> is missing validation steps", name)
+            raise ConfigValidationException("Validator set <%s> is missing "
+                                            "validation steps", name)
 
         for step in validators_list["steps"]:
             if not isinstance(step, tuple):
-                raise ConfigValidationException("Validator set <%s> contains a step that's <%s> and not a tuple", name, step)
+                raise ConfigValidationException("Validator set <%s> contains "
+                                                "a step that's <%s> and not a "
+                                                "tuple", name, step)
 
             if len(step) == 0:
-                raise ConfigValidationException("Validator set <%s> contains a step with no validator name", name)
+                raise ConfigValidationException("Validator set <%s> contains "
+                                                "a step with no validator name",
+                                                name)
 
             if not hasattr(validators, step[0]):
-                raise ConfigValidationException("Validator set <%s> contains an unknown validator <%s>", name, step[0])
+                raise ConfigValidationException("Validator set <%s> contains "
+                                                "an unknown validator <%s>",
+                                                name, step[0])
 
 
 def setup_app(config):

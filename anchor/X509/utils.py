@@ -16,6 +16,7 @@ from cryptography.hazmat.backends.openssl import backend
 
 def load_pem_private_key(key_data, passwd=None):
     """Load and return an OpenSSL EVP_PKEY public key object from a data buffer
+
     :param key_data: The data buffer
     :param passwd: Decryption password if neded (not used for now)
     :return: an OpenSSL EVP_PKEY public key object

@@ -11,10 +11,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from .results import AuthDetails, AUTH_FAILED
+from .results import AUTH_FAILED
+from .results import AuthDetails
 
 import json
 import logging
+
 from pecan import conf
 import requests
 

@@ -11,11 +11,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from cryptography.hazmat.backends.openssl import backend
-
-import errors
 import certificate
+import errors
 import name
+
+from cryptography.hazmat.backends.openssl import backend
 
 
 class X509CsrError(errors.X509Error):
@@ -24,7 +24,7 @@ class X509CsrError(errors.X509Error):
 
 
 class X509Csr(object):
-    """An X509 Certificate Signing Request"""
+    """An X509 Certificate Signing Request."""
     def __init__(self):
         self._lib = backend._lib
         self._ffi = backend._ffi
@@ -40,6 +40,7 @@ class X509Csr(object):
 
     def from_buffer(self, data, password=None):
         """Create this CSR from a buffer
+
         :param data: The data buffer
         :param password: decryption password, if needed
         """
@@ -54,6 +55,7 @@ class X509Csr(object):
 
     def from_file(self, path, password=None):
         """Create this CSR from a file on disk
+
         :param path: Path to the file on disk
         :param password: decryption password, if needed
         """
@@ -64,6 +66,7 @@ class X509Csr(object):
 
     def get_pubkey(self):
         """Get the public key from the CSR
+
         :return: an OpenSSL EVP_PKEY object
         """
         pkey = self._lib.X509_REQ_get_pubkey(self._csrObj)
@@ -74,6 +77,7 @@ class X509Csr(object):
 
     def get_subject(self):
         """Get the subject name field from the CSR
+
         :return: an X509Name object
         """
         subs = self._lib.X509_REQ_get_subject_name(self._csrObj)
@@ -84,6 +88,7 @@ class X509Csr(object):
 
     def get_extensions(self):
         """Get the list of all X509 V3 Extensions on this CSR
+
         :return: a list of X509Extension objects
         """
         # TODO(tkelsey): I assume the ext list copies data and this is safe

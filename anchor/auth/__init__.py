@@ -11,7 +11,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from .results import AuthDetails, AUTH_FAILED
+from .results import AUTH_FAILED
+from .results import AuthDetails
 
 from pecan import conf
 
@@ -24,8 +25,8 @@ if conf.auth.get('keystone'):
 
 def validate(user, secret):
     if conf.auth.get('static'):
-        if secret == conf.auth['static']['secret'] and \
-           user == conf.auth['static']['user']:
+        if (secret == conf.auth['static']['secret'] and
+           user == conf.auth['static']['user']):
             return AuthDetails(username=conf.auth['static']['user'], groups=[])
 
     if conf.auth.get('ldap'):

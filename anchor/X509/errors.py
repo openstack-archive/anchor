@@ -13,6 +13,6 @@
 
 
 class X509Error(Exception):
-    """Base exception for X509 errors"""
+    """Base exception for X509 errors."""
     def __init__(self, what):
         super(X509Error, self).__init__(what)

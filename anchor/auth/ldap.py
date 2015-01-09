@@ -13,7 +13,8 @@
 
 from __future__ import absolute_import
 
-from .results import AuthDetails, AUTH_FAILED
+from .results import AUTH_FAILED
+from .results import AuthDetails
 
 import ldap
 import ldap.filter

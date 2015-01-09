@@ -49,7 +49,7 @@ class MessageDigest(object):
         v = 0L
         lx = len(x)
         for i in range(lx):
-            v = v + ord(x[i]) * (256L ** (lx-i-1))
+            v = v + ord(x[i]) * (256L ** (lx - i - 1))
         return v
 
     def update(self, data):

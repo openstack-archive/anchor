@@ -20,7 +20,9 @@ import os
 import sys
 import time
 import uuid
+
 from pecan import conf
+
 from . import validators
 
 logger = logging.getLogger(__name__)
@@ -110,7 +112,7 @@ def sign(csr):
     new_cert.set_version(0)
 
     start_time = int(time.time())
-    end_time = start_time+(conf.ca['valid_hours']*60*60)
+    end_time = start_time + (conf.ca['valid_hours'] * 60 * 60)
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
