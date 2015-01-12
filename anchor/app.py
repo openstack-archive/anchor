@@ -12,7 +12,6 @@
 # under the License.
 
 import paste
-from paste import translogger
 from pecan import make_app
 
 import validators

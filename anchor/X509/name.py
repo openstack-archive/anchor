@@ -21,6 +21,7 @@ class X509Name(object):
 
     # NOTE(tkelsey): this is not exhaustive
     nid = {'C': backend._lib.NID_countryName,
+           'countryName': backend._lib.NID_countryName,
            'SP': backend._lib.NID_stateOrProvinceName,
            'ST': backend._lib.NID_stateOrProvinceName,
            'stateOrProvinceName': backend._lib.NID_stateOrProvinceName,
@@ -29,7 +30,7 @@ class X509Name(object):
            'O': backend._lib.NID_organizationName,
            'organizationName': backend._lib.NID_organizationName,
            'OU': backend._lib.NID_organizationalUnitName,
-           'organizationUnitName': backend._lib.NID_organizationalUnitName,
+           'organizationalUnitName': backend._lib.NID_organizationalUnitName,
            'CN': backend._lib.NID_commonName,
            'commonName': backend._lib.NID_commonName,
            'Email': backend._lib.NID_pkcs9_emailAddress,
@@ -52,15 +53,7 @@ class X509Name(object):
             return "%s %s" % (self.get_name(), self.get_value())
 
         def __cmp__(self, other):
-            data = str(other)
-            asn1_str_1 = self._lib.ASN1_STRING_new()
-            asn1_str_1 = self._ffi.gc(asn1_str_1, self._lib.ASN1_STRING_free)
-            ret = self._lib.ASN1_STRING_set(asn1_str_1, data, len(data))
-            if ret != 0:
-                asn1_str_2 = self._lib.X509_NAME_ENTRY_get_string(self._entry)
-                ret = self._lib.ASN1_STRING_cmp(asn1_str_1, asn1_str_2)
-                return (ret == 1)
-            raise errors.X509Error("Could not setup ASN1 string data.")
+            return (str(self) == str(other))
 
         def get_name(self):
             """Get the name of this entry.
