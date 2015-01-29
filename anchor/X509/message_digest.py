@@ -63,4 +63,5 @@ class MessageDigest(object):
         ret = self._lib.EVP_DigestFinal_ex(self.ctx, data, self._ffi.NULL)
         if ret == 0:
             raise MessageDigestError("Failed to get message digest.")
-        return self._ffi.string(data)
+        digest = self._ffi.string(data)
+        return hex(self._octx_to_num(digest))[2:-1].upper()

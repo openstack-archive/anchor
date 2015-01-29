@@ -280,6 +280,4 @@ class X509Certificate(object):
         der = self.as_der()
         md = message_digest.MessageDigest(md)
         md.update(der)
-        digest = md.final()
-        digest = hex(md._octx_to_num(digest))[2:-1].upper()
-        return digest
+        return md.final()
