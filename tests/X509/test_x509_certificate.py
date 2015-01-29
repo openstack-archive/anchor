@@ -48,6 +48,16 @@ class TestX509Cert(unittest.TestCase):
     def tearDown(self):
         pass
 
+    def test_bad_data_throws(self):
+        bad_data = (
+            "some bad data is "
+            "EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m")
+
+        cert = certificate.X509Certificate()
+        self.assertRaises(x509_errors.X509Error,
+                          cert.from_buffer,
+                          bad_data)
+
     def test_get_bad_elem(self):
         name = self.cert.get_subject()
         self.assertRaises(x509_errors.X509Error,
