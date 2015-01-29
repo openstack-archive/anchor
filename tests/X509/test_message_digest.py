@@ -80,3 +80,16 @@ class TestMessageDigest(unittest.TestCase):
         md.update(TestMessageDigest.data)
         ret = md.final()
         self.assertEqual(ret, v)
+
+    def test_algorithms(self):
+        algs = [
+            "md5",
+            "ripemd160",
+            "sha224",
+            "sha256",
+            "sha384",
+            "sha512"
+            ]
+        valid = message_digest.MessageDigest.getValidAlgorithms()
+        for alg in algs:
+            self.assertTrue(alg in valid)

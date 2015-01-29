@@ -20,6 +20,25 @@ class MessageDigestError(Exception):
 
 
 class MessageDigest(object):
+    """Compute a message digest from input data."""
+
+    @staticmethod
+    def getValidAlgorithms():
+        """Get a list of available valid hash algorithms."""
+        algs = [
+            "md5",
+            "ripemd160",
+            "sha224",
+            "sha256",
+            "sha384",
+            "sha512"
+            ]
+        ret = []
+        for alg in algs:
+            if getattr(backend._lib, "EVP_%s" % alg, None) is not None:
+                ret.append(alg)
+        return ret
+
     def __init__(self, algo):
         self._lib = backend._lib
         self._ffi = backend._ffi
@@ -53,11 +72,18 @@ class MessageDigest(object):
         return v
 
     def update(self, data):
+        """Add more data to the digest."""
+
         ret = self._lib.EVP_DigestUpdate(self.ctx, data, len(data))
         if ret == 0:
             raise MessageDigestError("Failed to update message digest data.")
 
     def final(self):
+        """get the final resulting digest value.
+
+        Note that you should not call update() with additional data after using
+        final.
+        """
         sz = self._lib.EVP_MD_size(self.mda)
         data = self._ffi.new("char[]", sz)
         ret = self._lib.EVP_DigestFinal_ex(self.ctx, data, self._ffi.NULL)
