@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Robert Clark <robert.clark@hp.com>
+Code-Review+2: Doug Chivers <doug.chivers@hp.com>
+Workflow+1: Doug Chivers <doug.chivers@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 03 Feb 2015 14:20:32 +0000
+Reviewed-on: https://review.openstack.org/151228
+Project: stackforge/anchor
+Branch: refs/heads/master
