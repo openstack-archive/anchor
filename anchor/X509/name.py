@@ -77,13 +77,15 @@ class X509Name(object):
             data = self._lib.ASN1_STRING_data(val)
             return self._ffi.string(data)  # Encoding?
 
-    def __init__(self, name_obj):
-        # NOTE(tkelsey): we create a copy of the name and own it
+    def __init__(self, name_obj=None):
         self._lib = backend._lib
         self._ffi = backend._ffi
-        self._name_obj = self._lib.X509_NAME_dup(name_obj)
-        if self._name_obj == self._ffi.NULL:
-            raise errors.X509Error("Failed to copy X509_NAME object.")
+        if name_obj is not None:
+            self._name_obj = self._lib.X509_NAME_dup(name_obj)
+            if self._name_obj == self._ffi.NULL:
+                raise errors.X509Error("Failed to copy X509_NAME object.")
+        else:
+            self._name_obj = self._lib.X509_NAME_new()
 
     def __del__(self):
         self._lib.X509_NAME_free(self._name_obj)
@@ -109,6 +111,21 @@ class X509Name(object):
     def __iter__(self):
         for i in xrange(self.entry_count()):
             yield self[i]
+
+    def add_name_entry(self, nid_name, text):
+        """Add a name entiry by its NID name."""
+        if nid_name not in X509Name.nid:
+            raise errors.X509Error("Unknown NID name: %s" % nid_name)
+
+        nid = X509Name.nid[nid_name]
+        ret = self._lib.X509_NAME_add_entry_by_NID(
+            self._name_obj, nid,
+            self._lib.MBSTRING_ASC,
+            text, -1, -1, 0)
+
+        if ret != 1:
+            raise errors.X509Error("Failed to add name entry: '%s' '%s'" % (
+                nid_name, text))
 
     def entry_count(self):
         """Get the number of entries in the name object."""

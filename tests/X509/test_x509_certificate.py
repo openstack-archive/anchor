@@ -231,3 +231,25 @@ class TestX509Cert(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "herp.derp.plc")
+
+    def test_set_subject(self):
+        name = x509_name.X509Name()
+        name.add_name_entry('C', 'UK')
+        self.cert.set_subject(name)
+
+        name = self.cert.get_subject()
+        entries = name.get_entries_by_nid_name('C')
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0].get_name(), "countryName")
+        self.assertEqual(entries[0].get_value(), "UK")
+
+    def test_set_issuer(self):
+        name = x509_name.X509Name()
+        name.add_name_entry('C', 'UK')
+        self.cert.set_issuer(name)
+
+        name = self.cert.get_issuer()
+        entries = name.get_entries_by_nid_name('C')
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0].get_name(), "countryName")
+        self.assertEqual(entries[0].get_value(), "UK")
