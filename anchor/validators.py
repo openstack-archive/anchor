@@ -92,9 +92,9 @@ def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
             alternatives = [alt.strip() for alt in ext.get_value().split(',')]
             for alternative in alternatives:
                 parts = alternative.split(':', 1)
-                if len(parts) != 2 or parts[0] != 'DNS':
+                if len(parts) != 2 or (parts[0] != 'DNS' and parts[0] != 'IP Address'):
                     raise ValidationError("Alt name '%s' does not have a "
-                                          "known type")
+                                          "known type" % parts[0])
                 if not (check_domains(parts[1], allowed_domains) or
                    check_networks(parts[1], allowed_networks)):
                     raise ValidationError("Domain '%s' not allowed (doesn't"
