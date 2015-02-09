@@ -79,8 +79,7 @@ def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
                                   " known domains or networks)" % cn)
 
 
-def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
-                      **kwargs):
+def alternative_names(csr=None, allowed_domains=[], **kwargs):
     """Check known domain alternative names.
 
     Refuse requests for certificates if the domain does not match
@@ -94,7 +93,30 @@ def alternative_names(csr=None, allowed_domains=[], allowed_networks=[],
                 parts = alternative.split(':', 1)
                 if len(parts) != 2 or parts[0] != 'DNS':
                     raise ValidationError("Alt name '%s' does not have a "
-                                          "known type")
+                                          "known type" % parts[0])
+                if not check_domains(parts[1], allowed_domains):
+                    raise ValidationError("Domain '%s' not allowed (doesn't"
+                                          " match known domains or networks)"
+                                          % parts[1])
+
+
+def alternative_names_ip(csr=None, allowed_domains=[], allowed_networks=[],
+                         **kwargs):
+    """Check known domain and ip alternative names.
+
+    Refuse requests for certificates if the domain does not match
+    the list of known suffixes, or network ranges.
+    """
+
+    for ext in (csr.get_extensions() or []):
+        if ext.get_name() == "subjectAltName":
+            alternatives = [alt.strip() for alt in ext.get_value().split(',')]
+            for alternative in alternatives:
+                parts = alternative.split(':', 1)
+                if len(parts) != 2 or (parts[0] != 'DNS' and
+                                       parts[0] != 'IP Address'):
+                    raise ValidationError("Alt name '%s' does not have a "
+                                          "known type" % parts[0])
                 if not (check_domains(parts[1], allowed_domains) or
                    check_networks(parts[1], allowed_networks)):
                     raise ValidationError("Domain '%s' not allowed (doesn't"
