@@ -57,7 +57,8 @@ class MessageDigest(object):
                                               self._ffi.NULL)
 
         if ret == 0:
-            raise MessageDigestError("Could not setup message digest context.")
+            raise MessageDigestError(
+                "Could not setup message digest context.")  # pragma: no cover
 
     def __del__(self):
         if getattr(self, 'ctx', None):
@@ -76,7 +77,8 @@ class MessageDigest(object):
 
         ret = self._lib.EVP_DigestUpdate(self.ctx, data, len(data))
         if ret == 0:
-            raise MessageDigestError("Failed to update message digest data.")
+            raise MessageDigestError(
+                "Failed to update message digest data.")  # pragma: no cover
 
     def final(self):
         """get the final resulting digest value.
@@ -88,6 +90,7 @@ class MessageDigest(object):
         data = self._ffi.new("char[]", sz)
         ret = self._lib.EVP_DigestFinal_ex(self.ctx, data, self._ffi.NULL)
         if ret == 0:
-            raise MessageDigestError("Failed to get message digest.")
+            raise MessageDigestError(
+                "Failed to get message digest.")  # pragma: no cover
         digest = self._ffi.string(data)
         return hex(self._octx_to_num(digest))[2:-1].upper()
