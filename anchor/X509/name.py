@@ -52,9 +52,6 @@ class X509Name(object):
         def __str__(self):
             return "%s %s" % (self.get_name(), self.get_value())
 
-        def __cmp__(self, other):
-            return (str(self) == str(other))
-
         def get_name(self):
             """Get the name of this entry.
 
@@ -86,6 +83,8 @@ class X509Name(object):
                 raise errors.X509Error("Failed to copy X509_NAME object.")
         else:
             self._name_obj = self._lib.X509_NAME_new()
+            if self._name_obj == self._ffi.NULL:
+                raise errors.X509Error("Failed to create X509_NAME object.")
 
     def __del__(self):
         self._lib.X509_NAME_free(self._name_obj)
@@ -113,7 +112,7 @@ class X509Name(object):
             yield self[i]
 
     def add_name_entry(self, nid_name, text):
-        """Add a name entiry by its NID name."""
+        """Add a name entry by its NID name."""
         if nid_name not in X509Name.nid:
             raise errors.X509Error("Unknown NID name: %s" % nid_name)
 
