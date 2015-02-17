@@ -35,15 +35,19 @@ config.py). This can be generated using the certificate provider of
 your choice, or a test signing certificate can be generated using
 openssl:
 
-Create a private key:
+Create a private key with password 'x', and then decrypt it:
 
     cd CA
-    openssl genrsa -des3 -passout pass:x -out ca.p.key 2048
+    openssl genrsa -aes128 -passout pass:x -out ca.p.key 4096
     openssl rsa -passin pass:x -in ca.p.key -out root-ca-unwrapped.key
 
 Then create a CSR from that key, specify 'Test Anchor CA' or similar as
 the Common Name for the certificate:
+
     openssl req -new -key root-ca-unwrapped.key -out ca.csr
+
+Finally, sign the CSR to create a self-signed root certificate:
+
     openssl x509 -req -days 365 -in ca.csr \
     -signkey root-ca-unwrapped.key -out root-ca.crt
     rm ca.p.key ca.csr
@@ -66,23 +70,23 @@ To test the service, generate the certificate request using default
 values and submit it using curl (change the user and secret if you have
 changed them in config.py):
 
-    openssl req -text -newkey rsa:384 -nodes \
-    -out some.name.hpcloud.net.csr
+    openssl req -text -newkey rsa:4096 -nodes \
+    -out subdomain.example.com.csr
 
     curl http://127.0.0.1:5000/sign -F user='woot' -F secret='woot' \
-    -F encoding=pem -F 'csr=<some.name.hpcloud.net.csr'
+    -F encoding=pem -F 'csr=<subdomain.example.com.csr'
 
 Assuming the installation is successful and the default config is
-unchanged, this will fail validation, but should not give a M2Crypto or
-other error. Now generate a valid csr that should pass validation and
+unchanged, this will fail validation, but should not give an OpenSSL or
+other error. Now generate a valid CSR that should pass validation and
 check that it is issued, by specifying a common name of
-'valid.cert.anchor.test' when prompted:
+'anchor-test.example.com' when prompted:
 
-    openssl req -text -newkey rsa:384 -nodes \
-    -out valid.cert.anchor.test.csr
+    openssl req -text -newkey rsa:4096 -nodes \
+    -out anchor-test.example.com.csr
 
     curl http://127.0.0.1:5000/sign -F user='woot' -F secret='woot' \
-    -F encoding=pem -F 'csr=<valid.cert.anchor.test'
+    -F encoding=pem -F 'csr=<anchor-test.example.com.csr'
 
 If Anchor is correctly configured, the CA will return a certificate.
 
