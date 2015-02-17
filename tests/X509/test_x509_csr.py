@@ -17,9 +17,12 @@
 import os
 
 import unittest
+import mock
 
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import signing_request
+
+from cryptography.hazmat.backends.openssl import backend
 
 
 class TestX509Csr(unittest.TestCase):
@@ -43,6 +46,28 @@ class TestX509Csr(unittest.TestCase):
 
     def tearDown(self):
         pass
+
+    def test_get_pubkey_bits(self):
+        # some OpenSSL gumph to test a reasonable attribute of the pubkey
+        pubkey = self.csr.get_pubkey()
+        size = backend._lib.EVP_PKEY_bits(pubkey)
+        self.assertEqual(size, 384)
+
+    def test_get_extensions(self):
+        exts = self.csr.get_extensions()
+        self.assertEqual(len(exts), 2)
+        self.assertEqual(str(exts[0]), "basicConstraints CA:FALSE")
+        self.assertEqual(str(exts[1]), ("keyUsage Digital Signature, Non "
+                                        "Repudiation, Key Encipherment"))
+
+    def test_read_from_file(self):
+        open_name = 'anchor.X509.signing_request.open'
+        with mock.patch(open_name, create=True) as mock_open:
+            mock_open.return_value = mock.MagicMock(spec=file)
+            m_file = mock_open.return_value.__enter__.return_value
+            m_file.read.return_value = TestX509Csr.csr_data
+            csr = signing_request.X509Csr()
+            csr.from_file("some_path")
 
     def test_bad_data_throws(self):
         bad_data = (

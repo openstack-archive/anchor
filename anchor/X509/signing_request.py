@@ -30,7 +30,8 @@ class X509Csr(object):
         self._ffi = backend._ffi
         csrObj = self._lib.X509_REQ_new()
         if csrObj == self._ffi.NULL:
-            raise X509CsrError("Could not create X509 CSR Object.")
+            raise X509CsrError(
+                "Could not create X509 CSR Object.")  # pragma: no cover
 
         self._csrObj = csrObj
 
@@ -62,7 +63,7 @@ class X509Csr(object):
         data = None
         with open(path, 'rb') as f:
             data = f.read()
-        self.fromBuffer(data, password)
+        self.from_buffer(data, password)
 
     def get_pubkey(self):
         """Get the public key from the CSR
@@ -71,7 +72,8 @@ class X509Csr(object):
         """
         pkey = self._lib.X509_REQ_get_pubkey(self._csrObj)
         if pkey == self._ffi.NULL:
-            raise X509CsrError("Could not get pubkey from X509 CSR Object.")
+            raise X509CsrError(
+                "Could not get pubkey from X509 CSR.")  # pragma: no cover
 
         return pkey
 
@@ -82,7 +84,8 @@ class X509Csr(object):
         """
         subs = self._lib.X509_REQ_get_subject_name(self._csrObj)
         if subs == self._ffi.NULL:
-            raise X509CsrError("Could not get subject from X509 CSR Object.")
+            raise X509CsrError(
+                "Could not get subject from X509 CSR.")  # pragma: no cover
 
         return name.X509Name(subs)
 
