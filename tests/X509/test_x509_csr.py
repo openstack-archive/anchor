@@ -14,8 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
-
 import unittest
 
 from anchor.X509 import errors as x509_errors
@@ -94,20 +92,6 @@ class TestX509Csr(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "Narnia")
-
-    def test_get_subject_l(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('L')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "Funkytown")
-
-    def test_get_subject_localityName(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('localityName')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "Funkytown")
 
     def test_get_subject_l(self):
         name = self.csr.get_subject()

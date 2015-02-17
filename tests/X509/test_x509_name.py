@@ -14,8 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import os
-
 import unittest
 
 from anchor.X509 import errors as x509_errors
