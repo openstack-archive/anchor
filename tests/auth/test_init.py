@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 import mock
-import os
 import unittest
 
 from pecan import conf
@@ -28,7 +27,9 @@ class AuthInitTests(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_validate(self):
+    def test_validate_static(self):
+        """Test all static user/pass authentication paths.
+        """
         config = 'pecan.conf.__values__'
         data = {'auth': {'static': {'secret': 'simplepassword',
                                     'user': 'myusername'},
@@ -44,5 +45,7 @@ class AuthInitTests(unittest.TestCase):
             valid_pass = data['auth']['static']['secret']
 
             expected = AuthDetails(username=valid_user, groups=[])
-            assert (auth.validate(valid_user, valid_pass) == expected)
-            assert (auth.validate(valid_user, 'badpass') == AUTH_FAILED)
+            self.assertEqual(auth.validate(valid_user, valid_pass), expected)
+            self.assertEqual(auth.validate(valid_user, 'badpass'), AUTH_FAILED)
+            self.assertEqual(auth.validate('baduser', valid_pass), AUTH_FAILED)
+            self.assertEqual(auth.validate('baduser', 'badpass'), AUTH_FAILED)
