@@ -71,16 +71,17 @@ values and submit it using curl (change the user and secret if you have
 changed them in config.py):
 
     openssl req -text -newkey rsa:4096 -nodes \
-    -out subdomain.example.com.csr
+    -out subdomain.example.org.csr
 
     curl http://127.0.0.1:5000/sign -F user='woot' -F secret='woot' \
-    -F encoding=pem -F 'csr=<subdomain.example.com.csr'
+    -F encoding=pem -F 'csr=<subdomain.example.org.csr'
 
 Assuming the installation is successful and the default config is
 unchanged, this will fail validation, but should not give an OpenSSL or
-other error. Now generate a valid CSR that should pass validation and
-check that it is issued, by specifying a common name of
-'anchor-test.example.com' when prompted:
+other error. This is assuming you set the CN to be subdomain.example.org,
+which is not permitted in the default config. Now generate a valid CSR
+that should pass validation and check that it is issued, by specifying a
+common name of 'anchor-test.example.com' when prompted:
 
     openssl req -text -newkey rsa:4096 -nodes \
     -out anchor-test.example.com.csr
