@@ -2,4 +2,4 @@ cryptography>=0.4
 pecan>=0.8.0
 Paste
 netaddr>=0.7.12
-
+python-ldap>=2.4
