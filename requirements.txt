@@ -3,3 +3,4 @@ pecan>=0.8.0
 Paste
 netaddr>=0.7.12
 python-ldap>=2.4
+requests>=2.2.0,!=2.4.0
