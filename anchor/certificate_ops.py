@@ -21,6 +21,7 @@ import sys
 import time
 import uuid
 
+from pecan import abort
 from pecan import conf
 
 from . import validators
@@ -33,7 +34,7 @@ def parse_csr(csr, encoding):
         if encoding != 'pem' or csr is None:
             logger.error("Parsing CSR failed due to non-pem encoding type or"
                          " null CSR.")
-            return None
+            abort(400, "CSR cannot be parsed")
 
         out_req = signing_request.X509Csr()
         out_req.from_buffer(csr)
@@ -41,7 +42,7 @@ def parse_csr(csr, encoding):
 
     except Exception as e:
         logger.exception("Exception while parsing the CSR: %s", e)
-        return None
+        abort(400, "CSR cannot be parsed")
 
 
 def validate_csr(auth_result, csr, request):
@@ -87,7 +88,7 @@ def validate_csr(auth_result, csr, request):
             # request passed all the tests here
             return
 
-    raise validators.ValidationError("All validator sets failed")
+    abort(400, "CSR failed validation")
 
 
 def sign(csr):
@@ -97,7 +98,7 @@ def sign(csr):
         ca.from_file(conf.ca["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
-        return None
+        abort(500, "certificate signing error")
 
     try:
         key_data = None
@@ -106,7 +107,7 @@ def sign(csr):
         key = X509_utils.load_pem_private_key(key_data)
     except Exception as e:
         logger.exception("Cannot load the signing CA key: %s", e)
-        return None
+        abort(500, "certificate signing error")
 
     new_cert = certificate.X509Certificate()
     new_cert.set_version(2)
@@ -141,7 +142,10 @@ def sign(csr):
     logger.info("Saving certificate to: %s", path)
     new_cert.save(path)
 
+    # return cert from memory if/when X509 lib supports it
     with open(path) as f:
-        return f.read()
+        cert = f.read()
+        if cert:
+            return cert
 
-    # return new_cert.as_pem()
+    abort(500, "certificate signing error")

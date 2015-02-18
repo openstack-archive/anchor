@@ -13,12 +13,10 @@
 
 from pecan import expose
 from pecan import request
-from pecan import response
 from pecan.rest import RestController
 
 from .. import auth
 from .. import certificate_ops
-from .. import validators
 
 import logging
 
@@ -43,25 +41,10 @@ class SignController(RestController):
 
         csr = certificate_ops.parse_csr(request.POST.get('csr'),
                                         request.POST.get('encoding'))
-        if csr is None:
-            logger.info("csr in the request cannot be parsed")
-            response.status_int = 400
-            return 'CSR cannot be parsed\n'
 
-        try:
-            certificate_ops.validate_csr(auth_result, csr, request)
-        except validators.ValidationError as e:
-            logger.exception("csr failed validation")
-            response.status_int = 409
-            return 'Validation failed: %s\n' % e
+        certificate_ops.validate_csr(auth_result, csr, request)
 
-        cert = certificate_ops.sign(csr)
-        if not cert:
-            logger.error("certificate signing error")
-            response.status_int = 500
-            return 'Signing Failure\n'
-
-        return cert
+        return certificate_ops.sign(csr)
 
 
 class RootController(object):
