@@ -16,8 +16,10 @@
 
 
 import unittest
+
 from anchor.app import ConfigValidationException
 from anchor.app import validate_config
+
 
 class TestValidDN(unittest.TestCase):
     test_bad_validator = [
@@ -40,7 +42,6 @@ class TestValidDN(unittest.TestCase):
         },
     ]
 
-
     def setUp(self):
         super(TestValidDN, self).setUp()
 
@@ -50,8 +51,8 @@ class TestValidDN(unittest.TestCase):
     def test_testing(self):
         self.assertTrue(True)
 
-    def test_validate_config(self):
+    def test_validate_bad_config(self):
         self.assertRaises(ConfigValidationException, validate_config, TestValidDN.test_validator)
 
-    def test_validate_config(self):
+    def test_validate_good_config(self):
         validate_config(test_good_validator)
