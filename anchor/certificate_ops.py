@@ -50,12 +50,12 @@ def validate_csr(auth_result, csr, request):
             'conf': conf,
             'request': request}
 
-    for validator_steps in conf.validators:
+    for validator_set in conf.validators:
         logger.debug("Checking validators set <%s>",
-                     validator_steps.get("name"))
+                     validator_set.get("name"))
         valid = True
 
-        for validator in validator_steps['steps']:
+        for validator in validator_set['steps']:
             if not isinstance(validator, tuple):
                 logger.error("Validator should be defined by a tuple"
                              " (got '%s' instead)", validator)

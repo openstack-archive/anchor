@@ -33,7 +33,7 @@ auth = {
 
 validators = [
     {
-        "name": "default",
+        "name": "common",
         "steps": [
             ('common_name', {'allowed_domains': ['.example.com']}),
             ('alternative_names', {'allowed_domains': ['.example.com']}),
