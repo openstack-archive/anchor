@@ -23,7 +23,7 @@ from anchor.X509 import signing_request
 
 
 class TestValidators(unittest.TestCase):
-    #CSR: CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
+    # CSR: CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
     csr_data = (
         "-----BEGIN CERTIFICATE REQUEST-----\n"
         "MIIDBTCCAe0CAQAwgb8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh\n"

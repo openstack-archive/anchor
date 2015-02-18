@@ -56,8 +56,8 @@ def validate_config(conf):
                                                 name, step[0])
     for domain in allowed_domains:
         if not domain.startswith('.'):
-            raise ConfigValidationException("Domain that does not start with "
-                                            "a '.' <%s>", j)
+            raise ConfigValidationException("Domain does not start with a '.' "
+                                            "<%s>", domain)
 
 
 def setup_app(config):
