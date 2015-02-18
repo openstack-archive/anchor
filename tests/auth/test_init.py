@@ -18,6 +18,8 @@ import unittest
 
 import mock
 
+from paste.httpexceptions import HTTPUnauthorized
+
 
 class AuthInitTests(unittest.TestCase):
 
@@ -36,7 +38,6 @@ class AuthInitTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
-            from anchor.auth.results import AUTH_FAILED
             from anchor.auth.results import AuthDetails
 
             valid_user = data['auth']['static']['user']
@@ -44,6 +45,9 @@ class AuthInitTests(unittest.TestCase):
 
             expected = AuthDetails(username=valid_user, groups=[])
             self.assertEqual(auth.validate(valid_user, valid_pass), expected)
-            self.assertEqual(auth.validate(valid_user, 'badpass'), AUTH_FAILED)
-            self.assertEqual(auth.validate('baduser', valid_pass), AUTH_FAILED)
-            self.assertEqual(auth.validate('baduser', 'badpass'), AUTH_FAILED)
+            with self.assertRaises(HTTPUnauthorized):
+                auth.validate(valid_user, 'badpass')
+            with self.assertRaises(HTTPUnauthorized):
+                auth.validate('baduser', valid_pass)
+            with self.assertRaises(HTTPUnauthorized):
+                auth.validate('baduser', 'badpass')
