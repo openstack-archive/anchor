@@ -14,6 +14,7 @@
 from .results import AUTH_FAILED
 from .results import AuthDetails
 
+from pecan import abort
 from pecan import conf
 
 try:
@@ -45,4 +46,4 @@ def validate(user, secret):
         if res is not AUTH_FAILED:
             return res
 
-    return AUTH_FAILED
+    abort(401, "request failed authentication")

@@ -40,10 +40,6 @@ class SignController(RestController):
     def post(self):
         auth_result = auth.validate(request.POST.get('user'),
                                     request.POST.get('secret'))
-        if auth_result is auth.AUTH_FAILED:
-            logger.info("request failed authentication")
-            response.status_int = 401
-            return
 
         csr = certificate_ops.parse_csr(request.POST.get('csr'),
                                         request.POST.get('encoding'))
