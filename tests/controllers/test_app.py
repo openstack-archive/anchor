@@ -20,27 +20,11 @@ import unittest
 from anchor.app import ConfigValidationException
 from anchor.app import validate_config
 
+import bad_config_domains
+import good_config_domains
+
 
 class TestValidDN(unittest.TestCase):
-    test_bad_validator = [
-        {
-            "name": "default",
-            "steps": [
-                ('common_name', {'allowed_domains': ['badexample.com']}),
-                ('alternative_names', {'allowed_domains': ['.example.com']})
-            ]
-        },
-    ]
-
-    test_good_validator = [
-        {
-            "name": "default",
-            "steps": [
-                ('common_name', {'allowed_domains': ['.example.com']}),
-                ('alternative_names', {'allowed_domains': ['.example.com']})
-            ]
-        },
-    ]
 
     def setUp(self):
         super(TestValidDN, self).setUp()
@@ -48,11 +32,15 @@ class TestValidDN(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_testing(self):
+    def test_self_test(self):
         self.assertTrue(True)
 
-    def test_validate_bad_config(self):
-        self.assertRaises(ConfigValidationException, validate_config, TestValidDN.test_validator)
+    def test_config_check_domains_good(self):
+        self.assertEqual(validate_config(good_config_domains), None)
 
-    def test_validate_good_config(self):
-        validate_config(test_good_validator)
+    def test_config_check_domains_bad(self):
+        self.assertRaises(
+            ConfigValidationException,
+            validate_config,
+            bad_config_domains
+        )
