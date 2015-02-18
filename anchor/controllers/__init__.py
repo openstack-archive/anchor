@@ -14,6 +14,7 @@
 from pecan import expose
 from pecan import request
 from pecan import response
+from pecan.rest import RestController
 
 from .. import auth
 from .. import certificate_ops
@@ -24,28 +25,28 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class RootController(object):
+class RobotsController(RestController):
+    """Serves /robots.txt that disallows search bots."""
 
     @expose(content_type="text/plain")
-    def robots(self):
-        if request.method != "GET":
-            response.status_int = 405
-            return
+    def get(self):
         return "User-agent: *\nDisallow: /\n"
 
-    @expose(content_type="text/plain")
-    def sign(self):
-        if request.method != "POST":
-            response.status_int = 405
-            return
 
-        auth_result = auth.validate(request.POST.get('user'), request.POST.get('secret'))
+class SignController(RestController):
+    """Handles POST requests to /sign."""
+
+    @expose(content_type="text/plain")
+    def post(self):
+        auth_result = auth.validate(request.POST.get('user'),
+                                    request.POST.get('secret'))
         if auth_result is auth.AUTH_FAILED:
             logger.info("request failed authentication")
             response.status_int = 401
             return
 
-        csr = certificate_ops.parse_csr(request.POST.get('csr'), request.POST.get('encoding'))
+        csr = certificate_ops.parse_csr(request.POST.get('csr'),
+                                        request.POST.get('encoding'))
         if csr is None:
             logger.info("csr in the request cannot be parsed")
             response.status_int = 400
@@ -65,3 +66,8 @@ class RootController(object):
             return 'Signing Failure\n'
 
         return cert
+
+
+class RootController(object):
+    robots = RobotsController()
+    sign = SignController()
