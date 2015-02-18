@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import hmac
+
 from .results import AUTH_FAILED
 from .results import AuthDetails
 
@@ -31,8 +33,11 @@ except AttributeError:
 
 def validate(user, secret):
     if conf.auth.get('static'):
-        if (secret == conf.auth['static']['secret'] and
-           user == conf.auth['static']['user']):
+        valid_secret = hmac.compare_digest(secret,
+                                           conf.auth['static']['secret'])
+        valid_user = hmac.compare_digest(user,
+                                         conf.auth['static']['user'])
+        if valid_secret and valid_user:
             return AuthDetails(username=conf.auth['static']['user'], groups=[])
 
     if conf.auth.get('ldap'):
