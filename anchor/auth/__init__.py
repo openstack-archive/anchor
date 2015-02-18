@@ -12,37 +12,17 @@
 # under the License.
 
 from .results import AUTH_FAILED
-from .results import AuthDetails
 
 from pecan import conf
 
-try:
-    if conf.auth.get('ldap'):
-        from . import ldap
-except AttributeError:
-    pass  # config not loaded
-
-try:
-    if conf.auth.get('keystone'):
-        from . import keystone
-except AttributeError:
-    pass  # config not loaded
-
 
 def validate(user, secret):
-    if conf.auth.get('static'):
-        if (secret == conf.auth['static']['secret'] and
-           user == conf.auth['static']['user']):
-            return AuthDetails(username=conf.auth['static']['user'], groups=[])
-
-    if conf.auth.get('ldap'):
-        res = ldap.login(user, secret)
-        if res is not AUTH_FAILED:
-            return res
-
-    if conf.auth.get('keystone'):
-        res = keystone.login(secret)
-        if res is not AUTH_FAILED:
-            return res
+    for auth_type in conf.to_dict().get('auth', {}).keys():
+        if conf.auth.get(auth_type):
+            module_name = "{}.{}".format(__name__, auth_type)
+            module = __import__(module_name, fromlist=[''])
+            res = module.login(user, secret)
+            if res is not AUTH_FAILED:
+                return res
 
     return AUTH_FAILED

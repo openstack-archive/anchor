@@ -23,7 +23,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-def login(token):
+def login(_, token):
     """Authenticate with the keystone endpoint from configuration file
 
     :param token: A Keystone Token
