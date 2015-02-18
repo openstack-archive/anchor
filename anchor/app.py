@@ -54,6 +54,10 @@ def validate_config(conf):
                 raise ConfigValidationException("Validator set <%s> contains "
                                                 "an unknown validator <%s>",
                                                 name, step[0])
+    for j in allowed_domains:
+        if not j.startswith('.'):
+            raise ConfigValidationException("Domain that does not start with "
+                                            "a '.' <%s>", j)
 
 
 def setup_app(config):
