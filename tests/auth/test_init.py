@@ -51,3 +51,25 @@ class AuthInitTests(unittest.TestCase):
                 auth.validate('baduser', valid_pass)
             with self.assertRaises(HTTPUnauthorized):
                 auth.validate('baduser', 'badpass')
+
+    def test_validate_static_malformed1(self):
+        """Test static user/pass authentication with malformed config."""
+        config = 'pecan.conf.__values__'
+        data = {'auth': {'static': {}}}
+
+        with mock.patch.dict(config, data):
+            # can't import until mock'd
+            from anchor import auth
+            with self.assertRaises(HTTPUnauthorized):
+                auth.validate('baduser', 'badpass')
+
+    def test_validate_static_malformed2(self):
+        """Test static user/pass authentication with malformed config."""
+        config = 'pecan.conf.__values__'
+        data = {'auth': {}}
+
+        with mock.patch.dict(config, data):
+            # can't import until mock'd
+            from anchor import auth
+            with self.assertRaises(HTTPUnauthorized):
+                auth.validate('baduser', 'badpass')

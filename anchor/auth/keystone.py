@@ -11,11 +11,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from .results import AUTH_FAILED
-from .results import AuthDetails
-
 import json
 import logging
+
+from .results import AuthDetails
 
 from pecan import conf
 import requests
@@ -23,7 +22,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 
-def login(token):
+def login(_, token):
     """Authenticate with the keystone endpoint from configuration file
 
     :param token: A Keystone Token
@@ -35,10 +34,12 @@ def login(token):
             "token": {
                 "id": token
             }}}})
-    req = requests.post(conf.auth['keystone']['url'] + '/v3/auth/tokens', headers={'Content-Type': 'application/json'}, data=data)
+    req = requests.post(conf.auth['keystone']['url'] + '/v3/auth/tokens',
+                        headers={'Content-Type': 'application/json'}, data=data)
     if req.status_code != 200:
-        logger.info("Authentication failed for token <%s>, status %s", token, req.status_code)
-        return AUTH_FAILED
+        logger.info("Authentication failed for token <%s>, status %s",
+                    token, req.status_code)
+        return None
 
     try:
         res = req.json()
@@ -47,6 +48,6 @@ def login(token):
         roles = [role['name'] for role in res['token']['roles']]
     except Exception:
         logger.exception("Keystone response was not in the expected format")
-        return AUTH_FAILED
+        return None
 
     return AuthDetails(username=user, groups=roles)

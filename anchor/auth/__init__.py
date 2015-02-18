@@ -11,39 +11,42 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from .results import AUTH_FAILED
-from .results import AuthDetails
-
 from pecan import abort
 from pecan import conf
 
+# One time, on import, we want to safely build a list of the auth
+# modules listed in the config that we should be using for validate.
+# This technique is "safe" because it will not fail, even if there
+# is no config defined. It will also not fail if the config is
+# imcomplete or malformed.
+AUTH_MODULES = []
 try:
-    if conf.auth.get('ldap'):
-        from . import ldap
+    for auth_type in conf.to_dict().get('auth', {}).keys():
+        try:
+            module_name = "{}.{}".format(__name__, auth_type)
+            module = __import__(module_name, fromlist=[''])
+            AUTH_MODULES.append(module)
+        except TypeError:
+            pass  # malformed config, but try next auth type in config
 except AttributeError:
-    pass  # config not loaded
-
-try:
-    if conf.auth.get('keystone'):
-        from . import keystone
-except AttributeError:
-    pass  # config not loaded
+    pass  # malformed config
 
 
 def validate(user, secret):
-    if conf.auth.get('static'):
-        if (secret == conf.auth['static']['secret'] and
-           user == conf.auth['static']['user']):
-            return AuthDetails(username=conf.auth['static']['user'], groups=[])
+    """Top-level authN entry point.
 
-    if conf.auth.get('ldap'):
-        res = ldap.login(user, secret)
-        if res is not AUTH_FAILED:
+       This will return an AuthDetails object or abort. This will only
+       check that a single auth method. That method will either succeed
+       or fail.
+
+       :param user: user provided user name
+       :param secret: user provided secret (password or token)
+       :return: AuthDetails if authenticated or aborts
+    """
+    for module in AUTH_MODULES:
+        res = module.login(user, secret)
+        if res:
             return res
 
-    if conf.auth.get('keystone'):
-        res = keystone.login(secret)
-        if res is not AUTH_FAILED:
-            return res
-
-    abort(401, "request failed authentication")
+    # we should only get here if a module failed to abort
+    abort(401, "authentication failure")
