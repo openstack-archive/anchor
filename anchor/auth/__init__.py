@@ -16,11 +16,17 @@ from .results import AuthDetails
 
 from pecan import conf
 
-if conf.auth.get('ldap'):
-    from . import ldap
+try:
+    if conf.auth.get('ldap'):
+        from . import ldap
+except AttributeError:
+    pass  # config not loaded
 
-if conf.auth.get('keystone'):
-    from . import keystone
+try:
+    if conf.auth.get('keystone'):
+        from . import keystone
+except AttributeError:
+    pass  # config not loaded
 
 
 def validate(user, secret):

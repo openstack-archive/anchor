@@ -15,6 +15,7 @@
 # under the License.
 
 import unittest
+
 import mock
 
 from anchor.X509 import errors as x509_errors
