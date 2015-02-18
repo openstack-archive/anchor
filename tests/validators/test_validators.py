@@ -14,8 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import netaddr
-
 import unittest
 
 from anchor import validators
@@ -23,7 +21,7 @@ from anchor.X509 import signing_request
 
 
 class TestValidators(unittest.TestCase):
-    #CSR: CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
+    # CSR: CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
     csr_data = (
         "-----BEGIN CERTIFICATE REQUEST-----\n"
         "MIIDBTCCAe0CAQAwgb8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh\n"
@@ -60,27 +58,15 @@ class TestValidators(unittest.TestCase):
     def test_check_domains(self):
         test_domain = 'ossg.test.com'
         test_allowed = ['.example.com', '.test.com']
-
         self.assertTrue(validators.check_domains(test_domain, test_allowed))
         self.assertFalse(validators.check_domains('gmail.com', test_allowed))
 
-    @unittest.skip("This test works but the code it tests is broken, I think. (hyakuhei)")
+    def test_check_networks_bad_domain(self):
+        bad_domain = 'bad!$domain'
+        allowed_networks = ['127/8', '10/8']
+        self.assertFalse(validators.check_networks(bad_domain, allowed_networks))
+
     def test_check_networks(self):
-        bad_domain = 'x.![].y.*%'
-        allowed_networks = ['127/8']
-        self.assertFalse(
-            validators.check_networks,
-            bad_domain,
-            allowed_networks)
-
-        self.assertTrue(
-            validators.check_networks,
-            'localhost',
-            allowed_networks
-        )
-
-        self.assertFalse(
-            validators.check_networks,
-            'example.com',
-            allowed_networks
-        )
+        allowed_networks = ['127/8', '10/8']
+        self.assertTrue(validators.check_networks('localhost', allowed_networks))
+        self.assertFalse(validators.check_networks('example.com', allowed_networks))

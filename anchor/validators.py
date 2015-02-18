@@ -12,6 +12,7 @@
 # under the License.
 
 import logging
+import socket
 
 import netaddr
 
@@ -37,15 +38,44 @@ def check_domains(domain, allowed_domains):
 
 
 def check_networks(domain, allowed_networks):
+    """Check the domain resolves to an IP that is within an allowed network
+
+    Resolve all of the IP addresses for 'domain' and ensure that
+    at least one of the IP addresses is listed in allowed_networks for the
+    deployment.
+    """
     try:
-        netaddr.IPAddress(domain)
-    except netaddr.AddrFormatError:
+        networks = socket.gethostbyname_ex(domain)
+    except socket.gaierror:
         # the domain is not a valid ip address
         return False
 
-    if not any(domain in netaddr.IPNetwork(net) for net in allowed_networks):
-        # no network matched
+    for possible_network in networks[2]:
+        ip = netaddr.IPAddress(possible_network)
+        if any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
+            return True
+
+    return False
+
+
+def check_networks_strict(domain, allowed_networks):
+    """Check the domain resolves to an IP that is within an allowed network
+
+    Resolve all of the IP addresses for 'domain' and ensure that
+    at each of the IP addresses is listed in allowed_networks for the
+    deployment. This is the stricter form of check_networks.
+    """
+    try:
+        networks = socket.gethostbyname_ex(domain)[2]
+    except socket.gaierror:
+        # the domain is not a valid ip address
         return False
+
+    for possible_network in networks:
+        ip = netaddr.IPAddress(possible_network)
+        if not any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
+            return False
+
     return True
 
 
@@ -73,7 +103,7 @@ def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        if not (check_domains(cn, allowed_domains) or
+        if not (check_domains(cn, allowed_domains) and
                 check_networks(cn, allowed_networks)):
             raise ValidationError("Domain '%s' not allowed (doesn't match"
                                   " known domains or networks)" % cn)
