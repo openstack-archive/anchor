@@ -13,10 +13,10 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import mock
+
 import unittest
 
-from pecan import conf
+import mock
 
 
 class AuthInitTests(unittest.TestCase):
@@ -28,13 +28,11 @@ class AuthInitTests(unittest.TestCase):
         pass
 
     def test_validate_static(self):
-        """Test all static user/pass authentication paths.
-        """
+        """Test all static user/pass authentication paths."""
         config = 'pecan.conf.__values__'
         data = {'auth': {'static': {'secret': 'simplepassword',
-                                    'user': 'myusername'},
-                        }
-               }
+                                    'user': 'myusername'}}}
+
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
