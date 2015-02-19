@@ -16,6 +16,8 @@
 
 import unittest
 
+import mock
+
 from anchor.X509 import certificate
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import name as x509_name
@@ -237,3 +239,30 @@ class TestX509Cert(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
+
+    def test_read_from_file(self):
+        open_name = 'anchor.X509.certificate.open'
+        with mock.patch(open_name, create=True) as mock_open:
+            mock_open.return_value = mock.MagicMock(spec=file)
+            m_file = mock_open.return_value.__enter__.return_value
+            m_file.read.return_value = TestX509Cert.cert_data
+            cert = certificate.X509Certificate()
+            cert.from_file("some_path")
+
+            name = cert.get_subject()
+            entries = name.get_entries_by_nid_name('C')
+            self.assertEqual(entries[0].get_value(), "UK")
+
+    def test_get_fingerprint(self):
+        fp = self.cert.get_fingerprint()
+        self.assertEqual(fp, "56D61AC583BDDD4B44EEB479EF6C998F")
+
+    def test_sign_bad_md(self):
+        self.assertRaises(x509_errors.X509Error,
+                          self.cert.sign,
+                          None, "BAD")
+
+    def test_sign_bad_key(self):
+        self.assertRaises(x509_errors.X509Error,
+                          self.cert.sign,
+                          self.cert._ffi.NULL)

@@ -60,7 +60,7 @@ class X509Certificate(object):
         certObj = self._lib.X509_new()
         if certObj == self._ffi.NULL:
             raise X509CertificateError("Could not create X509 certifiacte "
-                                       "object")
+                                       "object")  # pragma: no cover
 
         self._certObj = certObj
 
@@ -72,7 +72,8 @@ class X509Certificate(object):
         # asn1_utctime = self._lib.ASN1_UTCTIME_new()
         asn1_utctime = self._lib.ASN1_UTCTIME_set(self._ffi.NULL, t)
         if asn1_utctime == self._ffi.NULL:
-            raise X509CertificateError("Could not create ASN1_UTCTIME object")
+            raise X509CertificateError("Could not create ASN1_UTCTIME "
+                                       "object")  # pragma: no cover
 
         return asn1_utctime
 
@@ -128,7 +129,7 @@ class X509Certificate(object):
         ret = self._lib.X509_set_version(self._certObj, v)
         if ret == 0:
             raise X509CertificateError("Could not set X509 certificate "
-                                       "version.")
+                                       "version.")  # pragma: no cover
 
     def set_not_before(self, t):
         """Set the 'not before' date field.
@@ -265,10 +266,9 @@ class X509Certificate(object):
             buf_ptr = self._ffi.new("unsigned char**")
             buf_ptr[0] = buf
             num = self._lib.i2d_X509(self._certObj, buf_ptr)
-
-        if num == 0:
+        else:
             raise X509CertificateError("Could not encode X509 certificate "
-                                       "as DER.")
+                                       "as DER.")  # pragma: no cover
         return buf
 
     def get_fingerprint(self, md='md5'):
