@@ -27,7 +27,8 @@ validators = [
     {
         "name": "common",
         "steps": [
-            ('common_name', {'allowed_domains': ['example.com']}),  # example.com should start with a '.'
+            # example.com should start with a '.'
+            ('common_name', {'allowed_domains': ['example.com']}),
             ('alternative_names', {'allowed_domains': ['example.com']}),
             ('server_group', {'group_prefixes': {
                 'nv': 'Nova_Team',
@@ -39,8 +40,17 @@ validators = [
                 'ops': 'SysEng_Team',
                 'qu': 'Neutron_Team',
                 }}),
-            ('extensions', {'allowed_extensions': ['keyUsage', 'subjectAltName', 'basicConstraints', 'subjectKeyIdentifier']}),
-            ('key_usage', {'allowed_usage': ['Digital Signature', 'Key Encipherment', 'Non Repudiation', 'Certificate Sign', 'CRL Sign']}),
+            ('extensions', {'allowed_extensions': [
+                'keyUsage',
+                'subjectAltName',
+                'basicConstraints',
+                'subjectKeyIdentifier']}),
+            ('key_usage', {'allowed_usage': [
+                'Digital Signature',
+                'Key Encipherment',
+                'Non Repudiation',
+                'Certificate Sign',
+                'CRL Sign']}),
             ('ca_status', {'ca_requested': False}),
             ('source_cidrs', {'cidrs': ["127.0.0.0/8"]}),
         ]

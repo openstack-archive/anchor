@@ -30,8 +30,9 @@ def config_check_domains(conf):
             if 'allowed_domains' in step[1]:
                 for domain in step[1]['allowed_domains']:
                     if not domain.startswith('.'):
-                        raise ConfigValidationException("Domain that does not start with "
-                                                        "a '.' <%s>", domain)
+                        raise ConfigValidationException(
+                            "Domain that does not start with "
+                            "a '.' <%s>", domain)
 
 
 def validate_config(conf):
@@ -59,8 +60,8 @@ def validate_config(conf):
 
             if len(step) == 0:
                 raise ConfigValidationException("Validator set <%s> contains "
-                                                "a step with no validator name",
-                                                name)
+                                                "a step with no validator "
+                                                "name", name)
 
             if not hasattr(validators, step[0]):
                 raise ConfigValidationException("Validator set <%s> contains "

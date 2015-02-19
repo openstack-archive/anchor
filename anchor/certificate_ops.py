@@ -44,7 +44,7 @@ def parse_csr(csr, encoding):
     """
     # validate untrusted input
     if str(encoding).lower() not in VALID_ENCODINGS:
-        logger.error("parse_csr failed: invalid encoding ({})".format(encoding))
+        logger.error("parse_csr failed: bad encoding ({})".format(encoding))
         abort(400, "invalid CSR")
 
     if csr is None:

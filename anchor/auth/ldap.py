@@ -39,7 +39,8 @@ def login(user, secret):
     ldo = ldap.initialize("ldap://%s" % (conf.auth['ldap']['host'],))
     ldo.set_option(ldap.OPT_REFERRALS, 0)
     try:
-        ldo.simple_bind_s("%s@%s" % (user, conf.auth['ldap']['domain']), secret)
+        ldo.simple_bind_s("%s@%s" % (user, conf.auth['ldap']['domain']),
+                          secret)
 
         filter_str = ('(sAMAccountName=%s)' %
                       ldap.filter.escape_filter_chars(user))
