@@ -22,6 +22,18 @@ class ConfigValidationException(Exception):
     pass
 
 
+def config_check_domains(conf):
+    # gc.validators[0]['steps'][0][1]['allowed_domains']
+
+    for validator in conf.validators:
+        for step in validator['steps']:
+            if 'allowed_domains' in step[1]:
+                for domain in step[1]['allowed_domains']:
+                    if not domain.startswith('.'):
+                        raise ConfigValidationException("Domain that does not start with "
+                                                        "a '.' <%s>", domain)
+
+
 def validate_config(conf):
     if not hasattr(conf, "auth") or not conf.auth:
         raise ConfigValidationException("No authentication configured")
@@ -54,10 +66,8 @@ def validate_config(conf):
                 raise ConfigValidationException("Validator set <%s> contains "
                                                 "an unknown validator <%s>",
                                                 name, step[0])
-    for domain in allowed_domains:
-        if not domain.startswith('.'):
-            raise ConfigValidationException("Domain that does not start with "
-                                            "a '.' <%s>", domain)
+
+    config_check_domains(conf)
 
 
 def setup_app(config):
