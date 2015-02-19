@@ -16,27 +16,31 @@
 
 import unittest
 
+import mock
+
+import textwrap
+
 from anchor.X509 import certificate
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import name as x509_name
 
 
 class TestX509Cert(unittest.TestCase):
-    cert_data = (
-        "-----BEGIN CERTIFICATE-----\n"
-        "MIICKjCCAZOgAwIBAgIIfeW6dwGe6wMwDQYJKoZIhvcNAQEFBQAwUjELMAkGA1UE\n"
-        "BhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxFjAUBgNVBAoTDUhlcnAgRGVycCBw\n"
-        "bGMxFjAUBgNVBAMTDWhlcnAuZGVycC5wbGMwHhcNMTUwMTE0MTQxMDE5WhcNMTUw\n"
-        "MTE1MTQxMDE5WjCBlDELMAkGA1UEBhMCVUsxDzANBgNVBAgTBk5hcm5pYTESMBAG\n"
-        "A1UEBxMJRnVua3l0b3duMRcwFQYDVQQKEw5BbmNob3IgVGVzdGluZzEQMA4GA1UE\n"
-        "CxMHdGVzdGluZzEUMBIGA1UEAxMLYW5jaG9yLnRlc3QxHzAdBgkqhkiG9w0BCQEW\n"
-        "EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m/GQLE0\n"
-        "1NzzoZWc/ita9qeI6cdp6ZduEE6gXGEzBqCGKru7lX1kqRRl9u74v5lJAgMBAAGj\n"
-        "GjAYMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgXgMA0GCSqGSIb3DQEBBQUAA4GBAGeX\n"
-        "hSul19/DgwM5m3cj6y9+dkOhXCdImG1O6wjDHxa/xU+hlPJwGZr5zrcBsk/8jaIP\n"
-        "z1FWAhsmZBl0zSJY7XEZ9jmw7JIaCy3XpYMVEA2LGEofydr7N3CRqIE5ehdAh5rz\n"
-        "gTLni27WuVJFVBNoTU1JfoxBSm/RBLdTj92g9N5g\n"
-        "-----END CERTIFICATE-----\n")
+    cert_data = textwrap.dedent("""
+        -----BEGIN CERTIFICATE-----
+        MIICKjCCAZOgAwIBAgIIfeW6dwGe6wMwDQYJKoZIhvcNAQEFBQAwUjELMAkGA1UE
+        BhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxFjAUBgNVBAoTDUhlcnAgRGVycCBw
+        bGMxFjAUBgNVBAMTDWhlcnAuZGVycC5wbGMwHhcNMTUwMTE0MTQxMDE5WhcNMTUw
+        MTE1MTQxMDE5WjCBlDELMAkGA1UEBhMCVUsxDzANBgNVBAgTBk5hcm5pYTESMBAG
+        A1UEBxMJRnVua3l0b3duMRcwFQYDVQQKEw5BbmNob3IgVGVzdGluZzEQMA4GA1UE
+        CxMHdGVzdGluZzEUMBIGA1UEAxMLYW5jaG9yLnRlc3QxHzAdBgkqhkiG9w0BCQEW
+        EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m/GQLE0
+        1NzzoZWc/ita9qeI6cdp6ZduEE6gXGEzBqCGKru7lX1kqRRl9u74v5lJAgMBAAGj
+        GjAYMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgXgMA0GCSqGSIb3DQEBBQUAA4GBAGeX
+        hSul19/DgwM5m3cj6y9+dkOhXCdImG1O6wjDHxa/xU+hlPJwGZr5zrcBsk/8jaIP
+        z1FWAhsmZBl0zSJY7XEZ9jmw7JIaCy3XpYMVEA2LGEofydr7N3CRqIE5ehdAh5rz
+        gTLni27WuVJFVBNoTU1JfoxBSm/RBLdTj92g9N5g
+        -----END CERTIFICATE-----""")
 
     def setUp(self):
         super(TestX509Cert, self).setUp()
@@ -237,3 +241,30 @@ class TestX509Cert(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
+
+    def test_read_from_file(self):
+        open_name = 'anchor.X509.certificate.open'
+        with mock.patch(open_name, create=True) as mock_open:
+            mock_open.return_value = mock.MagicMock(spec=file)
+            m_file = mock_open.return_value.__enter__.return_value
+            m_file.read.return_value = TestX509Cert.cert_data
+            cert = certificate.X509Certificate()
+            cert.from_file("some_path")
+
+            name = cert.get_subject()
+            entries = name.get_entries_by_nid_name('C')
+            self.assertEqual(entries[0].get_value(), "UK")
+
+    def test_get_fingerprint(self):
+        fp = self.cert.get_fingerprint()
+        self.assertEqual(fp, "56D61AC583BDDD4B44EEB479EF6C998F")
+
+    def test_sign_bad_md(self):
+        self.assertRaises(x509_errors.X509Error,
+                          self.cert.sign,
+                          None, "BAD")
+
+    def test_sign_bad_key(self):
+        self.assertRaises(x509_errors.X509Error,
+                          self.cert.sign,
+                          self.cert._ffi.NULL)
