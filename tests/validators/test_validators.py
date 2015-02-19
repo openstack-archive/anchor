@@ -67,7 +67,8 @@ class TestValidators(unittest.TestCase):
     def test_check_networks_bad_domain(self):
         bad_domain = 'bad!$domain'
         allowed_networks = ['127/8', '10/8']
-        self.assertFalse(validators.check_networks(bad_domain, allowed_networks))
+        self.assertFalse(validators.check_networks(
+            bad_domain, allowed_networks))
 
     @mock.patch('socket.gethostbyname_ex')
     def test_check_networks_both(self, gethostbyname_ex):
@@ -82,11 +83,14 @@ class TestValidators(unittest.TestCase):
                 '74.125.224.70',
             ]
         )
-        self.assertTrue(validators.check_networks('example.com', allowed_networks))
-        self.assertTrue(validators.check_networks_strict('example.com', allowed_networks))
+        self.assertTrue(validators.check_networks(
+            'example.com', allowed_networks))
+        self.assertTrue(validators.check_networks_strict(
+            'example.com', allowed_networks))
 
         gethostbyname_ex.return_value = ('example.com', [], ['12.2.2.2'])
-        self.assertFalse(validators.check_networks('example.com', allowed_networks))
+        self.assertFalse(validators.check_networks(
+            'example.com', allowed_networks))
 
         gethostbyname_ex.return_value = (
             'example.com',
@@ -97,4 +101,5 @@ class TestValidators(unittest.TestCase):
                 '16.1.1.1',
             ]
         )
-        self.assertFalse(validators.check_networks_strict('example.com', allowed_networks))
+        self.assertFalse(validators.check_networks_strict(
+            'example.com', allowed_networks))
