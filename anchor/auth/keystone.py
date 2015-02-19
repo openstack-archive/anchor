@@ -35,7 +35,8 @@ def login(_, token):
                 "id": token
             }}}})
     req = requests.post(conf.auth['keystone']['url'] + '/v3/auth/tokens',
-                        headers={'Content-Type': 'application/json'}, data=data)
+                        headers={'Content-Type': 'application/json'},
+                        data=data)
     if req.status_code != 200:
         logger.info("Authentication failed for token <%s>, status %s",
                     token, req.status_code)
