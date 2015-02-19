@@ -64,9 +64,16 @@ class CertificateOpsTests(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_parse_csr_success(self):
+    def test_parse_csr_success1(self):
         """Test basic success path for parse_csr."""
         result = certificate_ops.parse_csr(self.csr, 'pem')
+        subject = result.get_subject()
+        actual_cn = subject.get_entries_by_nid_name('CN')[0].get_value()
+        self.assertEqual(actual_cn, self.expected_cn)
+
+    def test_parse_csr_success2(self):
+        """Test basic success path for parse_csr."""
+        result = certificate_ops.parse_csr(self.csr, 'PEM')
         subject = result.get_subject()
         actual_cn = subject.get_entries_by_nid_name('CN')[0].get_value()
         self.assertEqual(actual_cn, self.expected_cn)
