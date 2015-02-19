@@ -21,10 +21,10 @@ import mock
 from webob.exc import HTTPUnauthorized
 
 
-class AuthInitTests(unittest.TestCase):
+class AuthStaticTests(unittest.TestCase):
 
     def setUp(self):
-        super(AuthInitTests, self).setUp()
+        super(AuthStaticTests, self).setUp()
 
     def tearDown(self):
         pass

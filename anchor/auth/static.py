@@ -11,12 +11,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import hmac
 import logging
 
 from pecan import conf
 
-from .results import AuthDetails
+from anchor.auth.results import AuthDetails
+from anchor import util
 
 
 logger = logging.getLogger(__name__)
@@ -61,8 +61,8 @@ def login(user, secret):
 
     # This technique is used to provide a constant time string compare
     # between the user input and the expected values.
-    valid_user = hmac.compare_digest(user, e_user)
-    valid_pass = hmac.compare_digest(secret, e_pass)
+    valid_user = util.constant_time_compare(user, e_user)
+    valid_pass = util.constant_time_compare(secret, e_pass)
 
     # This if statement results in a potential timing attack where the
     # statement could return more quickly if valid_secret=False. We
