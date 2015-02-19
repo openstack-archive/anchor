@@ -52,10 +52,17 @@ def validate_csr(auth_result, csr, request):
             'conf': conf,
             'request': request}
 
+    # It is ok if the config doesn't have any validators listed
+    # so we set the initial state to valid.
+    valid = True
+
     for validator_set in conf.validators:
         logger.debug("Checking validators set <%s>",
                      validator_set.get("name"))
-        valid = True
+
+        # there is at least one validator in the config, so set valid to
+        # false until we see the validator pass
+        valid = False
 
         for validator in validator_set['steps']:
             if not isinstance(validator, tuple):
@@ -80,15 +87,18 @@ def validate_csr(auth_result, csr, request):
             new_kwargs.update(params)
             try:
                 getattr(validators, validator_name)(**new_kwargs)
+                valid = True  # validator passed b/c no exceptions
             except validators.ValidationError as e:
                 logger.debug("Validation failed: %s", e)
                 valid = False
                 break
 
-        if valid:
-            # request passed all the tests here
-            return
+    # valid here says that either (1) we didn't run any tests, or (2) we
+    # ran some tests and they all passed. Either way, we can just return.
+    if valid:
+        return
 
+    # something failed, return a 400 to the client
     abort(400, "CSR failed validation")
 
 
