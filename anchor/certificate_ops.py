@@ -30,20 +30,35 @@ from . import validators
 logger = logging.getLogger(__name__)
 
 
-def parse_csr(csr, encoding):
-    try:
-        if encoding != 'pem' or csr is None:
-            logger.error("Parsing CSR failed due to non-pem encoding type or"
-                         " null CSR.")
-            abort(400, "CSR cannot be parsed")
+# we only support the PEM encoding for now, but this may grow
+# to support things like DER in the future
+VALID_ENCODINGS = ['pem']
 
+
+def parse_csr(csr, encoding):
+    """Loads the user provided CSR into the backend X509 library.
+
+       :param csr: CSR as provided by the API user
+       :param encoding: encoding for the CSR (must be PEM today)
+       :return: CSR object from backend X509 library or aborts
+    """
+    # validate untrusted input
+    if str(encoding).lower() not in VALID_ENCODINGS:
+        logger.error("parse_csr failed: invalid encoding ({})".format(encoding))
+        abort(400, "invalid CSR")
+
+    if csr is None:
+        logger.error("parse_csr failed: missing CSR")
+        abort(400, "invalid CSR")
+
+    # load the CSR into the backend X509 library
+    try:
         out_req = signing_request.X509Csr()
         out_req.from_buffer(csr)
         return out_req
-
     except Exception as e:
-        logger.exception("Exception while parsing the CSR: %s", e)
-        abort(400, "CSR cannot be parsed")
+        logger.exception("parse_csr exception while parsing the CSR: %s", e)
+        abort(400, "invalid CSR")
 
 
 def validate_csr(auth_result, csr, request):
