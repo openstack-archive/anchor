@@ -18,6 +18,8 @@ import unittest
 
 import textwrap
 
+import mock
+
 from webob.exc import HTTPClientError
 
 from anchor import certificate_ops
@@ -63,23 +65,90 @@ class CertificateOpsTests(unittest.TestCase):
         pass
 
     def test_parse_csr_success(self):
+        """Test basic success path for parse_csr."""
         result = certificate_ops.parse_csr(self.csr, 'pem')
         subject = result.get_subject()
         actual_cn = subject.get_entries_by_nid_name('CN')[0].get_value()
         self.assertEqual(actual_cn, self.expected_cn)
 
     def test_parse_csr_fail1(self):
+        """Test invalid CSR format (wrong value) for parse_csr."""
         with self.assertRaises(HTTPClientError):
             certificate_ops.parse_csr(self.csr, 'blah')
 
     def test_parse_csr_fail2(self):
+        """Test invalid CSR format (wrong type) for parse_csr."""
         with self.assertRaises(HTTPClientError):
             certificate_ops.parse_csr(self.csr, True)
 
     def test_parse_csr_fail3(self):
+        """Test invalid CSR (None) format for parse_csr."""
         with self.assertRaises(HTTPClientError):
             certificate_ops.parse_csr(None, 'pem')
 
     def test_parse_csr_fail4(self):
+        """Test invalid CSR (wrong value) format for parse_csr."""
         with self.assertRaises(HTTPClientError):
             certificate_ops.parse_csr('invalid csr input', 'pem')
+
+    def test_validate_csr_success(self):
+        """Test basic success path for validate_csr."""
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "pecan.conf.__values__"
+        validators = [{'name': 'common',
+                       'steps': [
+                           ('extensions', {'allowed_extensions': []})]}]
+        data = {'validators': validators}
+
+        with mock.patch.dict(config, data):
+            certificate_ops.validate_csr(None, csr_obj, None)
+
+    def test_validate_csr_fail1(self):
+        """Test empty validator set for validate_csr."""
+        config = "pecan.conf.__values__"
+        data = {'validators': []}
+
+        with mock.patch.dict(config, data):
+            # this should work, it allows people to bypass validation
+            certificate_ops.validate_csr(None, None, None)
+
+    def test_validate_csr_fail2(self):
+        """Test invalid validator set (no tuples) for validate_csr."""
+        config = "pecan.conf.__values__"
+        validators = [{'name': 'common', 'steps': [True]}]
+        data = {'validators': validators}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(HTTPClientError):
+                certificate_ops.validate_csr(None, None, None)
+
+    def test_validate_csr_fail3(self):
+        """Test invalid validator set (tuple too long) for validate_csr."""
+        config = "pecan.conf.__values__"
+        validators = [{'name': 'common', 'steps': [(1, 2, 3)]}]
+        data = {'validators': validators}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(HTTPClientError):
+                certificate_ops.validate_csr(None, None, None)
+
+    def test_validate_csr_fail4(self):
+        """Test invalid validator set (bogus validator) for validate_csr."""
+        config = "pecan.conf.__values__"
+        validators = [{'name': 'common', 'steps': [('no_such_method')]}]
+        data = {'validators': validators}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(HTTPClientError):
+                certificate_ops.validate_csr(None, None, None)
+
+    def test_validate_csr_fail5(self):
+        """Test validate_csr with a validator that should fail."""
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "pecan.conf.__values__"
+        validators = [{'name': 'common', 'steps': [('common_name')]}]
+        data = {'validators': validators}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(HTTPClientError):
+                certificate_ops.validate_csr(None, csr_obj, None)
