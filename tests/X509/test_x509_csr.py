@@ -68,6 +68,10 @@ class TestX509Csr(unittest.TestCase):
             csr = signing_request.X509Csr()
             csr.from_file("some_path")
 
+            name = csr.get_subject()
+            entries = name.get_entries_by_nid_name('C')
+            self.assertEqual(entries[0].get_value(), "UK")
+
     def test_bad_data_throws(self):
         bad_data = (
             "some bad data is "
