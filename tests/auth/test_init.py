@@ -18,7 +18,7 @@ import unittest
 
 import mock
 
-from paste.httpexceptions import HTTPUnauthorized
+from webob.exc import HTTPUnauthorized
 
 
 class AuthInitTests(unittest.TestCase):
