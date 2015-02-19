@@ -61,8 +61,16 @@ def login(user, secret):
 
     # This technique is used to provide a constant time string compare
     # between the user input and the expected values.
-    valid_user = hmac.compare_digest(user, e_user)
-    valid_pass = hmac.compare_digest(secret, e_pass)
+    # the compare_digest function is new to version 2.7.7 the try/except block
+    # will use the less secure digest comparison function in older python
+    # functions.
+    # TODO(hyakuhei) Log when hmac.compare_digest isn't available
+    try:
+        valid_user = hmac.compare_digest(user, e_user)
+        valid_pass = hmac.compare_digest(secret, e_pass)
+    except AttributeError:
+        valid_user = (e_user == user)
+        valid_pass = (e_pass == secret)
 
     # This if statement results in a potential timing attack where the
     # statement could return more quickly if valid_secret=False. We
