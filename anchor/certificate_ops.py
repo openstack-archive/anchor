@@ -52,10 +52,13 @@ def validate_csr(auth_result, csr, request):
             'conf': conf,
             'request': request}
 
+    valid = True
+
     for validator_set in conf.validators:
         logger.debug("Checking validators set <%s>",
                      validator_set.get("name"))
-        valid = True
+
+        valid = False
 
         for validator in validator_set['steps']:
             if not isinstance(validator, tuple):
@@ -80,14 +83,15 @@ def validate_csr(auth_result, csr, request):
             new_kwargs.update(params)
             try:
                 getattr(validators, validator_name)(**new_kwargs)
+                valid = True
             except validators.ValidationError as e:
                 logger.debug("Validation failed: %s", e)
                 valid = False
                 break
 
-        if valid:
-            # request passed all the tests here
-            return
+    if valid:
+        # request passed all the tests here
+        return
 
     abort(400, "CSR failed validation")
 
