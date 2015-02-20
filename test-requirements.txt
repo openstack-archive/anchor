@@ -7,3 +7,4 @@ python-subunit>=0.0.18
 testrepository>=0.0.18
 testscenarios>=0.4
 testtools>=0.9.34
+requests-mock>=0.5.1
