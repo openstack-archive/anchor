@@ -13,9 +13,8 @@
 
 import logging
 
-import pecan
-
 from anchor.auth import results
+from anchor import jsonloader
 from anchor import util
 
 
@@ -44,8 +43,8 @@ def login(user, secret):
 
     # expected values
     try:
-        e_user = str(pecan.conf.auth['static']['user'])
-        e_pass = str(pecan.conf.auth['static']['secret'])
+        e_user = str(jsonloader.conf.auth['static']['user'])
+        e_pass = str(jsonloader.conf.auth['static']['secret'])
     except (KeyError, TypeError):
         logger.warn("auth conf missing static user or secret")
         return None
