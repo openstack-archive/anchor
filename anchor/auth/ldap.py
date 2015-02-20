@@ -15,7 +15,8 @@ from .results import AuthDetails
 
 import ldap
 import ldap.filter
-from pecan import conf
+
+from anchorconfig import conf
 
 
 def user_get_groups(attributes):

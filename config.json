@@ -1,0 +1,153 @@
+{
+  "auth": {
+    "static": {
+      "secret": "simplepassword",
+      "user": "myusername"
+    }
+  },
+  "ca": {
+    "cert_path": "CA/root-ca.crt",
+    "key_path": "CA/root-ca-unwrapped.key",
+    "output_path": "certs",
+    "signing_hash": "sha1",
+    "valid_hours": 24
+  },
+  "logging": {
+    "formatters": {
+      "simple": {
+        "format": "%(asctime)s %(levelname)-5.5s [%(name)s][%(process)d/%(threadName)s] %(message)s"
+      }
+    },
+    "handlers": {
+      "console": {
+        "class": "logging.StreamHandler",
+        "formatter": "simple",
+        "level": "DEBUG"
+      }
+    },
+    "loggers": {
+      "anchor": {
+        "level": "DEBUG"
+      },
+      "wsgi": {
+        "level": "INFO"
+      }
+    },
+    "root": {
+      "handlers": [
+        "console"
+      ],
+      "level": "INFO"
+    }
+  },
+  "validators": [
+    {
+      "name": "default",
+      "steps": [
+        [
+          "common_name",
+          {
+            "allowed_domains": [
+              ".example.com"
+            ]
+          }
+        ],
+        [
+          "alternative_names",
+          {
+            "allowed_domains": [
+              ".example.com"
+            ]
+          }
+        ],
+        [
+          "server_group",
+          {
+            "group_prefixes": {
+              "bk": "Bock_Team",
+              "cs": "CS_Team",
+              "gl": "Glance_Team",
+              "mb": "MB_Team",
+              "nv": "Nova_Team",
+              "ops": "SysEng_Team",
+              "qu": "Neutron_Team",
+              "sw": "Swift_Team"
+            }
+          }
+        ],
+        [
+          "extensions",
+          {
+            "allowed_extensions": [
+              "keyUsage",
+              "subjectAltName",
+              "basicConstraints",
+              "subjectKeyIdentifier"
+            ]
+          }
+        ],
+        [
+          "key_usage",
+          {
+            "allowed_usage": [
+              "Digital Signature",
+              "Key Encipherment",
+              "Non Repudiation",
+              "Certificate Sign",
+              "CRL Sign"
+            ]
+          }
+        ],
+        [
+          "ca_status",
+          {
+            "ca_requested": false
+          }
+        ],
+        [
+          "source_cidrs",
+          {
+            "cidrs": [
+              "127.0.0.0/8"
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "name": "ip",
+      "steps": [
+        [
+          "common_name",
+          {
+            "allowed_networks": [
+              "127/8"
+            ]
+          }
+        ],
+        [
+          "alternative_names",
+          {
+            "allowed_networks": [
+              "127/8"
+            ]
+          }
+        ],
+        [
+          "ca_status",
+          {
+            "ca_requested": false
+          }
+        ],
+        [
+          "source_cidrs",
+          {
+            "cidrs": [
+              "127.0.0.0/8"
+            ]
+          }
+        ]
+      ]
+    }
+  ]
+}

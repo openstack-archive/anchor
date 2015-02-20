@@ -22,10 +22,11 @@ import time
 import uuid
 
 from pecan import abort
-from pecan import conf
+
+from anchorconfig import conf
+
 
 from . import validators
-
 
 logger = logging.getLogger(__name__)
 

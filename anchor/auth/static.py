@@ -13,7 +13,7 @@
 
 import logging
 
-from pecan import conf
+from anchorconfig import conf
 
 from anchor.auth.results import AuthDetails
 from anchor import util
@@ -44,6 +44,7 @@ def login(user, secret):
 
     # expected values
     try:
+        logger.warning(conf.auth['static']['user'])
         e_user = str(conf.auth['static']['user'])
         e_pass = str(conf.auth['static']['secret'])
     except (KeyError, TypeError):

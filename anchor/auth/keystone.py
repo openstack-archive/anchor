@@ -15,9 +15,10 @@ import json
 import logging
 
 from .results import AuthDetails
-
-from pecan import conf
 import requests
+
+from anchorconfig import conf
+
 
 logger = logging.getLogger(__name__)
 
