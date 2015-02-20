@@ -77,18 +77,22 @@ class CertificateOpsTests(unittest.TestCase):
         self.assertEqual(actual_cn, self.expected_cn)
 
     def test_parse_csr_fail1(self):
+        """Test invalid CSR format (wrong value) for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, 'blah')
 
     def test_parse_csr_fail2(self):
+         """Test invalid CSR format (wrong type) for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, True)
 
     def test_parse_csr_fail3(self):
+        """Test invalid CSR (None) format for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(None, 'pem')
 
     def test_parse_csr_fail4(self):
+        """Test invalid CSR (wrong value) format for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr('invalid csr input', 'pem')
 
