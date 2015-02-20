@@ -13,25 +13,10 @@
 
 import pecan
 
+from anchor.auth import keystone  # noqa
+from anchor.auth import ldap  # noqa
+from anchor.auth import static  # noqa
 from anchor import jsonloader
-
-
-# One time, on import, we want to safely build a list of the auth
-# modules listed in the config that we should be using for validate.
-# This technique is "safe" because it will not fail, even if there
-# is no config defined. It will also not fail if the config is
-# imcomplete or malformed.
-AUTH_MODULES = []
-try:
-    for auth_type in jsonloader.conf.auth.keys():
-        try:
-            module_name = "{}.{}".format(__name__, auth_type)
-            module = __import__(module_name, fromlist=[''])
-            AUTH_MODULES.append(module)
-        except TypeError:
-            pass  # malformed config, but try next auth type in config
-except AttributeError:
-    pass  # malformed config
 
 
 def validate(user, secret):
@@ -45,7 +30,8 @@ def validate(user, secret):
        :param secret: user provided secret (password or token)
        :return: AuthDetails if authenticated or aborts
     """
-    for module in AUTH_MODULES:
+    for name in jsonloader.conf.auth.keys():
+        module = globals()[name]
         res = module.login(user, secret)
         if res:
             return res
