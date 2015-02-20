@@ -60,7 +60,57 @@ def parse_csr(csr, encoding):
         pecan.abort(400, "CSR cannot be parsed")
 
 
+def _run_validator(tup, args):
+    """Parse the validator tuple, call the validator, and return result.
+
+       :param tup: validator tuple directly from the config
+       :param args: additional arguments to pass to the validator function
+       :return: True on success, else False
+    """
+    # make sure that tup is actually a tuple
+    if type(tup) is not tuple:
+        logger.error("_run_validator: validator not a tuple {}".format(tup))
+        return False
+
+    # extract the args from the tuple
+    if len(tup) == 1:
+        name, params = tup[0], {}
+    elif len(tup) == 2:
+        name, params = tup
+    else:
+        logger.error("_run_validator: validator malformed {}".format(tup))
+        return False
+
+    # make sure the requested validator exists
+    if not hasattr(validators, name):
+        logger.error("_run_validator: no validator method {}".format(tup))
+        return False
+
+    # careful to not modify the master copy of args with local params
+    new_kwargs = args.copy()
+    new_kwargs.update(params)
+
+    # perform the actual check
+    logger.debug("_run_validator: checking {}".format(name))
+    try:
+        getattr(validators, name)(**new_kwargs)
+        return True  # validator passed b/c no exceptions
+    except validators.ValidationError as e:
+        logger.debug("_run_validator: validation failed %s", e)
+        return False
+
+
 def validate_csr(auth_result, csr, request):
+    """Validates various aspects of the CSR based on the loaded config.
+
+       The arguments of this method are passed to the underlying validate
+       methods. Therefore, some may be optional, depending on which
+       validation routines are specified in the configuration.
+
+       :param auth_result: AuthDetails value from auth.validate
+       :param csr: CSR value from certificate_ops.parse_csr
+       :param request: pecan request object associated with this action
+    """
     args = {'auth_result': auth_result,
             'csr': csr,
             'conf': jsonloader.conf,
@@ -70,42 +120,12 @@ def validate_csr(auth_result, csr, request):
     # so we set the initial state to valid.
     valid = True
 
-    for validator_set in jsonloader.conf.validators:
-        logger.debug("Checking validators set <%s>",
-                     validator_set.get("name"))
+    for vset in jsonloader.conf.validators:
+        logger.debug("validate_csr: checking {}".format(vset.get("name")))
 
-        # there is at least one validator in the config, so set valid to
-        # false until we see the validator pass
-        valid = False
-
-        for validator in validator_set['steps']:
-            if not isinstance(validator, tuple):
-                logger.error("Validator should be defined by a tuple"
-                             " (got '%s' instead)", validator)
-                break
-            elif len(validator) == 1:
-                validator_name, params = validator[0], {}
-            elif len(validator) == 2:
-                validator_name, params = validator
-            elif len(validator) > 2:
-                logger.error("Validator config incorrect: '%s'", validator)
-                break
-
-            if not hasattr(validators, validator_name):
-                logger.error("Could not find validator named '%s'", validator)
-                break
-
-            logger.debug("Checking step <%s>", validator_name)
-
-            new_kwargs = args.copy()
-            new_kwargs.update(params)
-            try:
-                getattr(validators, validator_name)(**new_kwargs)
-                valid = True  # validator passed b/c no exceptions
-            except validators.ValidationError as e:
-                logger.debug("Validation failed: %s", e)
-                valid = False
-                break
+        results = [_run_validator(x, args) for x in vset['steps']]
+        results.append(valid)  # track previous failures
+        valid = all(results)
 
     # valid here says that either (1) we didn't run any tests, or (2) we
     # ran some tests and they all passed. Either way, we can just return.
