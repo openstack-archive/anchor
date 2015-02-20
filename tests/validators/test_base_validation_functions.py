@@ -23,8 +23,7 @@ from anchor import validators
 from anchor.X509 import signing_request
 
 
-class TestValidators(unittest.TestCase):
-    # CSR: CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
+class TestBaseValidators(unittest.TestCase):
     csr_data = textwrap.dedent("""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIDBTCCAe0CAQAwgb8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh
@@ -45,14 +44,18 @@ class TestValidators(unittest.TestCase):
         7lcLhUzNVdWaPveTqX/V8QX//53IkyNa+IBm+H84UE5M0GFunqFBYqrWw8S46tMQ
         JQxgjf65ujnn
         -----END CERTIFICATE REQUEST-----""")
+    """
+    Subject:
+        CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
+    """
 
     def setUp(self):
-        super(TestValidators, self).setUp()
+        super(TestBaseValidators, self).setUp()
         self.csr = signing_request.X509Csr()
-        self.csr.from_buffer(TestValidators.csr_data)
+        self.csr.from_buffer(TestBaseValidators.csr_data)
 
     def tearDown(self):
-        super(TestValidators, self).tearDown()
+        super(TestBaseValidators, self).tearDown()
 
     def test_csr_get_cn(self):
         name = validators.csr_get_cn(self.csr)
