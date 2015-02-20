@@ -82,7 +82,7 @@ class CertificateOpsTests(unittest.TestCase):
             certificate_ops.parse_csr(self.csr, 'blah')
 
     def test_parse_csr_fail2(self):
-         """Test invalid CSR format (wrong type) for parse_csr."""
+        """Test invalid CSR format (wrong type) for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, True)
 
