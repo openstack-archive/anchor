@@ -32,7 +32,7 @@ class AuthKeystoneTests(unittest.TestCase):
 
     def test_auth_login(self):
 
-        config = 'pecan.conf.__values__'
+        config = "anchor.jsonloader.conf._config"
         data = {'auth': {'keystone': {'url': 'http://localhost:35357'}}}
         with mock.patch.dict(config, data):
 
