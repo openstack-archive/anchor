@@ -12,7 +12,6 @@
 # under the License.
 
 from cryptography.hazmat.backends.openssl import backend
-
 import errors
 import message_digest
 import name

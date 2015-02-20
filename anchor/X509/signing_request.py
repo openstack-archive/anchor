@@ -12,10 +12,9 @@
 # under the License.
 
 import certificate
+from cryptography.hazmat.backends.openssl import backend
 import errors
 import name
-
-from cryptography.hazmat.backends.openssl import backend
 
 
 class X509CsrError(errors.X509Error):

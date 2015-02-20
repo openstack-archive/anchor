@@ -13,8 +13,7 @@
 
 import paste
 from paste import translogger  # noqa
-from pecan import make_app
-
+import pecan
 import validators
 
 
@@ -76,7 +75,7 @@ def setup_app(config):
 
     validate_config(config)
 
-    app = make_app(
+    app = pecan.make_app(
         app_conf.pop('root'),
         logging=getattr(config, 'logging', {}),
         **app_conf

@@ -17,8 +17,7 @@
 import unittest
 
 import mock
-
-from webob.exc import HTTPUnauthorized
+from webob import exc as http_status
 
 
 class AuthStaticTests(unittest.TestCase):
@@ -38,18 +37,18 @@ class AuthStaticTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
-            from anchor.auth.results import AuthDetails
+            from anchor.auth import results
 
             valid_user = data['auth']['static']['user']
             valid_pass = data['auth']['static']['secret']
 
-            expected = AuthDetails(username=valid_user, groups=[])
+            expected = results.AuthDetails(username=valid_user, groups=[])
             self.assertEqual(auth.validate(valid_user, valid_pass), expected)
-            with self.assertRaises(HTTPUnauthorized):
+            with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate(valid_user, 'badpass')
-            with self.assertRaises(HTTPUnauthorized):
+            with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate('baduser', valid_pass)
-            with self.assertRaises(HTTPUnauthorized):
+            with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate('baduser', 'badpass')
 
     def test_validate_static_malformed1(self):
@@ -60,7 +59,7 @@ class AuthStaticTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
-            with self.assertRaises(HTTPUnauthorized):
+            with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate('baduser', 'badpass')
 
     def test_validate_static_malformed2(self):
@@ -71,5 +70,5 @@ class AuthStaticTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
-            with self.assertRaises(HTTPUnauthorized):
+            with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate('baduser', 'badpass')

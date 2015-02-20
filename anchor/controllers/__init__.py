@@ -11,38 +11,38 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from pecan import expose
-from pecan import request
-from pecan.rest import RestController
-
-from .. import auth
-from .. import certificate_ops
-
 import logging
+
+import pecan
+from pecan import rest
+
+from anchor import auth
+from anchor import certificate_ops
+
 
 logger = logging.getLogger(__name__)
 
 
-class RobotsController(RestController):
+class RobotsController(rest.RestController):
     """Serves /robots.txt that disallows search bots."""
 
-    @expose(content_type="text/plain")
+    @pecan.expose(content_type="text/plain")
     def get(self):
         return "User-agent: *\nDisallow: /\n"
 
 
-class SignController(RestController):
+class SignController(rest.RestController):
     """Handles POST requests to /sign."""
 
-    @expose(content_type="text/plain")
+    @pecan.expose(content_type="text/plain")
     def post(self):
-        auth_result = auth.validate(request.POST.get('user'),
-                                    request.POST.get('secret'))
+        auth_result = auth.validate(pecan.request.POST.get('user'),
+                                    pecan.request.POST.get('secret'))
 
-        csr = certificate_ops.parse_csr(request.POST.get('csr'),
-                                        request.POST.get('encoding'))
+        csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
+                                        pecan.request.POST.get('encoding'))
 
-        certificate_ops.validate_csr(auth_result, csr, request)
+        certificate_ops.validate_csr(auth_result, csr, pecan.request)
 
         return certificate_ops.sign(csr)
 

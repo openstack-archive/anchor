@@ -11,6 +11,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-from collections import namedtuple
+import collections
 
-AuthDetails = namedtuple('AuthDetails', ['username', 'groups'])
+
+AuthDetails = collections.namedtuple('AuthDetails', ['username', 'groups'])
