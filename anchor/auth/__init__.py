@@ -13,6 +13,8 @@
 
 import pecan
 
+from anchor import jsonloader
+
 
 # One time, on import, we want to safely build a list of the auth
 # modules listed in the config that we should be using for validate.
@@ -21,7 +23,7 @@ import pecan
 # imcomplete or malformed.
 AUTH_MODULES = []
 try:
-    for auth_type in pecan.conf.to_dict().get('auth', {}).keys():
+    for auth_type in jsonloader.conf.auth.keys():
         try:
             module_name = "{}.{}".format(__name__, auth_type)
             module = __import__(module_name, fromlist=[''])

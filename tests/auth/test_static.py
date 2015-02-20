@@ -30,7 +30,7 @@ class AuthStaticTests(unittest.TestCase):
 
     def test_validate_static(self):
         """Test all static user/pass authentication paths."""
-        config = 'pecan.conf.__values__'
+        config = "anchor.jsonloader.conf._config"
         data = {'auth': {'static': {'secret': 'simplepassword',
                                     'user': 'myusername'}}}
 
@@ -53,7 +53,7 @@ class AuthStaticTests(unittest.TestCase):
 
     def test_validate_static_malformed1(self):
         """Test static user/pass authentication with malformed config."""
-        config = 'pecan.conf.__values__'
+        config = "anchor.jsonloader.conf._config"
         data = {'auth': {'static': {}}}
 
         with mock.patch.dict(config, data):
@@ -64,7 +64,7 @@ class AuthStaticTests(unittest.TestCase):
 
     def test_validate_static_malformed2(self):
         """Test static user/pass authentication with malformed config."""
-        config = 'pecan.conf.__values__'
+        config = "anchor.jsonloader.conf._config"
         data = {'auth': {}}
 
         with mock.patch.dict(config, data):

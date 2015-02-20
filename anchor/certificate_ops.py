@@ -19,6 +19,7 @@ import uuid
 
 import pecan
 
+from anchor import jsonloader
 from anchor import validators
 from anchor.X509 import certificate
 from anchor.X509 import signing_request
@@ -62,14 +63,14 @@ def parse_csr(csr, encoding):
 def validate_csr(auth_result, csr, request):
     args = {'auth_result': auth_result,
             'csr': csr,
-            'conf': pecan.conf,
+            'conf': jsonloader.conf,
             'request': request}
 
     # It is ok if the config doesn't have any validators listed
     # so we set the initial state to valid.
     valid = True
 
-    for validator_set in pecan.conf.validators:
+    for validator_set in jsonloader.conf.validators:
         logger.debug("Checking validators set <%s>",
                      validator_set.get("name"))
 
@@ -119,14 +120,14 @@ def sign(csr):
 
     try:
         ca = certificate.X509Certificate()
-        ca.from_file(pecan.conf.ca["cert_path"])
+        ca.from_file(jsonloader.conf.ca["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")
 
     try:
         key_data = None
-        with open(pecan.conf.ca["key_path"]) as f:
+        with open(jsonloader.conf.ca["key_path"]) as f:
             key_data = f.read()
         key = X509_utils.load_pem_private_key(key_data)
     except Exception as e:
@@ -137,7 +138,7 @@ def sign(csr):
     new_cert.set_version(2)
 
     start_time = int(time.time())
-    end_time = start_time + (pecan.conf.ca['valid_hours'] * 60 * 60)
+    end_time = start_time + (jsonloader.conf.ca['valid_hours'] * 60 * 60)
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
@@ -157,11 +158,12 @@ def sign(csr):
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)
 
-    new_cert.sign(key, pecan.conf.ca['signing_hash'])
+    new_cert.sign(key, jsonloader.conf.ca['signing_hash'])
 
     path = os.path.join(
-        pecan.conf.ca['output_path'],
-        '%s.crt' % new_cert.get_fingerprint(pecan.conf.ca['signing_hash']))
+        jsonloader.conf.ca['output_path'],
+        '%s.crt' % new_cert.get_fingerprint(
+            jsonloader.conf.ca['signing_hash']))
 
     logger.info("Saving certificate to: %s", path)
     new_cert.save(path)
