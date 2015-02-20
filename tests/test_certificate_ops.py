@@ -14,13 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import textwrap
 import unittest
 
-import textwrap
-
 import mock
-
-from webob.exc import HTTPClientError
+from webob import exc as http_status
 
 from anchor import certificate_ops
 
@@ -79,23 +77,19 @@ class CertificateOpsTests(unittest.TestCase):
         self.assertEqual(actual_cn, self.expected_cn)
 
     def test_parse_csr_fail1(self):
-        """Test invalid CSR format (wrong value) for parse_csr."""
-        with self.assertRaises(HTTPClientError):
+        with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, 'blah')
 
     def test_parse_csr_fail2(self):
-        """Test invalid CSR format (wrong type) for parse_csr."""
-        with self.assertRaises(HTTPClientError):
+        with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, True)
 
     def test_parse_csr_fail3(self):
-        """Test invalid CSR (None) format for parse_csr."""
-        with self.assertRaises(HTTPClientError):
+        with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(None, 'pem')
 
     def test_parse_csr_fail4(self):
-        """Test invalid CSR (wrong value) format for parse_csr."""
-        with self.assertRaises(HTTPClientError):
+        with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr('invalid csr input', 'pem')
 
     def test_validate_csr_success(self):
@@ -126,7 +120,7 @@ class CertificateOpsTests(unittest.TestCase):
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(HTTPClientError):
+            with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, None, None)
 
     def test_validate_csr_fail3(self):
@@ -136,7 +130,7 @@ class CertificateOpsTests(unittest.TestCase):
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(HTTPClientError):
+            with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, None, None)
 
     def test_validate_csr_fail4(self):
@@ -146,7 +140,7 @@ class CertificateOpsTests(unittest.TestCase):
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(HTTPClientError):
+            with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, None, None)
 
     def test_validate_csr_fail5(self):
@@ -157,5 +151,5 @@ class CertificateOpsTests(unittest.TestCase):
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(HTTPClientError):
+            with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, csr_obj, None)

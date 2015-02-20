@@ -13,9 +13,9 @@
 
 import logging
 
-from pecan import conf
+import pecan
 
-from anchor.auth.results import AuthDetails
+from anchor.auth import results
 from anchor import util
 
 
@@ -44,8 +44,8 @@ def login(user, secret):
 
     # expected values
     try:
-        e_user = str(conf.auth['static']['user'])
-        e_pass = str(conf.auth['static']['secret'])
+        e_user = str(pecan.conf.auth['static']['user'])
+        e_pass = str(pecan.conf.auth['static']['secret'])
     except (KeyError, TypeError):
         logger.warn("auth conf missing static user or secret")
         return None
@@ -69,6 +69,6 @@ def login(user, secret):
     # do not see an obvious solution to this problem, but also believe
     # that leaking which input was valid isn't as big of a concern.
     if valid_user and valid_pass:
-        return AuthDetails(username=e_user, groups=[])
+        return results.AuthDetails(username=e_user, groups=[])
 
     logger.info("failed static auth for user {}".format(user))

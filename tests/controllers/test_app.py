@@ -14,14 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 import unittest
-
-from anchor.app import ConfigValidationException
-from anchor.app import validate_config
 
 import bad_config_domains
 import good_config_domains
+
+from anchor import app
 
 
 class TestValidDN(unittest.TestCase):
@@ -36,11 +34,11 @@ class TestValidDN(unittest.TestCase):
         self.assertTrue(True)
 
     def test_config_check_domains_good(self):
-        self.assertEqual(validate_config(good_config_domains), None)
+        self.assertEqual(app.validate_config(good_config_domains), None)
 
     def test_config_check_domains_bad(self):
         self.assertRaises(
-            ConfigValidationException,
-            validate_config,
+            app.ConfigValidationException,
+            app.validate_config,
             bad_config_domains
         )
