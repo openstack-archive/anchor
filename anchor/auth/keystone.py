@@ -14,10 +14,11 @@
 import json
 import logging
 
-from .results import AuthDetails
-
-from pecan import conf
+import pecan
 import requests
+
+from anchor.auth import results
+
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +35,7 @@ def login(_, token):
             "token": {
                 "id": token
             }}}})
-    req = requests.post(conf.auth['keystone']['url'] + '/v3/auth/tokens',
+    req = requests.post(pecan.conf.auth['keystone']['url'] + '/v3/auth/tokens',
                         headers={'Content-Type': 'application/json'},
                         data=data)
     if req.status_code != 200:
@@ -51,4 +52,4 @@ def login(_, token):
         logger.exception("Keystone response was not in the expected format")
         return None
 
-    return AuthDetails(username=user, groups=roles)
+    return results.AuthDetails(username=user, groups=roles)
