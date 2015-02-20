@@ -14,10 +14,10 @@
 import json
 import logging
 
-import pecan
 import requests
 
 from anchor.auth import results
+from anchor import jsonloader
 
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,8 @@ def login(_, token):
             "token": {
                 "id": token
             }}}})
-    req = requests.post(pecan.conf.auth['keystone']['url'] + '/v3/auth/tokens',
+    req = requests.post(jsonloader.conf.auth['keystone']['url'] +
+                        '/v3/auth/tokens',
                         headers={'Content-Type': 'application/json'},
                         data=data)
     if req.status_code != 200:
