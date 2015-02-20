@@ -13,9 +13,8 @@
 
 import logging
 
-import pecan
-
 from anchor.auth import results
+from anchor import jsonloader
 from anchor import util
 
 
@@ -44,31 +43,31 @@ def login(user, secret):
 
     # expected values
     try:
-        e_user = str(pecan.conf.auth['static']['user'])
-        e_pass = str(pecan.conf.auth['static']['secret'])
+        expected_user = str(jsonloader.conf.auth['static']['user'])
+        expected_secret = str(jsonloader.conf.auth['static']['secret'])
     except (KeyError, TypeError):
         logger.warn("auth conf missing static user or secret")
         return None
 
     # In python, len(<string>) is O(1)
     # Short circuit this if lengths don't match
-    if len(user) != len(e_user):
+    if len(user) != len(expected_user):
         logger.info("failed static auth: invalid username ({})".format(user))
         return None
-    if len(secret) != len(e_pass):
+    if len(secret) != len(expected_secret):
         logger.info("failed static auth: invalid password")
         return None
 
     # This technique is used to provide a constant time string compare
     # between the user input and the expected values.
-    valid_user = util.constant_time_compare(user, e_user)
-    valid_pass = util.constant_time_compare(secret, e_pass)
+    valid_user = util.constant_time_compare(user, expected_user)
+    valid_secret = util.constant_time_compare(secret, expected_secret)
 
     # This if statement results in a potential timing attack where the
     # statement could return more quickly if valid_secret=False. We
     # do not see an obvious solution to this problem, but also believe
     # that leaking which input was valid isn't as big of a concern.
-    if valid_user and valid_pass:
-        return results.AuthDetails(username=e_user, groups=[])
+    if valid_user and valid_secret:
+        return results.AuthDetails(username=expected_user, groups=[])
 
     logger.info("failed static auth for user {}".format(user))

@@ -13,9 +13,9 @@
 
 import ldap
 import ldap.filter
-import pecan
 
 from anchor.auth import results
+from anchor import jsonloader
 
 
 def user_get_groups(attributes):
@@ -36,15 +36,16 @@ def login(user, secret):
     :param secret: Secret/Passphrase
     :returns: AuthDetails -- Class used for authentication information
     """
-    ldo = ldap.initialize("ldap://%s" % (pecan.conf.auth['ldap']['host'],))
+    ldo = ldap.initialize("ldap://%s" % (jsonloader.conf.auth['ldap']['host']))
     ldo.set_option(ldap.OPT_REFERRALS, 0)
     try:
-        ldo.simple_bind_s("%s@%s" % (user, pecan.conf.auth['ldap']['domain']),
+        ldo.simple_bind_s("%s@%s" % (user,
+                                     jsonloader.conf.auth['ldap']['domain']),
                           secret)
 
         filter_str = ('(sAMAccountName=%s)' %
                       ldap.filter.escape_filter_chars(user))
-        ret = ldo.search_s(pecan.conf.auth['ldap']['base'],
+        ret = ldo.search_s(jsonloader.conf.auth['ldap']['base'],
                            ldap.SCOPE_SUBTREE,
                            filterstr=filter_str,
                            attrlist=['memberOf'])

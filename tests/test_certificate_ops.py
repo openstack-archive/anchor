@@ -82,7 +82,7 @@ class CertificateOpsTests(unittest.TestCase):
             certificate_ops.parse_csr(self.csr, 'blah')
 
     def test_parse_csr_fail2(self):
-         """Test invalid CSR format (wrong type) for parse_csr."""
+        """Test invalid CSR format (wrong type) for parse_csr."""
         with self.assertRaises(http_status.HTTPClientError):
             certificate_ops.parse_csr(self.csr, True)
 
@@ -99,7 +99,7 @@ class CertificateOpsTests(unittest.TestCase):
     def test_validate_csr_success(self):
         """Test basic success path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         validators = [{'name': 'common',
                        'steps': [
                            ('extensions', {'allowed_extensions': []})]}]
@@ -110,7 +110,7 @@ class CertificateOpsTests(unittest.TestCase):
 
     def test_validate_csr_fail1(self):
         """Test empty validator set for validate_csr."""
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         data = {'validators': []}
 
         with mock.patch.dict(config, data):
@@ -119,7 +119,7 @@ class CertificateOpsTests(unittest.TestCase):
 
     def test_validate_csr_fail2(self):
         """Test invalid validator set (no tuples) for validate_csr."""
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         validators = [{'name': 'common', 'steps': [True]}]
         data = {'validators': validators}
 
@@ -129,7 +129,7 @@ class CertificateOpsTests(unittest.TestCase):
 
     def test_validate_csr_fail3(self):
         """Test invalid validator set (tuple too long) for validate_csr."""
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         validators = [{'name': 'common', 'steps': [(1, 2, 3)]}]
         data = {'validators': validators}
 
@@ -139,7 +139,7 @@ class CertificateOpsTests(unittest.TestCase):
 
     def test_validate_csr_fail4(self):
         """Test invalid validator set (bogus validator) for validate_csr."""
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         validators = [{'name': 'common', 'steps': [('no_such_method')]}]
         data = {'validators': validators}
 
@@ -150,7 +150,7 @@ class CertificateOpsTests(unittest.TestCase):
     def test_validate_csr_fail5(self):
         """Test validate_csr with a validator that should fail."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
-        config = "pecan.conf.__values__"
+        config = "anchor.jsonloader.conf._config"
         validators = [{'name': 'common', 'steps': [('common_name')]}]
         data = {'validators': validators}
 
