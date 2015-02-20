@@ -16,6 +16,8 @@
 
 import unittest
 
+import textwrap
+
 import mock
 
 from anchor.X509 import errors as x509_errors
@@ -25,18 +27,17 @@ from cryptography.hazmat.backends.openssl import backend
 
 
 class TestX509Csr(unittest.TestCase):
-    csr_data = (
-        "-----BEGIN CERTIFICATE REQUEST-----\n"""
-        "MIIBWTCCARMCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ\n"
-        "BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV\n"
-        "BAsTB3Rlc3RpbmcxFDASBgNVBAMTC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB\n"
-        "FhB0ZXN0QGFuY2hvci50ZXN0MEwwDQYJKoZIhvcNAQEBBQADOwAwOAIxAOpvxkCx\n"
-        "NNTc86GVnP4rWvaniOnHaemXbhBOoFxhMwaghiq7u5V9ZKkUZfbu+L+ZSQIDAQAB\n"
-        "oCkwJwYJKoZIhvcNAQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkq\n"
-        "hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ\n"
-        "VMs9DuTAxljX7t7Eug==\n"
-        "-----END CERTIFICATE REQUEST-----\n"
-        )
+    csr_data = textwrap.dedent("""
+        -----BEGIN CERTIFICATE REQUEST-----
+        MIIBWTCCARMCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ
+        BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
+        BAsTB3Rlc3RpbmcxFDASBgNVBAMTC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
+        FhB0ZXN0QGFuY2hvci50ZXN0MEwwDQYJKoZIhvcNAQEBBQADOwAwOAIxAOpvxkCx
+        NNTc86GVnP4rWvaniOnHaemXbhBOoFxhMwaghiq7u5V9ZKkUZfbu+L+ZSQIDAQAB
+        oCkwJwYJKoZIhvcNAQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkq
+        hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ
+        VMs9DuTAxljX7t7Eug==
+        -----END CERTIFICATE REQUEST-----""")
 
     def setUp(self):
         super(TestX509Csr, self).setUp()
