@@ -142,3 +142,24 @@ class TestX509Name(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test_Email")
+
+    def test_entry_to_string(self):
+        entries = self.name.get_entries_by_nid_name('Email')
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(str(entries[0]), "emailAddress: test_Email")
+
+    def test_entry_length(self):
+        num = len(self.name)
+        self.assertEqual(num, 9)
+
+    def test_entry_index_good(self):
+        self.assertEqual("givenName: test_GN", str(self.name[8]))
+
+    def test_entry_index_bad(self):
+        with self.assertRaises(IndexError):
+            self.name[9]
+
+    def test_entry_itter(self):
+        val = [str(e) for e in self.name]
+        self.assertEqual("countryName: UK", val[0])
+        self.assertEqual("givenName: test_GN", val[8])

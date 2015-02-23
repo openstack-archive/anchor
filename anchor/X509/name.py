@@ -49,7 +49,7 @@ class X509Name(object):
             self._entry = obj
 
         def __str__(self):
-            return "%s %s" % (self.get_name(), self.get_value())
+            return "%s: %s" % (self.get_name(), self.get_value())
 
         def get_name(self):
             """Get the name of this entry.
@@ -61,7 +61,7 @@ class X509Name(object):
             ret = self._lib.OBJ_obj2txt(buf, 1024, asn1_obj, 0)
             if ret == 0:
                 raise errors.X509Error("Could not convert ASN1_OBJECT to "
-                                       "string.")
+                                       "string.")  # pragma: no cover
             return self._ffi.string(buf)
 
         def get_value(self):
@@ -79,11 +79,13 @@ class X509Name(object):
         if name_obj is not None:
             self._name_obj = self._lib.X509_NAME_dup(name_obj)
             if self._name_obj == self._ffi.NULL:
-                raise errors.X509Error("Failed to copy X509_NAME object.")
+                raise errors.X509Error("Failed to copy X509_NAME "
+                                       "object.")  # pragma: no cover
         else:
             self._name_obj = self._lib.X509_NAME_new()
             if self._name_obj == self._ffi.NULL:
-                raise errors.X509Error("Failed to create X509_NAME object.")
+                raise errors.X509Error("Failed to create "
+                                       "X509_NAME object.")  # pragma: no cover
 
     def __del__(self):
         self._lib.X509_NAME_free(self._name_obj)
@@ -92,7 +94,8 @@ class X509Name(object):
         # NOTE(tkelsey): we need to pass in a max size, so why not 1024
         val = self._lib.X509_NAME_oneline(self._name_obj, self._ffi.NULL, 1024)
         if val == self._ffi.NULL:
-            raise errors.X509Error("Could not convert X509_NAME to string.")
+            raise errors.X509Error("Could not convert"
+                                   " X509_NAME to string.")  # pragma: no cover
 
         val = self._ffi.gc(val, self._lib.OPENSSL_free)
         return self._ffi.string(val)
