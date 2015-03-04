@@ -15,6 +15,7 @@ import logging
 import socket
 
 import netaddr
+import ipdb
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +87,6 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     entries, or the domain does not match the list of known suffixes
     or network ranges.
     """
-
     alt_present = any(ext.get_name() == "subjectAltName"
                       for ext in csr.get_extensions())
 

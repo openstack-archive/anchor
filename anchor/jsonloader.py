@@ -24,11 +24,6 @@ logger = logging.getLogger(__name__)
 
 class AnchorConf():
 
-    ca = None
-    _config = None
-    _logger = None
-    _settings = dict()
-
     def __init__(self, logger, config_file):
         '''Attempt to initialize a config dictionary from a yaml file.
 
