@@ -44,6 +44,11 @@ def check_networks(domain, allowed_networks):
     at least one of the IP addresses is listed in allowed_networks for the
     deployment.
     """
+    if len(allowed_networks) == 0:
+        # no valid networks were provided, so we can't make any assertions
+        logger.warning("No valid network IP ranges were given, skipping")
+        return True
+
     try:
         networks = socket.gethostbyname_ex(domain)
     except socket.gaierror:
@@ -86,7 +91,6 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     entries, or the domain does not match the list of known suffixes
     or network ranges.
     """
-
     alt_present = any(ext.get_name() == "subjectAltName"
                       for ext in csr.get_extensions())
 
