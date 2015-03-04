@@ -11,10 +11,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+
 import paste
 from paste import translogger  # noqa
 import pecan
-import validators
+
+from anchor import jsonloader
 
 
 class ConfigValidationException(Exception):
@@ -51,29 +54,17 @@ def validate_config(conf):
             raise ConfigValidationException("Validator set <%s> is missing "
                                             "validation steps", name)
 
-        for step in validators_list["steps"]:
-            if not isinstance(step, tuple):
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "a step that's <%s> and not a "
-                                                "tuple", name, step)
-
-            if len(step) == 0:
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "a step with no validator "
-                                                "name", name)
-
-            if not hasattr(validators, step[0]):
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "an unknown validator <%s>",
-                                                name, step[0])
-
+        # TODO(hyakuhei): Add validation functions for JSON schema
     config_check_domains(conf)
 
 
 def setup_app(config):
     app_conf = dict(config.app)
 
-    validate_config(config)
+    validate_config(jsonloader.conf)
+
+    logging.basicConfig()
+    logging.root.setLevel(logging.DEBUG)
 
     app = pecan.make_app(
         app_conf.pop('root'),

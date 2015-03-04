@@ -55,6 +55,8 @@ class TestValidators(unittest.TestCase):
                 O=OSSG, OU=OSSG, CN=master.test.com
     X509v3 Subject Alternative Name:
                 DNS:server1.test.com, DNS:server2.test.com
+    X509v3 Key Usage:
+                Digital Signature, Non Repudiation, Key Encipherment
     """
 
     csr_data_bad_subjectAltNames = textwrap.dedent("""
@@ -274,4 +276,60 @@ class TestValidators(unittest.TestCase):
             self.csr_good_sub_alt_names_IP,
             allowed_domains=['mock'],
             allowed_networks=['99/8']
+        )
+
+    @mock.patch('anchor.validators.csr_get_cn')
+    def test_server_group_correct(self, csr_get_cn):
+        csr_get_cn.return_value = 'tst-server1.example.com'
+        mock_result = mock.Mock(groups=['TestGroup'])
+        self.assertEqual(
+            None,
+            validators.server_group(
+                auth_result=mock_result,
+                csr=None,
+                group_prefixes={'tst': 'TestGroup'}
+            )
+        )
+
+    @mock.patch('anchor.validators.csr_get_cn')
+    def test_server_grou_no_prefix(self, csr_get_cn):
+        csr_get_cn.return_value = 'test.example.com'
+        self.assertEqual(None, validators.server_group())
+
+    @mock.patch('anchor.validators.csr_get_cn')
+    def test_server_group_wrong_prefix(self, csr_get_cn):
+        csr_get_cn.return_value = 'nv-232.example.com'
+        mock_result = mock.Mock(groups=['Swift'])
+        self.assertRaises(
+            validators.ValidationError,
+            validators.server_group,
+            auth_result=mock_result,
+            csr=None,
+            group_prefixes={'nv': 'Nova', 'tst': 'TestGroup'}
+        )
+
+    @mock.patch('anchor.X509.name.X509Name.Entry.get_name')
+    @mock.patch('anchor.X509.signing_request.X509Csr.get_extensions')
+    def test_extensions(self, get_extensions, get_name):
+        get_extensions.return_value = None
+        self.assertEqual(None, validators.extensions())
+
+        get_extensions.return_value = ['mock']
+        get_name.return_value = 'bad extension'
+        self.assertRaises(
+            validators.ValidationError,
+            validators.extensions,
+            csr=None,
+            allowed_extensions=['good']
+        )
+
+    @mock.patch('anchor.X509.signing_request.X509Csr.get_extensions')
+    def test_key_usage(self):
+        # Key Usage: Digital Signature, Non Repudiation, Key Encipherment
+        self.assertEqual(
+            None,
+            self.validators.key_usage(
+                csr=self.csr_good_sub_alt_names,
+                allowed_usage=''
+            )
         )
