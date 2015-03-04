@@ -60,30 +60,20 @@ def parse_csr(csr, encoding):
         pecan.abort(400, "CSR cannot be parsed")
 
 
-def _run_validator(tup, args):
+def _run_validator(validator_step, args):
     """Parse the validator tuple, call the validator, and return result.
 
-       :param tup: validator tuple directly from the config
+       :param validator_step: validator tuple directly from the config
        :param args: additional arguments to pass to the validator function
        :return: True on success, else False
     """
-    # make sure that tup is actually a tuple
-    if type(tup) is not tuple:
-        logger.error("_run_validator: validator not a tuple {}".format(tup))
-        return False
-
-    # extract the args from the tuple
-    if len(tup) == 1:
-        name, params = tup[0], {}
-    elif len(tup) == 2:
-        name, params = tup
-    else:
-        logger.error("_run_validator: validator malformed {}".format(tup))
-        return False
+    function_name = validator_step[0]
+    params = validator_step[1]
 
     # make sure the requested validator exists
-    if not hasattr(validators, name):
-        logger.error("_run_validator: no validator method {}".format(tup))
+    if not hasattr(validators, function_name):
+        logger.error("_run_validator: no validator method {}"
+                     .format(function_name))
         return False
 
     # careful to not modify the master copy of args with local params
@@ -91,12 +81,13 @@ def _run_validator(tup, args):
     new_kwargs.update(params)
 
     # perform the actual check
-    logger.debug("_run_validator: checking {}".format(name))
+    logger.debug("_run_validator: checking {}".format(function_name))
     try:
-        getattr(validators, name)(**new_kwargs)
+        validator = getattr(validators, function_name)
+        validator(**new_kwargs)
         return True  # validator passed b/c no exceptions
     except validators.ValidationError as e:
-        logger.debug("_run_validator: validation failed %s", e)
+        logger.error("_run_validator: validation failed %s", e)
         return False
 
 
@@ -111,6 +102,8 @@ def validate_csr(auth_result, csr, request):
        :param csr: CSR value from certificate_ops.parse_csr
        :param request: pecan request object associated with this action
     """
+    # TODO(tkelsey): make this more robust
+
     args = {'auth_result': auth_result,
             'csr': csr,
             'conf': jsonloader.conf,
