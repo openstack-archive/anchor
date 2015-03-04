@@ -16,6 +16,8 @@ from paste import translogger  # noqa
 import pecan
 import validators
 
+from anchor import jsonloader
+
 
 class ConfigValidationException(Exception):
     pass
@@ -52,11 +54,6 @@ def validate_config(conf):
                                             "validation steps", name)
 
         for step in validators_list["steps"]:
-            if not isinstance(step, tuple):
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "a step that's <%s> and not a "
-                                                "tuple", name, step)
-
             if len(step) == 0:
                 raise ConfigValidationException("Validator set <%s> contains "
                                                 "a step with no validator "
@@ -73,11 +70,11 @@ def validate_config(conf):
 def setup_app(config):
     app_conf = dict(config.app)
 
-    validate_config(config)
+    validate_config(jsonloader.conf)
 
     app = pecan.make_app(
         app_conf.pop('root'),
-        logging=getattr(config, 'logging', {}),
+        logging=config.logging,
         **app_conf
     )
     return paste.translogger.TransLogger(app, setup_console_handler=False)

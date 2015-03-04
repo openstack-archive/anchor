@@ -108,50 +108,24 @@ class CertificateOpsTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             certificate_ops.validate_csr(None, csr_obj, None)
 
-    def test_validate_csr_fail1(self):
+    def test_validate_csr_bypass(self):
         """Test empty validator set for validate_csr."""
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
         data = {'validators': []}
 
         with mock.patch.dict(config, data):
             # this should work, it allows people to bypass validation
-            certificate_ops.validate_csr(None, None, None)
+            certificate_ops.validate_csr(None, csr_obj, None)
 
-    def test_validate_csr_fail2(self):
-        """Test invalid validator set (no tuples) for validate_csr."""
-        config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'common', 'steps': [True]}]
-        data = {'validators': validators}
-
-        with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPClientError):
-                certificate_ops.validate_csr(None, None, None)
-
-    def test_validate_csr_fail3(self):
-        """Test invalid validator set (tuple too long) for validate_csr."""
-        config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'common', 'steps': [(1, 2, 3)]}]
-        data = {'validators': validators}
-
-        with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPClientError):
-                certificate_ops.validate_csr(None, None, None)
-
-    def test_validate_csr_fail4(self):
-        """Test invalid validator set (bogus validator) for validate_csr."""
-        config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'common', 'steps': [('no_such_method')]}]
-        data = {'validators': validators}
-
-        with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPClientError):
-                certificate_ops.validate_csr(None, None, None)
-
-    def test_validate_csr_fail5(self):
-        """Test validate_csr with a validator that should fail."""
+    def test_validate_csr_fail(self):
+        """Test failure path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'common', 'steps': [('common_name')]}]
+        validators = [{'name': 'name',
+                       'steps': [
+                           ('common_name', {'allowed_domains':
+                                            ['.testing.com']})]}]
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):

@@ -112,7 +112,7 @@ class X509Certificate(object):
 
         :param path: Output file path
         """
-        bio = self._lib.BIO_new_file(path, "w")
+        bio = self._lib.BIO_new_file(path.encode('ascii', 'ignore'), "w")
         ret = self._lib.PEM_write_bio_X509(bio, self._certObj)
         self._lib.BIO_free(bio)
 

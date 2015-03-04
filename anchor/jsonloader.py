@@ -24,11 +24,6 @@ logger = logging.getLogger(__name__)
 
 class AnchorConf():
 
-    ca = None
-    _config = None
-    _logger = None
-    _settings = dict()
-
     def __init__(self, logger, config_file):
         '''Attempt to initialize a config dictionary from a yaml file.
 
@@ -39,6 +34,7 @@ class AnchorConf():
         '''
 
         self._logger = logger
+        self._config = {}
 
         try:
             f = open(config_file, 'r')
@@ -46,7 +42,7 @@ class AnchorConf():
             logger.error("could not open config file: %s" % config_file)
             sys.exit(2)
         else:
-            # yaml parser does its own exception handling
+            # JSON parser does its own exception handling
             self._config = json.load(f)
 
     @property
