@@ -79,7 +79,7 @@ def check_networks_strict(domain, allowed_networks):
     return True
 
 
-def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
+def common_name(csr=None, allowed_domains=[], allowed_networks=[], **kwargs):
     """Check CN entire is a known domain.
 
     Refuse requests for certificates if they contain multiple CN
@@ -103,13 +103,16 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        if not (check_domains(cn, allowed_domains) and
-                check_networks(cn, allowed_networks)):
-            raise ValidationError("Domain '%s' not allowed (doesn't match"
-                                  " known domains or networks)" % cn)
+        if allowed_domains:
+            if not check_domains(cn, allowed_domains):
+                raise ValidationError("Domain '%s' not allowed (doesn't match"
+                                      " known domains:%s)" % (cn," ".join(allowed_domains)))
+        if allowed_networks:
+            if not check_networks(cn, allowed_networks):
+                raise ValidationError("Domain '%s' not in an allowed network" % cn)
 
 
-def alternative_names(csr, allowed_domains=[], **kwargs):
+def alternative_names(csr=None, allowed_domains=[], **kwargs):
     """Check known domain alternative names.
 
     Refuse requests for certificates if the domain does not match
@@ -130,7 +133,7 @@ def alternative_names(csr, allowed_domains=[], **kwargs):
                                           % parts[1])
 
 
-def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
+def alternative_names_ip(csr=None, allowed_domains=[], allowed_networks=[],
                          **kwargs):
     """Check known domain and ip alternative names.
 
