@@ -1,0 +1,62 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            a3:ee:ec:b5:c1:fd:ea:58
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=AU, ST=Some-State, O=Herp Derp plc, CN=herp.derp.plc
+        Validity
+            Not Before: Dec 11 13:58:23 2014 GMT
+            Not After : Dec 10 13:58:23 2017 GMT
+        Subject: C=AU, ST=Some-State, O=Herp Derp plc, CN=herp.derp.plc
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+            RSA Public Key: (1024 bit)
+                Modulus (1024 bit):
+                    00:9e:f9:e6:ac:c4:75:c2:48:6f:7f:cd:2f:62:a0:
+                    d1:f6:6a:cc:8c:54:28:8a:f1:41:68:0b:ca:b2:e4:
+                    68:59:28:63:1a:0e:29:10:3f:18:af:a1:2f:4b:d8:
+                    8f:da:4f:89:35:c4:38:69:98:46:36:5e:6e:05:55:
+                    cb:23:10:a8:63:c2:25:ee:21:f8:db:06:ed:6f:94:
+                    08:01:36:61:e8:1f:b7:d3:79:d2:77:30:7b:e6:5e:
+                    16:e2:b2:78:4d:be:9d:78:b4:d5:30:1e:31:29:bb:
+                    96:f0:f3:25:f3:a7:24:05:25:bb:ae:d8:6b:d9:73:
+                    82:cf:40:62:a5:bb:96:77:83
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Key Identifier: 
+                18:0B:71:2C:25:90:4F:BE:00:F8:18:18:14:5B:C0:D8:45:98:E3:78
+            X509v3 Authority Key Identifier: 
+                keyid:18:0B:71:2C:25:90:4F:BE:00:F8:18:18:14:5B:C0:D8:45:98:E3:78
+                DirName:/C=AU/ST=Some-State/O=Herp Derp plc/CN=herp.derp.plc
+                serial:A3:EE:EC:B5:C1:FD:EA:58
+
+            X509v3 Basic Constraints: 
+                CA:TRUE
+    Signature Algorithm: sha1WithRSAEncryption
+        43:73:36:07:e0:d6:a8:f1:5c:8a:01:9d:7a:ff:1c:cd:30:a8:
+        f1:b8:ec:f4:96:32:71:e3:21:97:88:79:25:f5:3d:37:cc:b2:
+        5a:85:15:73:7a:c1:e6:21:52:e1:f4:97:5c:52:22:ef:1a:e8:
+        05:28:2e:7e:ad:92:36:66:9b:10:dc:ed:b9:82:8d:88:35:1c:
+        95:ee:02:2e:bb:7f:54:c0:0b:1d:5d:c8:43:46:5f:ec:a4:f7:
+        1b:69:1f:91:96:dc:9e:f6:4c:f7:bd:88:80:93:7e:65:43:ea:
+        8d:5a:b4:cf:12:c9:78:32:22:34:0e:2b:e9:55:8c:3f:96:0f:
+        0b:0a
+-----BEGIN CERTIFICATE-----
+MIIC2DCCAkGgAwIBAgIJAKPu7LXB/epYMA0GCSqGSIb3DQEBBQUAMFIxCzAJBgNV
+BAYTAkFVMRMwEQYDVQQIEwpTb21lLVN0YXRlMRYwFAYDVQQKEw1IZXJwIERlcnAg
+cGxjMRYwFAYDVQQDEw1oZXJwLmRlcnAucGxjMB4XDTE0MTIxMTEzNTgyM1oXDTE3
+MTIxMDEzNTgyM1owUjELMAkGA1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUx
+FjAUBgNVBAoTDUhlcnAgRGVycCBwbGMxFjAUBgNVBAMTDWhlcnAuZGVycC5wbGMw
+gZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAJ755qzEdcJIb3/NL2Kg0fZqzIxU
+KIrxQWgLyrLkaFkoYxoOKRA/GK+hL0vYj9pPiTXEOGmYRjZebgVVyyMQqGPCJe4h
++NsG7W+UCAE2Yegft9N50ncwe+ZeFuKyeE2+nXi01TAeMSm7lvDzJfOnJAUlu67Y
+a9lzgs9AYqW7lneDAgMBAAGjgbUwgbIwHQYDVR0OBBYEFBgLcSwlkE++APgYGBRb
+wNhFmON4MIGCBgNVHSMEezB5gBQYC3EsJZBPvgD4GBgUW8DYRZjjeKFWpFQwUjEL
+MAkGA1UEBhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxFjAUBgNVBAoTDUhlcnAg
+RGVycCBwbGMxFjAUBgNVBAMTDWhlcnAuZGVycC5wbGOCCQCj7uy1wf3qWDAMBgNV
+HRMEBTADAQH/MA0GCSqGSIb3DQEBBQUAA4GBAENzNgfg1qjxXIoBnXr/HM0wqPG4
+7PSWMnHjIZeIeSX1PTfMslqFFXN6weYhUuH0l1xSIu8a6AUoLn6tkjZmmxDc7bmC
+jYg1HJXuAi67f1TACx1dyENGX+yk9xtpH5GW3J72TPe9iICTfmVD6o1atM8SyXgy
+IjQOK+lVjD+WDwsK
+-----END CERTIFICATE-----

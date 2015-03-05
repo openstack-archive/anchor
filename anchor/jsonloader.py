@@ -29,7 +29,7 @@ class AnchorConf():
 
         Error out if loading the yaml file fails for any reason.
         :param logger: Logger to be used in the case of errors
-        :param config_file: The Anchor yaml config file
+        :param config_file: The Anchor JSON config file
         :return: -
         '''
 
@@ -52,6 +52,9 @@ class AnchorConf():
         :return: Config dictionary
         '''
         return self._config
+
+    def load_str_data(self, data):
+        self._config = json.loads(data)
 
     def __getattr__(self, name):
         return self._config[name]
