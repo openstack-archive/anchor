@@ -14,6 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
 import unittest
 
 import mock
@@ -248,9 +249,9 @@ class TestX509Cert(unittest.TestCase):
             mock_open.return_value = mock.MagicMock(spec=file)
             m_file = mock_open.return_value.__enter__.return_value
             m_file.read.return_value = TestX509Cert.cert_data
+
             cert = certificate.X509Certificate()
             cert.from_file("some_path")
-
             name = cert.get_subject()
             entries = name.get_entries_by_nid_name('C')
             self.assertEqual(entries[0].get_value(), "UK")
@@ -268,3 +269,32 @@ class TestX509Cert(unittest.TestCase):
         self.assertRaises(x509_errors.X509Error,
                           self.cert.sign,
                           self.cert._ffi.NULL)
+
+    def test_get_version(self):
+        v = self.cert.get_version()
+        self.assertEqual(v, 2)
+
+    def test_set_version(self):
+        self.cert.set_version(5)
+        v = self.cert.get_version()
+        self.assertEqual(v, 5)
+
+    def test_get_not_before(self):
+        val = self.cert.get_not_before()
+        self.assertEqual(1421244619.0, val)
+
+    def test_set_not_before(self):
+        self.cert.set_not_before(0)  # seconds since epoch
+        val = self.cert.get_not_before()
+        tst = time.mktime(time.gmtime(0))
+        self.assertEqual(tst, val)
+
+    def test_get_not_after(self):
+        val = self.cert.get_not_after()
+        self.assertEqual(1421331019.0, val)
+
+    def test_set_not_after(self):
+        self.cert.set_not_after(0)  # seconds since epoch
+        val = self.cert.get_not_after()
+        tst = time.mktime(time.gmtime(0))
+        self.assertEqual(tst, val)
