@@ -11,7 +11,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+
 import logging
+import os
+import stat
 
 import paste
 from paste import translogger  # noqa
@@ -29,7 +32,6 @@ class ConfigValidationException(Exception):
 
 def config_check_domains(conf):
     # gc.validators[0]['steps'][0][1]['allowed_domains']
-
     for validator in conf.validators:
         for step in validator['steps']:
             if 'allowed_domains' in step[1]:
@@ -40,9 +42,46 @@ def config_check_domains(conf):
                             "a '.' <%s>", domain)
 
 
+def _check_file_permissions(path):
+    # checks that file is owner readable only
+    expected_permissions = (stat.S_IRUSR | stat.S_IFREG)  # 0o100400
+    st = os.stat(path)
+    if st.st_mode != expected_permissions:
+        raise ConfigValidationException("CA file: %s has incorrect "
+                                        "permissions set, expected "
+                                        "owner readable only" % path)
+
+
+def _check_file_exists(path):
+    if not (os.path.isfile(path) and
+            os.access(path, os.R_OK)):
+        raise ConfigValidationException("could not read file: %s" %
+                                        path)
+
+
 def validate_config(conf):
     if not hasattr(conf, "auth") or not conf.auth:
         raise ConfigValidationException("No authentication configured")
+
+    if not hasattr(conf, "ca") or not conf.ca:
+        raise ConfigValidationException("No ca configuration present")
+
+    # mandatory CA settings
+    ca_config_requirements = ["cert_path", "key_path", "output_path",
+                              "signing_hash", "valid_hours"]
+
+    for requirement in ca_config_requirements:
+        if requirement not in conf.ca.keys():
+            raise ConfigValidationException("CA config missing: %s" %
+                                            requirement)
+
+    # all are specified, check the CA certificate and key are readable with
+    # sane permissions
+    _check_file_exists(conf.ca['cert_path'])
+    _check_file_exists(conf.ca['key_path'])
+
+    _check_file_permissions(conf.ca['cert_path'])
+    _check_file_permissions(conf.ca['key_path'])
 
     if not hasattr(conf, "validators"):
         raise ConfigValidationException("No validators configured")
