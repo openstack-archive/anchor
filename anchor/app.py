@@ -40,6 +40,32 @@ def validate_config(conf):
     if not hasattr(conf, "auth") or not conf.auth:
         raise ConfigValidationException("No authentication configured")
 
+    if not hasattr(conf, "ca") or not conf.ca:
+        raise ConfigValidationException("No ca configuration present")
+
+    # mandatory CA settings
+    ca_config_requirements = ["cert_path", "key_path", "output_path",
+                              "signing_hash", "valid_hours"]
+
+    for requirement in ca_config_requirements:
+        if requirement not in conf.ca.keys():
+            raise ConfigValidationException("CA config missing: %s" %
+                                            requirement)
+
+    # all are specified, check the CA certificate and key are readable
+    try:
+        fp = open(conf.ca['cert_path'],'rb')
+        fp.close()
+    except IOError:
+        raise ConfigValidationException("could not read CA cert: %s" %
+                                        conf.ca['cert_path'])
+    try:
+        fp = open(conf.ca['key_path'],'rb')
+        fp.close()
+    except IOError:
+        raise ConfigValidationException("could not read CA private key: %s"
+                                        % conf.ca['key_path'])
+
     if not hasattr(conf, "validators"):
         raise ConfigValidationException("No validators configured")
 
