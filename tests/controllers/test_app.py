@@ -14,17 +14,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import stat
 import unittest
 
 import bad_config_domains
 import good_config_domains
 
 from anchor import app
+from anchor import jsonloader
 
 
 class TestValidDN(unittest.TestCase):
-
     def setUp(self):
+        self.test_file = "tests/controllers/app_test.crt"
+        os.chmod(self.test_file, stat.S_IRUSR | stat.S_IFREG)
         super(TestValidDN, self).setUp()
 
     def tearDown(self):
@@ -42,3 +46,78 @@ class TestValidDN(unittest.TestCase):
             app.validate_config,
             bad_config_domains
         )
+
+    def test_check_file_permissions_good(self):
+        os.chmod(self.test_file, stat.S_IRUSR | stat.S_IFREG)
+        app._check_file_permissions(self.test_file)
+
+    def test_check_file_permissions_bad(self):
+        os.chmod(self.test_file, stat.S_IRGRP)
+        self.assertRaises(app.ConfigValidationException,
+                          app._check_file_permissions, self.test_file)
+
+    def test_validate_config_no_auth(self):
+        jsonloader.conf.load_str_data("{}")
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "No authentication configured",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_no_ca(self):
+        jsonloader.conf.load_str_data("""{"auth" : { "static": {}} }""")
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "No ca configuration present",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_ca_config_reqs(self):
+        ca_config_requirements = ["cert_path", "key_path", "output_path",
+                                  "signing_hash", "valid_hours"]
+
+        config = """{"auth" : { "static": {}},
+                     "ca": { "cert_path":"", "key_path":"", "output_path":"",
+                            "signing_hash":"", "valid_hours":""} }"""
+
+        # Iterate through the ca_config_requirements, replace each one in turn
+        # with 'missing_req', perform validation. Each should raise in turn
+        for req in ca_config_requirements:
+            jsonloader.conf.load_str_data(config.replace(req, "missing_req"))
+            self.assertRaisesRegexp(app.ConfigValidationException,
+                                    "CA config missing: %s" % req,
+                                    app.validate_config, jsonloader.conf)
+
+    def test_validate_config_no_ca_cert_file(self):
+        config = """{"auth" : { "static": {}},
+                     "ca": { "cert_path":"no_cert_file", "key_path":"",
+                             "output_path":"", "signing_hash":"",
+                             "valid_hours":""} } """
+
+        jsonloader.conf.load_str_data(config)
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "could not read CA cert file: no_cert_file",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_no_ca_key_file(self):
+        # re-use test file from earlier for cert
+        config = """{"auth" : { "static": {}},
+                     "ca": { "cert_path":"tests/controllers/app_test.crt",
+                             "key_path":"no_key_file", "output_path":"",
+                             "signing_hash":"", "valid_hours":""} } """
+        jsonloader.conf.load_str_data(config)
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "could not read CA private key file: "
+                                "no_key_file",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_no_validators(self):
+        # re-use test file from earlier for cert and key
+        config = """{"auth" : { "static": {}},
+                     "ca": { "cert_path":"tests/controllers/app_test.crt",
+                             "key_path":"tests/controllers/app_test.crt",
+                             "output_path":"","signing_hash":"",
+                             "valid_hours":""} } """
+        jsonloader.conf.load_str_data(config)
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "No validators configured",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_good(self):
+        pass
