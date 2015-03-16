@@ -67,8 +67,8 @@ validators = [
 ]
 
 ca = {
-    'cert_path': "CA/root-ca.crt",
-    'key_path': "CA/root-ca-unwrapped.key",
+    'cert_path': "tests/CA/root-ca.crt",
+    'key_path': "tests/CA/root-ca-unwrapped.key",
     'output_path': "certs",
     'valid_hours': 24,
     'signing_hash': "sha1",

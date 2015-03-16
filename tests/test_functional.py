@@ -100,11 +100,10 @@ class TestFunctional(unittest.TestCase):
         -----END CERTIFICATE REQUEST-----""")
 
     def setUp(self):
+        jsonloader.conf.load_str_data(TestFunctional.config)
         app_conf = {"app": copy.deepcopy(config.app),
                     "logging": copy.deepcopy(config.logging)}
         self.app = pecan_testing.load_test_app(app_conf)
-        jsonloader.conf.load_str_data(TestFunctional.config)
-
         self.conf = getattr(jsonloader.conf, "_config")
         self.conf["ca"]["output_path"] = tempfile.mkdtemp()
 
