@@ -11,12 +11,16 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import logging
+
 import paste
 from paste import translogger  # noqa
 import pecan
 import validators
 
 from anchor import jsonloader
+
+logger = logging.getLogger(__name__)
 
 
 class ConfigValidationException(Exception):
@@ -67,6 +71,18 @@ def validate_config(conf):
     config_check_domains(conf)
 
 
+def check_default_auth(conf):
+    default_user = "myusername"
+    default_secret = "simplepassword"
+
+    # Check for anchor being run with default user/secret
+    if 'static' in conf.auth.keys():
+        if conf.auth['static']['user'] == default_user:
+            logger.warn("default user for static auth in use")
+        if conf.auth['static']['secret'] == default_secret:
+            logger.warn("default secret for static auth in use")
+
+
 def setup_app(config):
     app_conf = dict(config.app)
 
@@ -77,4 +93,7 @@ def setup_app(config):
         logging=config.logging,
         **app_conf
     )
+
+    check_default_auth(jsonloader.conf)
+
     return paste.translogger.TransLogger(app, setup_console_handler=False)
