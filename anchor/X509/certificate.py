@@ -135,7 +135,7 @@ class X509Certificate(object):
 
         if ret == 0:
             raise X509CertificateError("Could not write X509 certificate to "
-                                       "disk as PEM data.")
+                                       "disk as PEM data.")  # pragma: no cover
 
     def set_version(self, v):
         """Set the version of this X509 certificate object.
@@ -195,7 +195,7 @@ class X509Certificate(object):
         ret = self._lib.X509_set_pubkey(self._certObj, pkey)
         if ret == 0:
             raise X509CertificateError("Could not set X509 certificate "
-                                       "pubkey.")
+                                       "pubkey.")  # pragma: no cover
 
     def get_subject(self):
         """Get the subject name field value.
@@ -257,7 +257,7 @@ class X509Certificate(object):
         self._lib.ASN1_INTEGER_free(asn1_int)
         if ret == 0:
             raise X509CertificateError("Could not set X509 certificate "
-                                       "serial number.")
+                                       "serial number.")  # pragma: no cover
 
     def add_extension(self, ext, index):
         """Add an X509 V3 Certificate extension.
@@ -268,7 +268,7 @@ class X509Certificate(object):
         ret = self._lib.X509_add_ext(self._certObj, ext._ext, index)
         if ret == 0:
             raise X509CertificateError("Could not add X509 certificate "
-                                       "extension.")
+                                       "extension.")  # pragma: no cover
 
     def sign(self, key, md='sha1'):
         """Sign the X509 certificate with a key using a message digest algorithm
@@ -287,7 +287,7 @@ class X509Certificate(object):
         ret = self._lib.X509_sign(self._certObj, key, mda())
         if ret == 0:
             raise X509CertificateError("X509 signing error: Could not sign "
-                                       " certificate.")
+                                       " certificate.")  # pragma: no cover
 
     def as_der(self):
         """Return this X509 certificate as DER encoded data."""
