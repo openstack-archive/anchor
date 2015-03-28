@@ -107,10 +107,13 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
-        if not (check_domains(cn, allowed_domains) and
-                check_networks(cn, allowed_networks)):
-            raise ValidationError("Domain '%s' not allowed (doesn't match"
-                                  " known domains or networks)" % cn)
+        if not (check_domains(cn, allowed_domains)):
+            raise ValidationError("Domain '%s' not allowed (does not match"
+                                  " known domains)" % cn)
+
+        if not (check_networks(cn, allowed_networks)):
+            raise ValidationError("Domain '%s' not allowed (does not match"
+                                  " known networks)" % cn)
 
 
 def alternative_names(csr, allowed_domains=[], **kwargs):
