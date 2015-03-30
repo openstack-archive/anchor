@@ -81,13 +81,16 @@ def _run_validator(validator_step, args):
     new_kwargs.update(params)
 
     # perform the actual check
-    logger.debug("_run_validator: checking {}".format(function_name))
+    logger.debug("_run_validator: checking <%s> with rules: %s",
+                 function_name, params)
     try:
         validator = getattr(validators, function_name)
         validator(**new_kwargs)
+        logger.debug("_run_validator: success: <%s> ", function_name)
         return True  # validator passed b/c no exceptions
     except validators.ValidationError as e:
-        logger.error("_run_validator: validation failed %s", e)
+        logger.error("_run_validator: FAILED:  <%s> - %s",
+                     function_name, e)
         return False
 
 
