@@ -1,4 +1,4 @@
-cryptography>=0.4
+cryptography>=0.8
 pecan>=0.8.0
 Paste
 netaddr>=0.7.12
