@@ -236,3 +236,32 @@ class TestValidDN(unittest.TestCase):
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
+
+    @mock.patch('anchor.jsonloader.conf.load_file_data')
+    def test_config_paths_env(self, conf):
+        with mock.patch.dict('os.environ', {'ANCHOR_CONF': '/fake/fake'}):
+            app.load_config()
+            conf.assert_called_with('/fake/fake')
+
+    @mock.patch('anchor.jsonloader.conf.load_file_data')
+    def test_config_paths_local(self, conf):
+        ret = lambda x: True if x == 'config.json' else False
+        with mock.patch("os.path.isfile", ret):
+            app.load_config()
+            conf.assert_called_with('config.json')
+
+    @mock.patch('anchor.jsonloader.conf.load_file_data')
+    def test_config_paths_user(self, conf):
+        ret = (lambda x: True if x == '/fake/.config/anchor/config.json'
+               else False)
+        with mock.patch('os.path.isfile', ret):
+            with mock.patch.dict('os.environ', {'HOME': '/fake'}):
+                app.load_config()
+                conf.assert_called_with('/fake/.config/anchor/config.json')
+
+    @mock.patch('anchor.jsonloader.conf.load_file_data')
+    def test_config_paths_system(self, conf):
+        ret = lambda x: True if x == '/etc/anchor/config.json' else False
+        with mock.patch('os.path.isfile', ret):
+            app.load_config()
+            conf.assert_called_with('/etc/anchor/config.json')
