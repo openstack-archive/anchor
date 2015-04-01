@@ -122,9 +122,32 @@ def check_default_auth(conf):
             logger.warn("default secret for static auth in use")
 
 
+def load_config():
+    config_name = 'ANCHOR_CONF'
+    local_config_path = 'config.json'
+    user_config_path = os.path.join(
+        os.environ['HOME'], '.config', 'anchor', 'config.json')
+
+    sys_config_path = os.path.join(os.sep, 'etc', 'anchor', 'config.json')
+
+    if 'auth' not in jsonloader.conf.config:
+        config_path = ""
+        if config_name in os.environ:
+            config_path = os.environ[config_name]
+        elif os.path.isfile(local_config_path):
+            config_path = local_config_path
+        elif os.path.isfile(user_config_path):
+            config_path = user_config_path
+        elif os.path.isfile(sys_config_path):
+            config_path = sys_config_path
+        print("using config: {}".format(config_path))  # no logger yet
+        jsonloader.conf.load_file_data(config_path)
+
+
 def setup_app(config):
     app_conf = dict(config.app)
 
+    load_config()
     validate_config(jsonloader.conf)
 
     app = pecan.make_app(

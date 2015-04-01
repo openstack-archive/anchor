@@ -16,15 +16,13 @@
 
 import json
 import logging
-import sys
-
 
 logger = logging.getLogger(__name__)
 
 
 class AnchorConf():
 
-    def __init__(self, logger, config_file):
+    def __init__(self, logger):
         '''Attempt to initialize a config dictionary from a yaml file.
 
         Error out if loading the yaml file fails for any reason.
@@ -36,14 +34,22 @@ class AnchorConf():
         self._logger = logger
         self._config = {}
 
+    def load_file_data(self, config_file):
+        '''Load a config from a file.'''
         try:
-            f = open(config_file, 'r')
+            with open(config_file, 'r') as f:
+                self._config = json.load(f)
+
         except IOError:
             logger.error("could not open config file: %s" % config_file)
-            sys.exit(2)
-        else:
-            # JSON parser does its own exception handling
-            self._config = json.load(f)
+            raise
+        except Exception:
+            logger.error("error parsing config file: %s" % config_file)
+            raise
+
+    def load_str_data(self, data):
+        '''Load a config from string data.'''
+        self._config = json.loads(data)
 
     @property
     def config(self):
@@ -53,11 +59,8 @@ class AnchorConf():
         '''
         return self._config
 
-    def load_str_data(self, data):
-        self._config = json.loads(data)
-
     def __getattr__(self, name):
         return self._config[name]
 
 
-conf = AnchorConf(logger, "config.json")
+conf = AnchorConf(logger)
