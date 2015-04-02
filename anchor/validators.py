@@ -31,9 +31,10 @@ def csr_get_cn(csr):
 
 
 def check_domains(domain, allowed_domains):
-    if not any(domain.endswith(suffix) for suffix in allowed_domains):
-        # no domain matched
-        return False
+    if len(allowed_domains):
+        if not any(domain.endswith(suffix) for suffix in allowed_domains):
+            # no domain matched
+            return False
     return True
 
 
