@@ -31,9 +31,13 @@ def csr_get_cn(csr):
 
 
 def check_domains(domain, allowed_domains):
-    if not any(domain.endswith(suffix) for suffix in allowed_domains):
-        # no domain matched
-        return False
+    if allowed_domains:
+        if not any(domain.endswith(suffix) for suffix in allowed_domains):
+            # no domain matched
+            return False
+    else:
+        # no valid domains were provided, so we can't make any assertions
+        logger.warning("No valid domains were given, skipping")
     return True
 
 
@@ -44,7 +48,7 @@ def check_networks(domain, allowed_networks):
     at least one of the IP addresses is listed in allowed_networks for the
     deployment.
     """
-    if len(allowed_networks) == 0:
+    if not allowed_networks:
         # no valid networks were provided, so we can't make any assertions
         logger.warning("No valid network IP ranges were given, skipping")
         return True
