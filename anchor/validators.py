@@ -118,7 +118,7 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
                                   " known domains)" % cn)
 
         if not (check_networks(cn, allowed_networks)):
-            raise ValidationError("Domain '%s' not allowed (does not match"
+            raise ValidationError("Network '%s' not allowed (does not match"
                                   " known networks)" % cn)
 
 
@@ -244,7 +244,7 @@ def source_cidrs(request=None, cidrs=None, **kwargs):
             if request.client_addr in r:
                 return
         except netaddr.AddrFormatError:
-            raise ValidationError("Cidr <%s> does not describe a valid"
-                                  " network", cidr)
-    raise ValidationError("No network matched the request source <%s>",
+            raise ValidationError("Cidr '%s' does not describe a valid"
+                                  " network" % cidr)
+    raise ValidationError("No network matched the request source '%s'" %
                           request.client_addr)
