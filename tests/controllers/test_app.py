@@ -18,8 +18,6 @@
 import stat
 import unittest
 
-import bad_config_domains
-import good_config_domains
 import mock
 
 from anchor import app
@@ -37,12 +35,54 @@ class TestValidDN(unittest.TestCase):
     def test_self_test(self):
         self.assertTrue(True)
 
-    def test_config_check_domains_good(self):
+    @mock.patch('anchor.app._check_file_exists')
+    @mock.patch('anchor.app._check_file_permissions')
+    def test_config_check_domains_good(self, a, b):
+        good_config_domains = jsonloader.AnchorConf(None)
+        good_config_domains._config = {
+            "auth": {"static": {}},
+            "ca": {
+                "cert_path": "no_cert_file",
+                "key_path": "no_key_file",
+                "output_path": "",
+                "signing_hash": "",
+                "valid_hours": ""
+                },
+            "validators": {
+                "steps": {
+                    "common_name": {
+                        "allowed_domains": [".test.com"]
+                    }
+                }
+            }
+        }
+
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
             self.assertEqual(app.validate_config(good_config_domains), None)
 
-    def test_config_check_domains_bad(self):
+    @mock.patch('anchor.app._check_file_exists')
+    @mock.patch('anchor.app._check_file_permissions')
+    def test_config_check_domains_bad(self, a, b):
+        bad_config_domains = jsonloader.AnchorConf(None)
+        bad_config_domains._config = {
+            "auth": {"static": {}},
+            "ca": {
+                "cert_path": "no_cert_file",
+                "key_path": "no_key_file",
+                "output_path": "",
+                "signing_hash": "",
+                "valid_hours": ""
+                },
+            "validators": {
+                "steps": {
+                    "common_name": {
+                        "allowed_domains": ["error.test.com"]
+                    }
+                }
+            }
+        }
+
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
             self.assertRaises(
@@ -122,70 +162,20 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
-    def test_validate_config_no_validator_name(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": [ { "no_name" : ""} ]
-                    }
-                 """
-        jsonloader.conf.load_str_data(config)
-        isfile.return_value = True
-        access.return_value = True
-        stat.return_value.st_mode = self.expected_key_permissions
-        self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <1> is missing a name",
-                                app.validate_config, jsonloader.conf)
-
-    @mock.patch('os.path.isfile')
-    @mock.patch('os.access')
-    @mock.patch('os.stat')
     def test_validate_config_no_validator_steps(self, stat, access, isfile):
         config = """{"auth" : { "static": {}},
                      "ca": { "cert_path":"no_cert_file",
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
                              "valid_hours":""},
-                     "validators": [ { "name" : "no_steps"} ]
-                    }
+                     "validators": { "no_steps" : {}}}
                  """
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
         self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <no_steps> is missing "
-                                "validation steps",
-                                app.validate_config, jsonloader.conf)
-
-    @mock.patch('os.path.isfile')
-    @mock.patch('os.access')
-    @mock.patch('os.stat')
-    def test_validate_config_no_validator_step_name(self, stat, access,
-                                                    isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": [
-                                    { "name" : "has_steps",
-                                    "steps": [ [
-
-                                    ] ]}
-
-                     ]
-                    }
-                 """
-        jsonloader.conf.load_str_data(config)
-        isfile.return_value = True
-        access.return_value = True
-        stat.return_value.st_mode = self.expected_key_permissions
-        self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <has_steps> contains a step "
-                                "with no validator name",
+                                "Validator set <no_steps> is empty",
                                 app.validate_config, jsonloader.conf)
 
     @mock.patch('os.path.isfile')
@@ -197,22 +187,18 @@ class TestValidDN(unittest.TestCase):
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
                              "valid_hours":""},
-                     "validators": [
-                                    { "name" : "has_steps",
-                                    "steps": [ [
-                                    "unknown_validator",
-                                      {}
-                                    ] ]}
-
-                     ]
-                    }
+                     "validators": {
+                        "steps": {
+                          "unknown_validator": {}
+                        }
+                    }}
                  """
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
         self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <has_steps> contains an "
+                                "Validator set <steps> contains an "
                                 "unknown validator <unknown_validator>",
                                 app.validate_config, jsonloader.conf)
 
@@ -225,13 +211,12 @@ class TestValidDN(unittest.TestCase):
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
                              "valid_hours":""},
-                     "validators": [
-                                    { "name" : "has_steps",
-                                    "steps": [ [
-                                    "common_name",
-                                      { "allowed_domains": [
+                     "validators": {
+                            "steps": {
+                                    "common_name": {
+                                      "allowed_domains": [
                                           ".test.com" ]
-                                      } ] ]} ] } """
+                                      }}}}"""
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True

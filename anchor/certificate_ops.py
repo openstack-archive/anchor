@@ -60,37 +60,27 @@ def parse_csr(csr, encoding):
         pecan.abort(400, "CSR cannot be parsed")
 
 
-def _run_validator(validator_step, args):
+def _run_validator(name, body, args):
     """Parse the validator tuple, call the validator, and return result.
 
-       :param validator_step: validator tuple directly from the config
+       :param name: the validator name
+       :param body: validator body, directly from config
        :param args: additional arguments to pass to the validator function
        :return: True on success, else False
     """
-    function_name = validator_step[0]
-    params = validator_step[1]
-
-    # make sure the requested validator exists
-    if not hasattr(validators, function_name):
-        logger.error("_run_validator: no validator method {}"
-                     .format(function_name))
-        return False
-
     # careful to not modify the master copy of args with local params
     new_kwargs = args.copy()
-    new_kwargs.update(params)
+    new_kwargs.update(body)
 
     # perform the actual check
-    logger.debug("_run_validator: checking <%s> with rules: %s",
-                 function_name, params)
+    logger.debug("_run_validator: checking <%s> with rules: %s", name, body)
     try:
-        validator = getattr(validators, function_name)
+        validator = getattr(validators, name)
         validator(**new_kwargs)
-        logger.debug("_run_validator: success: <%s> ", function_name)
+        logger.debug("_run_validator: success: <%s> ", name)
         return True  # validator passed b/c no exceptions
     except validators.ValidationError as e:
-        logger.error("_run_validator: FAILED:  <%s> - %s",
-                     function_name, e)
+        logger.error("_run_validator: FAILED:  <%s> - %s", name, e)
         return False
 
 
@@ -116,10 +106,10 @@ def validate_csr(auth_result, csr, request):
     # so we set the initial state to valid.
     valid = True
 
-    for vset in jsonloader.conf.validators:
-        logger.debug("validate_csr: checking {}".format(vset.get("name")))
+    for name, vset in jsonloader.conf.validators.iteritems():
+        logger.debug("validate_csr: checking {}".format(name))
 
-        results = [_run_validator(x, args) for x in vset['steps']]
+        results = [_run_validator(x, y, args) for x, y in vset.iteritems()]
         results.append(valid)  # track previous failures
         valid = all(results)
 
