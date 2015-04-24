@@ -100,9 +100,7 @@ class CertificateOpsTests(unittest.TestCase):
         """Test basic success path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'common',
-                       'steps': [
-                           ('extensions', {'allowed_extensions': []})]}]
+        validators = {'steps': {'extensions': {'allowed_extensions': []}}}
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
@@ -112,7 +110,7 @@ class CertificateOpsTests(unittest.TestCase):
         """Test empty validator set for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'validators': []}
+        data = {'validators': {}}
 
         with mock.patch.dict(config, data):
             # this should work, it allows people to bypass validation
@@ -122,10 +120,8 @@ class CertificateOpsTests(unittest.TestCase):
         """Test failure path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = [{'name': 'name',
-                       'steps': [
-                           ('common_name', {'allowed_domains':
-                                            ['.testing.com']})]}]
+        validators = {'steps': {'common_name': {'allowed_domains':
+                                                ['.testing.com']}}}
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):

@@ -30,16 +30,14 @@ class ConfigValidationException(Exception):
     pass
 
 
-def config_check_domains(conf):
-    # gc.validators[0]['steps'][0][1]['allowed_domains']
-    for validator in conf.validators:
-        for step in validator['steps']:
-            if 'allowed_domains' in step[1]:
-                for domain in step[1]['allowed_domains']:
-                    if not domain.startswith('.'):
-                        raise ConfigValidationException(
-                            "Domain that does not start with "
-                            "a '.' <%s>", domain)
+def config_check_domains(validator_set):
+    for name, step in validator_set.iteritems():
+        if 'allowed_domains' in step:
+            for domain in step['allowed_domains']:
+                if not domain.startswith('.'):
+                    raise ConfigValidationException(
+                        "Domain that does not start with "
+                        "a '.' <{}>".format(domain))
 
 
 def _check_file_permissions(path):
@@ -86,28 +84,21 @@ def validate_config(conf):
     if not hasattr(conf, "validators"):
         raise ConfigValidationException("No validators configured")
 
-    for i, validators_list in enumerate(conf.validators):
-        name = validators_list.get("name")
-        if not name:
-            raise ConfigValidationException("Validator set <%d> is missing a "
-                                            "name" % (i + 1))
+    print("Found {} validator sets.".format(len(conf.validators)))
+    for name, validator_set in conf.validators.iteritems():
+        print("Checking validator set <{}> ....".format(name))
+        if len(validator_set) == 0:
+            raise ConfigValidationException(
+                "Validator set <{}> is empty".format(name))
 
-        if not validators_list.get("steps"):
-            raise ConfigValidationException("Validator set <%s> is missing "
-                                            "validation steps" % name)
+        for step in validator_set.keys():
+            if not hasattr(validators, step):
+                raise ConfigValidationException(
+                    "Validator set <{}> contains an "
+                    "unknown validator <{}>".format(name, step))
 
-        for step in validators_list["steps"]:
-            if len(step) == 0:
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "a step with no validator "
-                                                "name" % name)
-
-            if not hasattr(validators, step[0]):
-                raise ConfigValidationException("Validator set <%s> contains "
-                                                "an unknown validator <%s>" %
-                                                (name, step[0]))
-
-    config_check_domains(conf)
+    config_check_domains(validator_set)
+    print("OK")
 
 
 def check_default_auth(conf):
