@@ -45,21 +45,15 @@ class TestFunctional(unittest.TestCase):
         "signing_hash": "sha1",
         "valid_hours": 24
       },
-      "validators": [
-        {
-          "name": "default",
-          "steps": [
-            [
-              "common_name",
-              {
-                "allowed_domains": [
-                  ".test.com"
+      "validators": {
+        "default": {
+          "common_name": {
+            "allowed_domains": [
+              ".test.com"
                 ]
               }
-            ]
-          ]
+           }
         }
-      ]
     }
     """
 
