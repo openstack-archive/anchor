@@ -60,7 +60,7 @@ class X509Certificate(object):
         self._ffi = backend._ffi
         certObj = self._lib.X509_new()
         if certObj == self._ffi.NULL:
-            raise X509CertificateError("Could not create X509 certifiacte "
+            raise X509CertificateError("Could not create X509 certificate "
                                        "object")  # pragma: no cover
 
         self._certObj = certObj
