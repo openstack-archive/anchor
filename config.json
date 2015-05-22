@@ -10,7 +10,7 @@
     "cert_path": "CA/root-ca.crt",
     "key_path": "CA/root-ca-unwrapped.key",
     "output_path": "certs",
-    "signing_hash": "sha1",
+    "signing_hash": "sha256",
     "valid_hours": 24
   },
 
