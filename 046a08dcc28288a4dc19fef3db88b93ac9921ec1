@@ -1,0 +1,10 @@
+Verified+2: Jenkins
+Code-Review+1: Stanislaw Pitucha <stanislaw.pitucha@hp.com>
+Code-Review+2: Doug Chivers <doug.chivers@hp.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hp.com>
+Workflow+1: Tim Kelsey <tim.kelsey@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 28 May 2015 11:13:20 +0000
+Reviewed-on: https://review.openstack.org/185179
+Project: stackforge/anchor
+Branch: refs/heads/master
