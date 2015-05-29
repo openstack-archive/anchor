@@ -11,6 +11,8 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import calendar
+import datetime
 import time
 
 from cryptography.hazmat.backends.openssl import backend
@@ -53,6 +55,20 @@ class X509Extension(object):
         return self._ffi.string(data)
 
 
+# TODO: The notBefore / notAfter times are a lie here. Openssl's X509 returns
+# ASN1_TIME, not ASN1_UTCTIME from notBefore/notAfter functions. Unfortunately
+# cryptography package does not support ASN1_TIME_set and other functions in
+# version 0.9. Cloning and fixing the whole binding just to add those two
+# functions would be too much work, so for now, we're pretending the UTCTIME
+# functions will work as expected and not crash. The offset is corrected
+# manually using the calendar module and time.timezone values.
+#
+# For now, the only fairly safe timezone to use with anchor is UTC, but even
+# this uses potentially mismatched time ASN1_UTCTIME variables.
+#
+# New version of cryptography.io already supports ASN1_TIME_set() and as soon
+# as it's released, this code needs to be updated to use it.
+
 class X509Certificate(object):
     """X509 certificate class."""
     def __init__(self):
@@ -70,7 +86,9 @@ class X509Certificate(object):
             self._lib.X509_free(self._certObj)
 
     def _asn1_utctime(self, t):
-        asn1_utctime = self._lib.ASN1_UTCTIME_set(self._ffi.NULL, t)
+        fake_local_time = t + time.timezone
+        asn1_utctime = self._lib.ASN1_UTCTIME_set(self._ffi.NULL,
+            fake_local_time)
         if asn1_utctime == self._ffi.NULL:
             raise X509CertificateError("Could not create ASN1_UTCTIME "
                                        "object")  # pragma: no cover
@@ -90,8 +108,8 @@ class X509Certificate(object):
         self._lib.BIO_gets(bio, data, size)
         data = self._ffi.string(data)
 
-        val = time.strptime(data, "%b %d %H:%M:%S %Y %Z")
-        return time.mktime(val)  # seconds since the epoch
+        val = datetime.datetime.strptime(data, "%b %d %H:%M:%S %Y %Z")
+        return calendar.timegm(val.utctimetuple())
 
     def from_buffer(self, data):
         """Build this X509 object from a data buffer in memory.
