@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class AnchorConf():
 
     def __init__(self, logger):
-        '''Attempt to initialize a config dictionary from a yaml file.
+        '''Attempt to initialize a config dictionary from a JSON file.
 
         Error out if loading the yaml file fails for any reason.
         :param logger: Logger to be used in the case of errors

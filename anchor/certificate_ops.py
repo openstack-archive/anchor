@@ -125,7 +125,10 @@ def validate_csr(auth_result, csr, request):
 
 
 def sign(csr):
+    """Generate an X.509 certificate and sign it.
 
+    :param csr: X509 certificate signing request
+    """
     try:
         ca = certificate.X509Certificate()
         ca.from_file(jsonloader.conf.ca["cert_path"])

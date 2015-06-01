@@ -117,6 +117,16 @@ def check_default_auth(conf):
 
 
 def load_config():
+    """Attempt to find and load a JSON configuration file.
+
+    We will search in various locations in order for a valid config file
+    to use:
+
+    - the contents of 'ANCHOR_CONF' environment variable
+    - a local 'config.json' file in the invocation folder
+    - a HOME/.config/anchor/config.json file
+    - a /etc/anchor/config.json fiile
+    """
     config_name = 'ANCHOR_CONF'
     local_config_path = 'config.json'
     user_config_path = os.path.join(
