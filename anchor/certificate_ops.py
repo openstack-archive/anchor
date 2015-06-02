@@ -106,20 +106,22 @@ def validate_csr(auth_result, csr, request):
     # so we set the initial state to valid.
     valid = True
 
-    for name, vset in jsonloader.conf.validators.iteritems():
-        logger.debug("validate_csr: checking {}".format(name))
+    try:
+        for name, vset in jsonloader.conf.validators.iteritems():
+            logger.debug("validate_csr: checking with set {}".format(name))
+            for vname, validator in vset.iteritems():
+                valid = _run_validator(vname, validator, args)
+                if not valid:
+                    break  # early out at the first error
 
-        results = [_run_validator(x, y, args) for x, y in vset.iteritems()]
-        results.append(valid)  # track previous failures
-        valid = all(results)
-
-    # valid here says that either (1) we didn't run any tests, or (2) we
-    # ran some tests and they all passed. Either way, we can just return.
-    if valid:
-        return
+    except Exception as e:
+        logger.exception("Error running validator <%s> - %s", vname, e)
+        pecan.abort(500, "Internal Validation Error running validator "
+                         "'{}' in set '{}'".format(vname, name))
 
     # something failed, return a 400 to the client
-    pecan.abort(400, "CSR failed validation")
+    if not valid:
+        pecan.abort(400, "CSR failed validation")
 
 
 def sign(csr):

@@ -25,6 +25,7 @@ import pecan
 from pecan import testing as pecan_testing
 
 from anchor import jsonloader
+from anchor import validators
 from anchor.X509 import certificate as X509_cert
 import config
 
@@ -154,3 +155,21 @@ class TestFunctional(unittest.TestCase):
         # make sure the cert was issued by anchor
         self.assertEqual("/C=UK/ST=Some-State/O=OSSG/CN=anchor.example.com",
                          str(cert.get_issuer()))
+
+    def test_check_broken_validator(self):
+        data = {'user': 'myusername',
+                'secret': 'simplepassword',
+                'encoding': 'pem',
+                'csr': TestFunctional.csr_good}
+
+        def derp(**kwdargs):
+            raise Exception("BOOM")
+
+        validators.broken_validator = derp
+        jsonloader.conf.validators["default"]["broken_validator"] = {}
+
+        resp = self.app.post('/sign', data, expect_errors=True)
+        self.assertEqual(500, resp.status_int)
+        self.assertTrue(("Internal Validation Error running "
+                         "validator 'broken_validator' "
+                         "in set 'default'") in str(resp))
