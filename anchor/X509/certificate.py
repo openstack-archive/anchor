@@ -11,12 +11,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
 
 from cryptography.hazmat.backends.openssl import backend
 import errors
 import message_digest
 import name
+import utils
 
 
 class X509CertificateError(errors.X509Error):
@@ -68,30 +68,6 @@ class X509Certificate(object):
     def __del__(self):
         if getattr(self, '_certObj', None):
             self._lib.X509_free(self._certObj)
-
-    def _asn1_utctime(self, t):
-        asn1_utctime = self._lib.ASN1_UTCTIME_set(self._ffi.NULL, t)
-        if asn1_utctime == self._ffi.NULL:
-            raise X509CertificateError("Could not create ASN1_UTCTIME "
-                                       "object")  # pragma: no cover
-
-        return asn1_utctime
-
-    def _python_utctime(self, t):
-        bio = self._lib.BIO_new(self._lib.BIO_s_mem())
-        bio = self._ffi.gc(bio, self._lib.BIO_free)
-
-        val = self._lib.ASN1_UTCTIME_print(bio, t)
-        if val != 1:
-            raise X509CertificateError("Could not print"
-                                       " ASN1_UTCTIME")  # pragma: no cover
-        size = 1024
-        data = self._ffi.new("char[]", size)
-        self._lib.BIO_gets(bio, data, size)
-        data = self._ffi.string(data)
-
-        val = time.strptime(data, "%b %d %H:%M:%S %Y %Z")
-        return time.mktime(val)  # seconds since the epoch
 
     def from_buffer(self, data):
         """Build this X509 object from a data buffer in memory.
@@ -156,9 +132,9 @@ class X509Certificate(object):
 
         :param t: time in seconds since the epoch
         """
-        ansi1_utc = self._asn1_utctime(t)
-        ret = self._lib.X509_set_notBefore(self._certObj, ansi1_utc)
-        self._lib.ASN1_UTCTIME_free(ansi1_utc)
+        asn1_time = utils.timestamp_to_asn1_time(t)
+        ret = self._lib.X509_set_notBefore(self._certObj, asn1_time)
+        self._lib.ASN1_TIME_free(asn1_time)
         if ret == 0:
             raise X509CertificateError("Could not set X509 certificate "
                                        "not before time.")  # pragma: no cover
@@ -166,17 +142,16 @@ class X509Certificate(object):
     def get_not_before(self):
         """Get the 'not before' date field as seconds since the epoch."""
         not_before = self._lib.X509_get_notBefore(self._certObj)
-        not_before = self._ffi.cast("ASN1_UTCTIME*", not_before)
-        return self._python_utctime(not_before)
+        return utils.asn1_time_to_timestamp(not_before)
 
     def set_not_after(self, t):
         """Set the 'not after' date field.
 
         :param t: time in seconds since the epoch
         """
-        ansi1_utc = self._asn1_utctime(t)
-        ret = self._lib.X509_set_notAfter(self._certObj, ansi1_utc)
-        self._lib.ASN1_UTCTIME_free(ansi1_utc)
+        asn1_time = utils.timestamp_to_asn1_time(t)
+        ret = self._lib.X509_set_notAfter(self._certObj, asn1_time)
+        self._lib.ASN1_TIME_free(asn1_time)
         if ret == 0:
             raise X509CertificateError("Could not set X509 certificate "
                                        "not after time.")  # pragma: no cover
@@ -184,8 +159,7 @@ class X509Certificate(object):
     def get_not_after(self):
         """Get the 'not after' date field as seconds since the epoch."""
         not_after = self._lib.X509_get_notAfter(self._certObj)
-        not_after = self._ffi.cast("ASN1_UTCTIME*", not_after)
-        return self._python_utctime(not_after)
+        return utils.asn1_time_to_timestamp(not_after)
 
     def set_pubkey(self, pkey):
         """Set the public key field.
