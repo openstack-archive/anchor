@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import time
 import unittest
 
 import mock
@@ -286,8 +285,7 @@ class TestX509Cert(unittest.TestCase):
     def test_set_not_before(self):
         self.cert.set_not_before(0)  # seconds since epoch
         val = self.cert.get_not_before()
-        tst = time.mktime(time.gmtime(0))
-        self.assertEqual(tst, val)
+        self.assertEqual(0, val)
 
     def test_get_not_after(self):
         val = self.cert.get_not_after()
@@ -296,5 +294,4 @@ class TestX509Cert(unittest.TestCase):
     def test_set_not_after(self):
         self.cert.set_not_after(0)  # seconds since epoch
         val = self.cert.get_not_after()
-        tst = time.mktime(time.gmtime(0))
-        self.assertEqual(tst, val)
+        self.assertEqual(0, val)
