@@ -16,3 +16,8 @@ class X509Error(Exception):
     """Base exception for X509 errors."""
     def __init__(self, what):
         super(X509Error, self).__init__(what)
+
+
+class ASN1TimeError(Exception):
+    """Base exception for ASN1-time related errors."""
+    pass
