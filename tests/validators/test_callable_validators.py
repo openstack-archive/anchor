@@ -646,3 +646,69 @@ class TestValidators(unittest.TestCase):
                 cidrs=['bad'])
         self.assertEqual("Cidr 'bad' does not describe a valid network",
                          str(e.exception))
+
+    def test_blacklist_good(self):
+        ext_mock = mock.MagicMock()
+        ext_mock.get_value.return_value = 'DNS:blah.good'
+        ext_mock.get_name.return_value = 'subjectAltName'
+
+        csr_mock = mock.MagicMock()
+        csr_mock.get_extensions.return_value = [ext_mock]
+
+        self.assertEqual(
+            None,
+            validators.blacklist(
+                csr=csr_mock,
+                blacklist_domains=['.bad'],
+            )
+        )
+
+    def test_blacklist_bad(self):
+        ext_mock = mock.MagicMock()
+        ext_mock.get_value.return_value = 'DNS:blah.bad'
+        ext_mock.get_name.return_value = 'subjectAltName'
+
+        csr_mock = mock.MagicMock()
+        csr_mock.get_extensions.return_value = [ext_mock]
+
+        with self.assertRaises(validators.ValidationError) as e:
+            validators.blacklist(
+                csr=csr_mock,
+                blacklist_domains=['.bad'],
+            )
+
+    def test_blacklist_mix(self):
+        ext1_mock = mock.MagicMock()
+        ext1_mock.get_value.return_value = 'DNS:blah.good'
+        ext1_mock.get_name.return_value = 'subjectAltName'
+
+        ext2_mock = mock.MagicMock()
+        ext2_mock.get_value.return_value = 'DNS:blah.bad'
+        ext2_mock.get_name.return_value = 'subjectAltName'
+
+        csr_mock = mock.MagicMock()
+        csr_mock.get_extensions.return_value = [ext1_mock, ext2_mock]
+
+        with self.assertRaises(validators.ValidationError) as e:
+            validators.blacklist(
+                csr=csr_mock,
+                blacklist_domains=['.bad'],
+            )
+
+    def test_blacklist_ignore_unknown(self):
+        # only validate the DNS type - other types may look like domains
+        # by accident
+        ext_mock = mock.MagicMock()
+        ext_mock.get_value.return_value = 'RANDOM_TYPE:random.bad'
+        ext_mock.get_name.return_value = 'subjectAltName'
+
+        csr_mock = mock.MagicMock()
+        csr_mock.get_extensions.return_value = [ext_mock]
+
+        self.assertEqual(
+            None,
+            validators.blacklist(
+                csr=csr_mock,
+                blacklist_domains=['.bad'],
+            )
+        )
