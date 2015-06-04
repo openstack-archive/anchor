@@ -230,7 +230,7 @@ class TestValidators(unittest.TestCase):
             validators.alternative_names(
                 csr=csr_mock,
                 allowed_domains=['.test.com'])
-        self.assertEqual("Alt name 'BAD' does not have a known type",
+        self.assertEqual("Alt name should have 2 parts, but found: 'BAD'",
                          str(e.exception))
 
     @mock.patch('socket.gethostbyname_ex')
@@ -284,7 +284,7 @@ class TestValidators(unittest.TestCase):
             validators.alternative_names_ip(
                 csr=csr_mock,
                 allowed_domains=['.test.com'])
-        self.assertEqual("Alt name 'BAD' does not have a known type",
+        self.assertEqual("Alt name should have 2 parts, but found: 'BAD'",
                          str(e.exception))
 
     def test_alternative_names_ip_bad_ext(self):
@@ -300,7 +300,7 @@ class TestValidators(unittest.TestCase):
                 csr=csr_mock,
                 allowed_domains=['.test.com'],
                 allowed_networks=['99/8'])
-        self.assertEqual("Alt name 'BAD' does not have a known type",
+        self.assertEqual("Alt name 'VALUE' has unexpected type 'BAD'",
                          str(e.exception))
 
     def test_server_group_no_prefix1(self):
