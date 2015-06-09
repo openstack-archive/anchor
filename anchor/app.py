@@ -81,7 +81,6 @@ def validate_config(conf):
     _check_file_exists(conf.ca['cert_path'])
     _check_file_exists(conf.ca['key_path'])
 
-    _check_file_permissions(conf.ca['cert_path'])
     _check_file_permissions(conf.ca['key_path'])
 
     if not hasattr(conf, "validators"):
