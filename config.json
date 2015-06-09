@@ -61,15 +61,6 @@
           "127.0.0.0/8"
         ]
       }
-    },
-
-    "ip": {
-      "common_name": {
-          "allowed_networks": ["93.184.216.34"]
-      },
-      "alternative_names": {
-            "allowed_networks": ["93.184.216.34"]
-      }
     }
   }
 }
