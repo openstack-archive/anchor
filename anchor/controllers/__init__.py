@@ -31,7 +31,7 @@ class RobotsController(rest.RestController):
         return "User-agent: *\nDisallow: /\n"
 
 
-class SignController(rest.RestController):
+class SignControllerV1(rest.RestController):
     """Handles POST requests to /sign."""
 
     @pecan.expose(content_type="text/plain")
@@ -47,6 +47,14 @@ class SignController(rest.RestController):
         return certificate_ops.sign(csr)
 
 
+class V1Controller(object):
+    sign = SignControllerV1()
+
+
 class RootController(object):
     robots = RobotsController()
-    sign = SignController()
+    v1 = V1Controller()
+
+    # backwards compatibility, no other controllers should be added into
+    # the RootController
+    sign = SignControllerV1()
