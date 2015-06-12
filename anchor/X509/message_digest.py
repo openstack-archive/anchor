@@ -68,10 +68,10 @@ class MessageDigest(object):
             self._lib.EVP_MD_CTX_destroy(self.ctx)
 
     def _octx_to_num(self, x):
-        v = 0L
+        v = 0
         lx = len(x)
         for i in range(lx):
-            v = v + ord(x[i]) * (256L ** (lx - i - 1))
+            v = v + ord(x[i]) * (256 ** (lx - i - 1))
         return v
 
     def update(self, data):
