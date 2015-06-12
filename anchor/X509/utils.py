@@ -136,3 +136,13 @@ def timestamp_to_asn1_time(t):
 
     # ASN1_GENERALIZEDTIME is a form of ASN1_TIME, so a pointer cast is valid
     return backend._ffi.cast("ASN1_TIME*", asn1_time)
+
+def asn1_string_to_utf8(asn1_string):
+    buf = backend._ffi.new("unsigned char **")
+    res = backend._lib.ASN1_STRING_to_UTF8(buf, asn1_string)
+    assert res >= 0
+    assert buf[0] != backend._ffi.NULL
+    buf = backend._ffi.gc(
+        buf, lambda buffer: backend._lib.OPENSSL_free(buffer[0])
+    )
+    return backend._ffi.buffer(buf[0], res)[:].decode('utf8')
