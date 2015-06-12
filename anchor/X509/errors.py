@@ -24,3 +24,8 @@ class X509Error(Exception):
 class ASN1TimeError(Exception):
     """Base exception for ASN1-time related errors."""
     pass
+
+
+class ASN1StringError(X509Error):
+    """Base exception for ASN1-string related errors."""
+    pass
