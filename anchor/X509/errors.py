@@ -11,6 +11,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+# not needed right now, just to be consistent and future-proof
+from __future__ import absolute_import
+
 
 class X509Error(Exception):
     """Base exception for X509 errors."""
