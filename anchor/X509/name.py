@@ -11,8 +11,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import
+
 from cryptography.hazmat.backends.openssl import backend
-import errors
+
+from anchor.X509 import errors
 
 
 class X509Name(object):
