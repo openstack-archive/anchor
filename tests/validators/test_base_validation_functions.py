@@ -25,7 +25,7 @@ from anchor.X509 import signing_request
 
 
 class TestBaseValidators(unittest.TestCase):
-    csr_data = textwrap.dedent("""
+    csr_data_with_cn = textwrap.dedent("""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIDBTCCAe0CAQAwgb8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh
         MRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMSEwHwYDVQQKExhPcGVuU3RhY2sgU2Vj
@@ -47,13 +47,41 @@ class TestBaseValidators(unittest.TestCase):
         -----END CERTIFICATE REQUEST-----""")
     """
     Subject:
+        C=US, ST=California, L=San Francisco,
+        O=OpenStack Security Group, OU=Security,
         CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
+    """
+
+    csr_data_without_cn = textwrap.dedent("""
+        -----BEGIN CERTIFICATE REQUEST-----
+        MIIC7TCCAdUCAQAwgacxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlh
+        MRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMSEwHwYDVQQKDBhPcGVuU3RhY2sgU2Vj
+        dXJpdHkgR3JvdXAxETAPBgNVBAsMCFNlY3VyaXR5MTUwMwYJKoZIhvcNAQkBFiZv
+        cGVuc3RhY2stc2VjdXJpdHlAbGlzdHMub3BlbnN0YWNrLm9yZzCCASIwDQYJKoZI
+        hvcNAQEBBQADggEPADCCAQoCggEBAMy2NIPIkpUt3bIFWINacX1piE1aqnQwy0MW
+        dpEJYnZKECJI9UTdIXWXKuKX2+c4igSvPThf/9RBPjXWflYEh67CEcgFwrb4B3mr
+        GtwAz/os19Tp7uiCZ2WHwh1ed8HuFGs4Iwtka4f18s03SYe+r7p0KwFsJYT9wgMK
+        7TvM/ZRZwHMnhDinlT7II6AKyLoU8y7EAe7Z75RMHKVaUiMwqD7vJJ6WEwS9GcGL
+        9CVWNBuyaVAchwqN4ejpMBPwAiSo3O7n3XM0oufhrtI6gz1V3l3PiIbDX+eb+Rit
+        Fc3RvmlQ0DApweREUBEfTA1NVls4qvuRdg5ps6+uwI6WqQlEvwsCAwEAAaAAMA0G
+        CSqGSIb3DQEBCwUAA4IBAQBfasOCSFjEHVazOeiJuaQnfRtwmEK0rDQsUL5oy21h
+        YbX5RyKLavDlU2er2N3NIEoZ+xBODEmXpKg0QXR3rGLvR/utPvjAU03a56ryw+mY
+        DlyBvC15oqnhdjlq9UvdhKXu9kpaQksNbn63PKoVSIPHj2wEs1qnneYTEWQngGP1
+        bcoRVE4esRNDBwo1SVC1y5QMjd/Ta4b9jeRU/3jOSuJHVUA+xaWhdRj9VX6EgvxY
+        x2LlF2bajZ8HdOb0MS+zvTQjyySXd1qg1D9APJRfNOxlIxOZdPTjH5+HT8fRfXGC
+        QxrcV4H0CsWt61dgiLe6w7CERmR7liD+yFoZYiTTXcbT
+        -----END CERTIFICATE REQUEST-----""")
+
+    """
+    Subject:
+        C=US, ST=California, L=San Francisco, O=OpenStack Security Group,
+        OU=Security/emailAddress=openstack-security@lists.openstack.org
     """
 
     def setUp(self):
         super(TestBaseValidators, self).setUp()
         self.csr = signing_request.X509Csr()
-        self.csr.from_buffer(TestBaseValidators.csr_data)
+        self.csr.from_buffer(TestBaseValidators.csr_data_with_cn)
 
     def tearDown(self):
         super(TestBaseValidators, self).tearDown()
@@ -61,6 +89,10 @@ class TestBaseValidators(unittest.TestCase):
     def test_csr_get_cn(self):
         name = validators.csr_get_cn(self.csr)
         self.assertEqual(name, "ossg.test.com")
+
+        self.csr.from_buffer(TestBaseValidators.csr_data_without_cn)
+        with self.assertRaises(validators.ValidationError):
+            validators.csr_get_cn(self.csr)
 
     def test_check_domains(self):
         test_domain = 'ossg.test.com'
