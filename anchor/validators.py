@@ -27,7 +27,10 @@ class ValidationError(Exception):
 def csr_get_cn(csr):
     name = csr.get_subject()
     data = name.get_entries_by_nid_name('CN')
-    return data[0].get_value()
+    if len(data) > 0:
+        return data[0].get_value()
+    else:
+        raise ValidationError("CSR is lacking a CN in the Subject")
 
 
 def check_domains(domain, allowed_domains):
