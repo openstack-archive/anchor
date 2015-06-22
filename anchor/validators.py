@@ -46,6 +46,22 @@ def check_domains(domain, allowed_domains):
     return True
 
 
+def iter_alternative_names(csr, types):
+    for ext in csr.get_extensions():
+        if ext.get_name() == "subjectAltName":
+            alternatives = [alt.strip() for alt in ext.get_value().split(',')]
+            for alternative in alternatives:
+                parts = alternative.split(':', 1)
+                if len(parts) != 2:
+                    # it has at least one part, so parts[0] is valid
+                    raise ValidationError("Alt name should have 2 parts, but "
+                                          "found: '%s'" % parts[0])
+                if parts[0] not in types:
+                    raise ValidationError("Alt name '%s' has unexpected type "
+                                          "'%s'" % (parts[1], parts[0]))
+                yield parts
+
+
 def check_networks(domain, allowed_networks):
     """Check the domain resolves to an IP that is within an allowed network
 
@@ -132,18 +148,11 @@ def alternative_names(csr, allowed_domains=[], **kwargs):
     the list of known suffixes, or network ranges.
     """
 
-    for ext in (csr.get_extensions() or []):
-        if ext.get_name() == "subjectAltName":
-            alternatives = [alt.strip() for alt in ext.get_value().split(',')]
-            for alternative in alternatives:
-                parts = alternative.split(':', 1)
-                if len(parts) != 2 or parts[0] != 'DNS':
-                    raise ValidationError("Alt name '%s' does not have a "
-                                          "known type" % parts[0])
-                if not check_domains(parts[1], allowed_domains):
-                    raise ValidationError("Domain '%s' not allowed (doesn't"
-                                          " match known domains or networks)"
-                                          % parts[1])
+    for name_type, name in iter_alternative_names(csr, ['DNS']):
+        if not check_domains(name, allowed_domains):
+            raise ValidationError("Domain '%s' not allowed (doesn't"
+                                  " match known domains or networks)"
+                                  % name)
 
 
 def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
@@ -154,20 +163,12 @@ def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
     the list of known suffixes, or network ranges.
     """
 
-    for ext in (csr.get_extensions() or []):
-        if ext.get_name() == "subjectAltName":
-            alternatives = [alt.strip() for alt in ext.get_value().split(',')]
-            for alternative in alternatives:
-                parts = alternative.split(':', 1)
-                if len(parts) != 2 or (parts[0] != 'DNS' and
-                                       parts[0] != 'IP Address'):
-                    raise ValidationError("Alt name '%s' does not have a "
-                                          "known type" % parts[0])
-                if not (check_domains(parts[1], allowed_domains) or
-                   check_networks(parts[1], allowed_networks)):
-                    raise ValidationError("Domain '%s' not allowed (doesn't"
-                                          " match known domains or networks)"
-                                          % parts[1])
+    for name_type, name in iter_alternative_names(csr, ['DNS', 'IP Address']):
+        if not (check_domains(name, allowed_domains) or
+                check_networks(name, allowed_networks)):
+            raise ValidationError("Domain '%s' not allowed (doesn't"
+                                  " match known domains or networks)"
+                                  % name)
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
