@@ -17,5 +17,4 @@ build/*
 build/*
 cover/*
 .cover
-
-
+.coverage
