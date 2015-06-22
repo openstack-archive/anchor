@@ -91,7 +91,7 @@ def check_networks_strict(domain, allowed_networks):
 
 
 def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
-    """Check CN entire is a known domain.
+    """Check the CN entry is a known domain.
 
     Refuse requests for certificates if they contain multiple CN
     entries, or the domain does not match the list of known suffixes
