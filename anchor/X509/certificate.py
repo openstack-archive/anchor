@@ -60,7 +60,7 @@ class X509Certificate(object):
         self._ffi = backend._ffi
         certObj = self._lib.X509_new()
         if certObj == self._ffi.NULL:
-            raise X509CertificateError("Could not create X509 certifiacte "
+            raise X509CertificateError("Could not create X509 certificate "
                                        "object")  # pragma: no cover
 
         self._certObj = certObj
@@ -278,7 +278,7 @@ class X509Certificate(object):
         return buf
 
     def get_fingerprint(self, md='md5'):
-        """Get the fingerprint of this X509 certifiacte.
+        """Get the fingerprint of this X509 certificate.
 
         :param md: The message digest algorthim used to compute the fingerprint
         :return: The fingerprint encoded as a hex string
