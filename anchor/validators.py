@@ -46,7 +46,7 @@ def check_domains(domain, allowed_domains):
     return True
 
 
-def iter_alternative_names(csr, types):
+def iter_alternative_names(csr, types, fail_other_types=True):
     for ext in csr.get_extensions():
         if ext.get_name() == "subjectAltName":
             alternatives = [alt.strip() for alt in ext.get_value().split(',')]
@@ -56,10 +56,11 @@ def iter_alternative_names(csr, types):
                     # it has at least one part, so parts[0] is valid
                     raise ValidationError("Alt name should have 2 parts, but "
                                           "found: '%s'" % parts[0])
-                if parts[0] not in types:
+                if parts[0] in types:
+                    yield parts
+                elif fail_other_types:
                     raise ValidationError("Alt name '%s' has unexpected type "
                                           "'%s'" % (parts[1], parts[0]))
-                yield parts
 
 
 def check_networks(domain, allowed_networks):
@@ -169,6 +170,28 @@ def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
             raise ValidationError("Domain '%s' not allowed (doesn't"
                                   " match known domains or networks)"
                                   % name)
+
+
+def blacklist_names(csr, domains=[], **kwargs):
+    """Check for blacklisted names in CN and altNames."""
+
+    if not domains:
+        logger.warning("No domains were configured for the blacklist filter, "
+                       "consider disabling the step or providing a list")
+        return
+
+    CNs = csr.get_subject().get_entries_by_nid_name('CN')
+    if len(CNs) > 0:
+        cn = csr_get_cn(csr)
+        if check_domains(cn, domains):
+            raise ValidationError("Domain '%s' not allowed "
+                                  "(CN blacklisted)" % cn)
+
+    for _, name in iter_alternative_names(csr, ['DNS'],
+                                          fail_other_types=False):
+        if check_domains(name, domains):
+            raise ValidationError("Domain '%s' not allowed "
+                                  "(alt blacklisted)" % name)
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
