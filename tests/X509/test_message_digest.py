@@ -20,7 +20,7 @@ from anchor.X509 import message_digest
 
 
 class TestMessageDigest(unittest.TestCase):
-    data = "this is test data to test with"
+    data = b"this is test data to test with"
 
     def setUp(self):
         super(TestMessageDigest, self).setUp()

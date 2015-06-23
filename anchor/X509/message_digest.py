@@ -15,6 +15,8 @@ from __future__ import absolute_import
 
 from cryptography.hazmat.backends.openssl import backend
 
+import binascii
+
 
 class MessageDigestError(Exception):
     def __init__(self, what):
@@ -67,13 +69,6 @@ class MessageDigest(object):
             self._lib.EVP_MD_CTX_cleanup(self.ctx)
             self._lib.EVP_MD_CTX_destroy(self.ctx)
 
-    def _octx_to_num(self, x):
-        v = 0L
-        lx = len(x)
-        for i in range(lx):
-            v = v + ord(x[i]) * (256L ** (lx - i - 1))
-        return v
-
     def update(self, data):
         """Add more data to the digest."""
 
@@ -95,4 +90,4 @@ class MessageDigest(object):
             raise MessageDigestError(
                 "Failed to get message digest.")  # pragma: no cover
         digest = self._ffi.string(data)
-        return hex(self._octx_to_num(digest))[2:-1].upper()
+        return binascii.hexlify(digest).decode('ascii').upper()
