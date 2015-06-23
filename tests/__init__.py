@@ -34,29 +34,37 @@ class DefaultConfigMixin(object):
 
     def setUp(self):
         self.sample_conf_auth = {
-            "static": {
+            "default_auth": {
+                "backend": "static",
                 "user": "myusername",
                 "secret": "simplepassword"
             }
         }
         self.sample_conf_ca = {
-            "cert_path": "tests/CA/root-ca.crt",
-            "key_path": "tests/CA/root-ca-unwrapped.key",
-            "output_path": "certs",
-            "signing_hash": "sha256",
-            "valid_hours": 24
+            "default_ca": {
+                "cert_path": "tests/CA/root-ca.crt",
+                "key_path": "tests/CA/root-ca-unwrapped.key",
+                "output_path": "certs",
+                "signing_hash": "sha256",
+                "valid_hours": 24
+            }
         }
         self.sample_conf_validators = {
-            "steps": {
-                "common_name": {
-                    "allowed_domains": [".test.com"]
-                }
+            "common_name": {
+                "allowed_domains": [".test.com"]
+            }
+        }
+        self.sample_conf_ra = {
+            "default_ra": {
+                "authentication": "default_auth",
+                "signing_ca": "default_ca",
+                "validators": self.sample_conf_validators
             }
         }
         self.sample_conf = {
-            "auth": self.sample_conf_auth,
-            "ca": self.sample_conf_ca,
-            "validators": self.sample_conf_validators,
+            "authentication": self.sample_conf_auth,
+            "signing_ca": self.sample_conf_ca,
+            "registration_authority": self.sample_conf_ra,
         }
 
         super(DefaultConfigMixin, self).setUp()
