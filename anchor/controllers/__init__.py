@@ -18,6 +18,7 @@ from pecan import rest
 
 from anchor import auth
 from anchor import certificate_ops
+from anchor import jsonloader
 
 
 logger = logging.getLogger(__name__)
@@ -31,22 +32,40 @@ class RobotsController(rest.RestController):
         return "User-agent: *\nDisallow: /\n"
 
 
-class SignController(rest.RestController):
-    """Handles POST requests to /sign."""
+class SignInstanceController(rest.RestController):
+    """Handles POST requests to /v1/sign/ra_name."""
+
+    def __init__(self, ra_name):
+        self.ra_name = ra_name
 
     @pecan.expose(content_type="text/plain")
     def post(self):
-        auth_result = auth.validate(pecan.request.POST.get('user'),
-                                    pecan.request.POST.get('secret'))
+        ra_name = self.ra_name
 
+        logger.debug("processing signing request in registration authority %s",
+                     ra_name)
+        auth_result = auth.validate(ra_name,
+                                    pecan.request.POST.get('user'),
+                                    pecan.request.POST.get('secret'))
         csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
                                         pecan.request.POST.get('encoding'))
+        certificate_ops.validate_csr(ra_name, auth_result, csr, pecan.request)
 
-        certificate_ops.validate_csr(auth_result, csr, pecan.request)
+        return certificate_ops.sign(ra_name, csr)
 
-        return certificate_ops.sign(csr)
+
+class SignController(rest.RestController):
+    @pecan.expose()
+    def _lookup(self, ra_name, *remaining):
+        if ra_name in jsonloader.registration_authority_names():
+            return SignInstanceController(ra_name), remaining
+        pecan.abort(404)
+
+
+class V1Controller(rest.RestController):
+    sign = SignController()
 
 
 class RootController(object):
     robots = RobotsController()
-    sign = SignController()
+    v1 = V1Controller()

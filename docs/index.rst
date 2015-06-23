@@ -10,6 +10,9 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+   configuration
+   api
+   validators
 
 Indices and tables
 ==================

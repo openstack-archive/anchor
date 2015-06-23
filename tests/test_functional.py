@@ -76,12 +76,13 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
 
         # Load config from json test config
         jsonloader.conf.load_str_data(json.dumps(self.sample_conf))
-        self.conf = getattr(jsonloader.conf, "_config")
-        self.conf["ca"]["output_path"] = tempfile.mkdtemp()
+        self.conf = jsonloader.conf._config
+        ca_conf = self.conf["signing_ca"]["default_ca"]
+        ca_conf["output_path"] = tempfile.mkdtemp()
 
         # Set CA file permissions
-        os.chmod(self.conf["ca"]["cert_path"], stat.S_IRUSR | stat.S_IFREG)
-        os.chmod(self.conf["ca"]["key_path"], stat.S_IRUSR | stat.S_IFREG)
+        os.chmod(ca_conf["cert_path"], stat.S_IRUSR | stat.S_IFREG)
+        os.chmod(ca_conf["key_path"], stat.S_IRUSR | stat.S_IFREG)
 
         app_conf = {"app": copy.deepcopy(config.app),
                     "logging": copy.deepcopy(config.logging)}
@@ -92,7 +93,7 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
         self.app.reset()
 
     def test_check_unauthorised(self):
-        resp = self.app.post('/sign', expect_errors=True)
+        resp = self.app.post('/v1/sign/default_ra', expect_errors=True)
         self.assertEqual(401, resp.status_int)
 
     def test_robots(self):
@@ -105,8 +106,17 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                 'secret': 'simplepassword',
                 'encoding': 'pem'}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default_ra', data, expect_errors=True)
         self.assertEqual(400, resp.status_int)
+
+    def test_check_unknown_instance(self):
+        data = {'user': 'myusername',
+                'secret': 'simplepassword',
+                'encoding': 'pem',
+                'csr': TestFunctional.csr_good}
+
+        resp = self.app.post('/v1/sign/unknown', data, expect_errors=True)
+        self.assertEqual(404, resp.status_int)
 
     def test_check_bad_csr(self):
         data = {'user': 'myusername',
@@ -114,7 +124,7 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                 'encoding': 'pem',
                 'csr': TestFunctional.csr_bad}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default_ra', data, expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
     def test_check_good_csr(self):
@@ -123,7 +133,7 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                 'encoding': 'pem',
                 'csr': TestFunctional.csr_good}
 
-        resp = self.app.post('/sign', data, expect_errors=False)
+        resp = self.app.post('/v1/sign/default_ra', data, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         cert = X509_cert.X509Certificate.from_buffer(resp.text)
@@ -147,10 +157,11 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
             raise Exception("BOOM")
 
         validators.broken_validator = derp
-        jsonloader.conf.validators["steps"]["broken_validator"] = {}
+        ra = jsonloader.conf.registration_authority['default_ra']
+        ra['validators']["broken_validator"] = {}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default_ra', data, expect_errors=True)
         self.assertEqual(500, resp.status_int)
-        self.assertTrue(("Internal Validation Error running "
-                         "validator 'broken_validator' "
-                         "in set 'steps'") in str(resp))
+        self.assertTrue(("Internal Validation Error running validator "
+                         "'broken_validator' for registration authority "
+                         "'default_ra'") in str(resp))
