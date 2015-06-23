@@ -32,7 +32,7 @@ class ConfigValidationException(Exception):
 
 
 def config_check_domains(validator_set):
-    for name, step in validator_set.iteritems():
+    for name, step in validator_set.items():
         if 'allowed_domains' in step:
             for domain in step['allowed_domains']:
                 if not domain.startswith('.'):
@@ -87,7 +87,7 @@ def validate_config(conf):
         raise ConfigValidationException("No validators configured")
 
     logger.info("Found {} validator sets.".format(len(conf.validators)))
-    for name, validator_set in conf.validators.iteritems():
+    for name, validator_set in conf.validators.items():
         logger.info("Checking validator set <{}> ....".format(name))
         if len(validator_set) == 0:
             raise ConfigValidationException(

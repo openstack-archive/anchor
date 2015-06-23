@@ -107,9 +107,9 @@ def validate_csr(auth_result, csr, request):
     valid = True
 
     try:
-        for name, vset in jsonloader.conf.validators.iteritems():
+        for name, vset in jsonloader.conf.validators.items():
             logger.debug("validate_csr: checking with set {}".format(name))
-            for vname, validator in vset.iteritems():
+            for vname, validator in vset.items():
                 valid = _run_validator(vname, validator, args)
                 if not valid:
                     break  # early out at the first error
