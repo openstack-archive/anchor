@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Doug Chivers <doug.chivers@hp.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hp.com>
+Workflow+1: Tim Kelsey <tim.kelsey@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 23 Jun 2015 10:10:00 +0000
+Reviewed-on: https://review.openstack.org/190877
+Project: stackforge/anchor
+Branch: refs/heads/master
