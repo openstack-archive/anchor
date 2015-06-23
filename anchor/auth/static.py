@@ -23,7 +23,7 @@ from anchor import util
 logger = logging.getLogger(__name__)
 
 
-def login(user, secret):
+def login(instance, user, secret):
     """Validates a user supplied user/password against an expected value.
 
        The expected value is pulled from the pecan config. Note that this
@@ -35,18 +35,21 @@ def login(user, secret):
        leaked. It may also be possible to use a timing attack to see
        which input failed validation. See comments below for details.
 
+       :param instance: name of the signing instance
        :param user: The user supplied username (unicode or string)
        :param secret: The user supplied password (unicode or string)
        :return: None on failure or an AuthDetails object on success
     """
+    instance_conf = jsonloader.for_instance(instance)
+
     # convert input to strings
     user = str(user)
     secret = str(secret)
 
     # expected values
     try:
-        expected_user = str(jsonloader.conf.auth['static']['user'])
-        expected_secret = str(jsonloader.conf.auth['static']['secret'])
+        expected_user = str(instance_conf['auth']['static']['user'])
+        expected_secret = str(instance_conf['auth']['static']['secret'])
     except (KeyError, TypeError):
         logger.warning("auth conf missing static user or secret")
         return None
