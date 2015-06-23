@@ -229,7 +229,7 @@ def key_usage(csr=None, allowed_usage=None, **kwargs):
             usages = set(usage.strip() for usage in ext.get_value().split(','))
             if usages & allowed != usages:
                 raise ValidationError("Found some not allowed key usages: %s"
-                                      % (usages - allowed))
+                                      % ', '.join(usages - allowed))
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
