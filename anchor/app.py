@@ -60,48 +60,55 @@ def _check_file_exists(path):
 
 
 def validate_config(conf):
-    logger = logging.getLogger("anchor")
+    # this function is called after copying the default data to instances which
+    # means we need to verify each instance only - global config doesn't matter
+    # at this point
+    if not conf.config.get('instances'):
+        raise ConfigValidationException("No instances configured")
 
-    if not hasattr(conf, "auth") or not conf.auth:
-        raise ConfigValidationException("No authentication configured")
+    for name, instance_conf in conf.instances.items():
+        validate_instance_config(name, instance_conf)
 
-    if not hasattr(conf, "ca") or not conf.ca:
-        raise ConfigValidationException("No ca configuration present")
+
+def validate_instance_config(name, conf):
+    if not conf.get('auth'):
+        raise ConfigValidationException(
+            "No authentication configured for instance %s" % name)
+
+    if not conf.get('ca'):
+        raise ConfigValidationException(
+            "No ca configuration present for instance %s" % name)
 
     # mandatory CA settings
     ca_config_requirements = ["cert_path", "key_path", "output_path",
                               "signing_hash", "valid_hours"]
 
     for requirement in ca_config_requirements:
-        if requirement not in conf.ca.keys():
-            raise ConfigValidationException("CA config missing: %s" %
-                                            requirement)
+        if requirement not in conf['ca'].keys():
+            raise ConfigValidationException(
+                "CA config missing: %s for instance %s" % (requirement, name))
 
     # all are specified, check the CA certificate and key are readable with
     # sane permissions
-    _check_file_exists(conf.ca['cert_path'])
-    _check_file_exists(conf.ca['key_path'])
+    _check_file_exists(conf['ca']['cert_path'])
+    _check_file_exists(conf['ca']['key_path'])
 
-    _check_file_permissions(conf.ca['key_path'])
+    _check_file_permissions(conf['ca']['key_path'])
 
-    if not hasattr(conf, "validators"):
-        raise ConfigValidationException("No validators configured")
+    if not conf.get("validators"):
+        raise ConfigValidationException(
+            "No validators configured for instance %s" % name)
 
-    logger.info("Found {} validator sets.".format(len(conf.validators)))
-    for name, validator_set in conf.validators.items():
-        logger.info("Checking validator set <{}> ....".format(name))
-        if len(validator_set) == 0:
+    instance_validators = conf['validators']
+
+    for step in instance_validators.keys():
+        if not hasattr(validators, step):
             raise ConfigValidationException(
-                "Validator set <{}> is empty".format(name))
+                "Unknown validator <{}> found for instance {}".format(step,
+                                                                      name))
 
-        for step in validator_set.keys():
-            if not hasattr(validators, step):
-                raise ConfigValidationException(
-                    "Validator set <{}> contains an "
-                    "unknown validator <{}>".format(name, step))
-
-    config_check_domains(validator_set)
-    logger.info("Validator set OK")
+    config_check_domains(instance_validators)
+    logger.info("Validators OK for instance %s", name)
 
 
 def check_default_auth(conf):

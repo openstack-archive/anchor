@@ -21,20 +21,22 @@ from anchor.auth import static  # noqa
 from anchor import jsonloader
 
 
-def validate(user, secret):
+def validate(instance, user, secret):
     """Top-level authN entry point.
 
        This will return an AuthDetails object or abort. This will only
        check that a single auth method. That method will either succeed
        or fail.
 
+       :param instance: name of the signing instance
        :param user: user provided user name
        :param secret: user provided secret (password or token)
        :return: AuthDetails if authenticated or aborts
     """
-    for name in jsonloader.conf.auth.keys():
+    instance_conf = jsonloader.for_instance(instance)
+    for name in instance_conf['auth'].keys():
         module = globals()[name]
-        res = module.login(user, secret)
+        res = module.login(instance, user, secret)
         if res:
             return res
 
