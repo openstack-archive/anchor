@@ -18,6 +18,7 @@ from __future__ import absolute_import
 
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +37,10 @@ class AnchorConf():
         self._logger = logger
         self._config = {}
 
-    def load_file_data(self, config_file):
-        '''Load a config from a file.'''
+    def _load_json_file(self, config_file):
         try:
             with open(config_file, 'r') as f:
-                self._config = json.load(f)
-
+                return json.load(f)
         except IOError:
             logger.error("could not open config file: %s" % config_file)
             raise
@@ -49,9 +48,40 @@ class AnchorConf():
             logger.error("error parsing config file: %s" % config_file)
             raise
 
+    def _copy_default_settings(self):
+        instances = self.config.get('instances', {})
+        for instance_name in instance_names():
+            instances[instance_name].setdefault('auth',
+                                                self.config.get('auth'))
+            instances[instance_name].setdefault('ca',
+                                                self.config.get('ca'))
+
+    def _load_instances(self, configs_dir):
+        instance_files = os.listdir(configs_dir)
+        instances = self.config['instances']
+        for instance_file in instance_files:
+            if not instance_file.endswith('.json'):
+                continue
+
+            instance_path = os.path.join(configs_dir, instance_file)
+            instance_name = instance_file.rsplit('.', 1)[0]
+            instances[instance_name] = self._load_json_file(instance_path)
+
+    def load_file_data(self, config_file):
+        '''Load a config from a file.'''
+        self._config = self._load_json_file(config_file)
+        self.config.setdefault('instances', {})
+
+        if 'configs_directory' in self.config:
+            base = os.path.dirname(config_file)
+            configs_dir = os.path.join(base, self.config['configs_directory'])
+            self._load_instances(configs_dir)
+        self._copy_default_settings()
+
     def load_str_data(self, data):
         '''Load a config from string data.'''
         self._config = json.loads(data)
+        self._copy_default_settings()
 
     @property
     def config(self):
@@ -70,3 +100,11 @@ class AnchorConf():
 
 
 conf = AnchorConf(logger)
+
+
+def for_instance(name):
+    return conf.instances[name]
+
+
+def instance_names():
+    return conf.config.get('instances', {}).keys()

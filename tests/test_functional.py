@@ -33,7 +33,7 @@ import config
 class TestFunctional(unittest.TestCase):
     config = """
     {
-        "auth": {
+      "auth": {
         "static": {
           "secret": "simplepassword",
           "user": "myusername"
@@ -46,15 +46,17 @@ class TestFunctional(unittest.TestCase):
         "signing_hash": "sha1",
         "valid_hours": 24
       },
-      "validators": {
+      "instances": {
         "default": {
-          "common_name": {
-            "allowed_domains": [
-              ".test.com"
-                ]
-              }
-           }
+          "validators": {
+            "common_name": {
+              "allowed_domains": [
+                ".test.com"
+                  ]
+            }
+          }
         }
+      }
     }
     """
 
@@ -115,7 +117,7 @@ class TestFunctional(unittest.TestCase):
         self.app.reset()
 
     def test_check_unauthorised(self):
-        resp = self.app.post('/sign', expect_errors=True)
+        resp = self.app.post('/v1/sign/default', expect_errors=True)
         self.assertEqual(401, resp.status_int)
 
     def test_check_missing_csr(self):
@@ -123,7 +125,7 @@ class TestFunctional(unittest.TestCase):
                 'secret': 'simplepassword',
                 'encoding': 'pem'}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default', data, expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
     def test_check_bad_csr(self):
@@ -132,7 +134,7 @@ class TestFunctional(unittest.TestCase):
                 'encoding': 'pem',
                 'csr': TestFunctional.csr_bad}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default', data, expect_errors=True)
         self.assertEqual(400, resp.status_int)
 
     def test_check_good_csr(self):
@@ -141,7 +143,7 @@ class TestFunctional(unittest.TestCase):
                 'encoding': 'pem',
                 'csr': TestFunctional.csr_good}
 
-        resp = self.app.post('/sign', data, expect_errors=False)
+        resp = self.app.post('/v1/sign/default', data, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
         cert = X509_cert.X509Certificate()
@@ -166,10 +168,11 @@ class TestFunctional(unittest.TestCase):
             raise Exception("BOOM")
 
         validators.broken_validator = derp
-        jsonloader.conf.validators["default"]["broken_validator"] = {}
+        instances = jsonloader.conf.instances
+        instances['default']['validators']['broken_validator'] = {}
 
-        resp = self.app.post('/sign', data, expect_errors=True)
+        resp = self.app.post('/v1/sign/default', data, expect_errors=True)
         self.assertEqual(500, resp.status_int)
         self.assertTrue(("Internal Validation Error running "
                          "validator 'broken_validator' "
-                         "in set 'default'") in str(resp))
+                         "for instance 'default'") in str(resp))

@@ -1,0 +1,49 @@
+{
+  "validators": {
+    "common_name" : {
+      "allowed_domains": [
+        ".example.com"
+        ]
+    },
+    "alternative_names": {
+      "allowed_domains": [
+        ".example.com"
+      ]
+    },
+    "server_group": {
+      "group_prefixes": {
+        "bk": "Bock_Team",
+        "cs": "CS_Team",
+        "gl": "Glance_Team",
+        "mb": "MB_Team",
+        "nv": "Nova_Team",
+        "ops": "SysEng_Team",
+        "qu": "Neutron_Team",
+        "sw": "Swift_Team"
+      }
+    },
+    "extensions": {
+      "allowed_extensions": [
+        "keyUsage",
+        "subjectAltName",
+        "basicConstraints",
+        "subjectKeyIdentifier"
+      ]
+    },
+    "key_usage": {
+      "allowed_usage": [
+        "Digital Signature",
+        "Key Encipherment",
+        "Non Repudiation"
+      ]
+    },
+    "ca_status": {
+      "ca_requested": false
+    },
+    "source_cidrs": {
+      "cidrs": [
+        "127.0.0.0/8"
+      ]
+    }
+  }
+}
