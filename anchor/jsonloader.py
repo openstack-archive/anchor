@@ -62,7 +62,11 @@ class AnchorConf():
         return self._config
 
     def __getattr__(self, name):
-        return self._config[name]
+        try:
+            return self._config[name]
+        except KeyError:
+            raise AttributeError("'AnchorConf' object has no attribute '%s'" %
+                                 name)
 
 
 conf = AnchorConf(logger)
