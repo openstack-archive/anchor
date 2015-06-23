@@ -18,11 +18,21 @@ import unittest
 
 import mock
 
+import sys
 import textwrap
 
 from anchor.X509 import certificate
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import name as x509_name
+
+
+# find the class representing an open file; it depends on the python version
+# it's used later for mocking
+if sys.version_info[0] < 3:
+    file_class = file
+else:
+    import _io
+    file_class = _io.TextIOWrapper
 
 
 class TestX509Cert(unittest.TestCase):
@@ -245,7 +255,7 @@ class TestX509Cert(unittest.TestCase):
     def test_read_from_file(self):
         open_name = 'anchor.X509.certificate.open'
         with mock.patch(open_name, create=True) as mock_open:
-            mock_open.return_value = mock.MagicMock(spec=file)
+            mock_open.return_value = mock.MagicMock(spec=file_class)
             m_file = mock_open.return_value.__enter__.return_value
             m_file.read.return_value = TestX509Cert.cert_data
 
