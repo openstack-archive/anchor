@@ -31,44 +31,48 @@ class AuthStaticTests(unittest.TestCase):
     def test_validate_static(self):
         """Test all static user/pass authentication paths."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {'static': {'secret': 'simplepassword',
-                                    'user': 'myusername'}}}
+        instance_conf = {'auth': {'static': {'secret': 'simplepassword',
+                                             'user': 'myusername'}}}
+        data = {'instances': {'default': instance_conf}}
 
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
             from anchor.auth import results
 
-            valid_user = data['auth']['static']['user']
-            valid_pass = data['auth']['static']['secret']
+            valid_user = instance_conf['auth']['static']['user']
+            valid_pass = instance_conf['auth']['static']['secret']
 
             expected = results.AuthDetails(username=valid_user, groups=[])
-            self.assertEqual(auth.validate(valid_user, valid_pass), expected)
+            self.assertEqual(auth.validate('default', valid_user, valid_pass),
+                             expected)
             with self.assertRaises(http_status.HTTPUnauthorized):
-                auth.validate(valid_user, 'badpass')
+                auth.validate('default', valid_user, 'badpass')
             with self.assertRaises(http_status.HTTPUnauthorized):
-                auth.validate('baduser', valid_pass)
+                auth.validate('default', 'baduser', valid_pass)
             with self.assertRaises(http_status.HTTPUnauthorized):
-                auth.validate('baduser', 'badpass')
+                auth.validate('default', 'baduser', 'badpass')
 
     def test_validate_static_malformed1(self):
         """Test static user/pass authentication with malformed config."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {'static': {}}}
+        instance_conf = {'auth': {'static': {}}}
+        data = {'instances': {'default': instance_conf}}
 
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
             with self.assertRaises(http_status.HTTPUnauthorized):
-                auth.validate('baduser', 'badpass')
+                auth.validate('default', 'baduser', 'badpass')
 
     def test_validate_static_malformed2(self):
         """Test static user/pass authentication with malformed config."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {}}
+        instance_conf = {'auth': {}}
+        data = {'instances': {'default': instance_conf}}
 
         with mock.patch.dict(config, data):
             # can't import until mock'd
             from anchor import auth
             with self.assertRaises(http_status.HTTPUnauthorized):
-                auth.validate('baduser', 'badpass')
+                auth.validate('default', 'baduser', 'badpass')
