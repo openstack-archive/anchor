@@ -100,30 +100,33 @@ class CertificateOpsTests(unittest.TestCase):
         """Test basic success path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = {'steps': {'extensions': {'allowed_extensions': []}}}
-        data = {'validators': validators}
+        validators = {'extensions': {'allowed_extensions': []}}
+        instance = {'validators': validators}
+        data = {'instances': {'default': instance}}
 
         with mock.patch.dict(config, data):
-            certificate_ops.validate_csr(None, csr_obj, None)
+            certificate_ops.validate_csr('default', None, csr_obj, None)
 
     def test_validate_csr_bypass(self):
         """Test empty validator set for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'validators': {}}
+        instance = {'validators': {}}
+        data = {'instances': {'default': instance}}
 
         with mock.patch.dict(config, data):
             # this should work, it allows people to bypass validation
-            certificate_ops.validate_csr(None, csr_obj, None)
+            certificate_ops.validate_csr('default', None, csr_obj, None)
 
     def test_validate_csr_fail(self):
         """Test failure path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = {'steps': {'common_name': {'allowed_domains':
-                                                ['.testing.com']}}}
-        data = {'validators': validators}
+        validators = {'common_name': {'allowed_domains':
+                                      ['.testing.com']}}
+        instance = {'validators': validators}
+        data = {'instances': {'default': instance}}
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPClientError):
-                certificate_ops.validate_csr(None, csr_obj, None)
+                certificate_ops.validate_csr('default', None, csr_obj, None)

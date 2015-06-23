@@ -18,6 +18,7 @@ from __future__ import absolute_import
 
 import json
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -36,22 +37,36 @@ class AnchorConf():
         self._logger = logger
         self._config = {}
 
-    def load_file_data(self, config_file):
-        '''Load a config from a file.'''
+    def _load_json_file(self, config_file):
         try:
             with open(config_file, 'r') as f:
-                self._config = json.load(f)
-
+                return json.load(f)
         except IOError:
             logger.error("could not open config file: %s" % config_file)
             raise
-        except Exception:
+        except ValueError:
             logger.error("error parsing config file: %s" % config_file)
             raise
+
+    def _copy_default_settings(self):
+        instances = self.config.get('instances', {})
+        for instance_name in instance_names():
+            instances[instance_name].setdefault('auth',
+                                                self.config.get('auth'))
+            instances[instance_name].setdefault('ca',
+                                                self.config.get('ca'))
+
+    def load_file_data(self, config_file):
+        '''Load a config from a file.'''
+        self._config = self._load_json_file(config_file)
+        self._config.setdefault('instances', {})
+        self._copy_default_settings()
 
     def load_str_data(self, data):
         '''Load a config from string data.'''
         self._config = json.loads(data)
+        self._config.setdefault('instances', {})
+        self._copy_default_settings()
 
     @property
     def config(self):
@@ -70,3 +85,11 @@ class AnchorConf():
 
 
 conf = AnchorConf(logger)
+
+
+def for_instance(name):
+    return conf.instances[name]
+
+
+def instance_names():
+    return conf.instances.keys()
