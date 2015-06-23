@@ -121,8 +121,8 @@ class X509Name(object):
         nid = X509Name.nid[nid_name]
         ret = self._lib.X509_NAME_add_entry_by_NID(
             self._name_obj, nid,
-            self._lib.MBSTRING_ASC,
-            text, -1, -1, 0)
+            self._lib.MBSTRING_UTF8,
+            text.encode('utf8'), -1, -1, 0)
 
         if ret != 1:
             raise errors.X509Error("Failed to add name entry: '%s' '%s'" % (
