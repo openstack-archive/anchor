@@ -113,7 +113,7 @@ class X509Name(object):
         return X509Name.Entry(ent)
 
     def __iter__(self):
-        for i in xrange(self.entry_count()):
+        for i in range(self.entry_count()):
             yield self[i]
 
     def add_name_entry(self, nid_name, text):
