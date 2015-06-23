@@ -11,6 +11,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from __future__ import absolute_import
 
 import logging
 import os
@@ -20,9 +21,9 @@ import sys
 import paste
 from paste import translogger  # noqa
 import pecan
-import validators
 
 from anchor import jsonloader
+from anchor import validators
 
 logger = logging.getLogger(__name__)
 
