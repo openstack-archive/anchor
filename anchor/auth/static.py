@@ -48,7 +48,7 @@ def login(user, secret):
         expected_user = str(jsonloader.conf.auth['static']['user'])
         expected_secret = str(jsonloader.conf.auth['static']['secret'])
     except (KeyError, TypeError):
-        logger.warn("auth conf missing static user or secret")
+        logger.warning("auth conf missing static user or secret")
         return None
 
     # In python, len(<string>) is O(1)

@@ -111,9 +111,9 @@ def check_default_auth(conf):
     # Check for anchor being run with default user/secret
     if 'static' in conf.auth.keys():
         if conf.auth['static']['user'] == default_user:
-            logger.warn("default user for static auth in use")
+            logger.warning("default user for static auth in use")
         if conf.auth['static']['secret'] == default_secret:
-            logger.warn("default secret for static auth in use")
+            logger.warning("default secret for static auth in use")
 
 
 def load_config():
