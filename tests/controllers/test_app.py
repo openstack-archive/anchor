@@ -40,18 +40,20 @@ class TestValidDN(unittest.TestCase):
     def test_config_check_domains_good(self, a, b):
         good_config_domains = jsonloader.AnchorConf(None)
         good_config_domains._config = {
-            "auth": {"static": {}},
-            "ca": {
-                "cert_path": "no_cert_file",
-                "key_path": "no_key_file",
-                "output_path": "",
-                "signing_hash": "",
-                "valid_hours": ""
-                },
-            "validators": {
-                "steps": {
-                    "common_name": {
-                        "allowed_domains": [".test.com"]
+            "instances": {
+                "default": {
+                    "auth": {"static": {}},
+                    "ca": {
+                        "cert_path": "no_cert_file",
+                        "key_path": "no_key_file",
+                        "output_path": "",
+                        "signing_hash": "",
+                        "valid_hours": ""
+                    },
+                    "validators": {
+                        "common_name": {
+                            "allowed_domains": [".test.com"]
+                        }
                     }
                 }
             }
@@ -74,10 +76,12 @@ class TestValidDN(unittest.TestCase):
                 "signing_hash": "",
                 "valid_hours": ""
                 },
-            "validators": {
-                "steps": {
-                    "common_name": {
-                        "allowed_domains": ["error.test.com"]
+            "instances": {
+                "default": {
+                    "validators": {
+                        "common_name": {
+                            "allowed_domains": ["error.test.com"]
+                        }
                     }
                 }
             }
@@ -102,14 +106,29 @@ class TestValidDN(unittest.TestCase):
             self.assertRaises(app.ConfigValidationException,
                               app._check_file_permissions, "/mock/path")
 
-    def test_validate_config_no_auth(self):
+    def test_validate_config_no_instances(self):
         jsonloader.conf.load_str_data("{}")
+        self.assertRaisesRegexp(app.ConfigValidationException,
+                                "No instances configured",
+                                app.validate_config, jsonloader.conf)
+
+    def test_validate_config_no_auth(self):
+        jsonloader.conf.load_str_data(
+            """{"instances": {"default": {
+                    "ca": {"dummy": "dummy"},
+                    "validators": {"dummy": {}}
+            }}}""")
         self.assertRaisesRegexp(app.ConfigValidationException,
                                 "No authentication configured",
                                 app.validate_config, jsonloader.conf)
 
     def test_validate_config_no_ca(self):
-        jsonloader.conf.load_str_data("""{"auth" : { "static": {}} }""")
+        jsonloader.conf.load_str_data(
+            """{"instances": {"default": {
+                    "auth": {
+                        "static": {}},
+                    "validators": {"dummy": {}}
+            }}}""")
         self.assertRaisesRegexp(app.ConfigValidationException,
                                 "No ca configuration present",
                                 app.validate_config, jsonloader.conf)
@@ -118,9 +137,9 @@ class TestValidDN(unittest.TestCase):
         ca_config_requirements = ["cert_path", "key_path", "output_path",
                                   "signing_hash", "valid_hours"]
 
-        config = """{"auth" : { "static": {}},
+        config = """{"instances": {"default": {"auth" : { "static": {}},
                      "ca": { "cert_path":"", "key_path":"", "output_path":"",
-                            "signing_hash":"", "valid_hours":""} }"""
+                            "signing_hash":"", "valid_hours":""} }}}"""
 
         # Iterate through the ca_config_requirements, replace each one in turn
         # with 'missing_req', perform validation. Each should raise in turn
@@ -132,10 +151,10 @@ class TestValidDN(unittest.TestCase):
 
     @mock.patch('os.path.isfile')
     def test_validate_config_no_ca_cert_file(self, isfile):
-        json_config = """{"auth" : { "static": {}},
+        json_config = """{"instances": {"default": {"auth" : { "static": {}},
                      "ca": { "cert_path":"no_cert_file",
                      "key_path":"no_key_file", "output_path":"",
-                     "signing_hash":"", "valid_hours":""} } """
+                     "signing_hash":"", "valid_hours":""} }}}"""
         jsonloader.conf.load_str_data(json_config)
         isfile.return_value = False
         self.assertRaisesRegexp(app.ConfigValidationException,
@@ -146,81 +165,61 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_no_validators(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
+        config = """{"instances": {"default": {"auth" : { "static": {}},
                      "ca": { "cert_path":"no_cert_file",
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
-                             "valid_hours":""} } """
+                             "valid_hours":""} }}}"""
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
         self.assertRaisesRegexp(app.ConfigValidationException,
-                                "No validators configured",
-                                app.validate_config, jsonloader.conf)
-
-    @mock.patch('os.path.isfile')
-    @mock.patch('os.access')
-    @mock.patch('os.stat')
-    def test_validate_config_no_validator_steps(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": { "no_steps" : {}}}
-                 """
-        jsonloader.conf.load_str_data(config)
-        isfile.return_value = True
-        access.return_value = True
-        stat.return_value.st_mode = self.expected_key_permissions
-        self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <no_steps> is empty",
+                                "No validators configured for "
+                                "instance default",
                                 app.validate_config, jsonloader.conf)
 
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_unknown_validator(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
+        config = """{"instances": {"default": {"auth" : { "static": {}},
                      "ca": { "cert_path":"no_cert_file",
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
                              "valid_hours":""},
                      "validators": {
-                        "steps": {
-                          "unknown_validator": {}
-                        }
-                    }}
+                        "unknown_validator": {}
+                    }}}}
                  """
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
         self.assertRaisesRegexp(app.ConfigValidationException,
-                                "Validator set <steps> contains an "
-                                "unknown validator <unknown_validator>",
+                                "Unknown validator <unknown_validator> "
+                                "found for instance default",
                                 app.validate_config, jsonloader.conf)
 
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_good(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
+        config = """{"instances": {"default": {"auth" : { "static": {}},
                      "ca": { "cert_path":"no_cert_file",
                              "key_path":"no_key_file",
                              "output_path":"","signing_hash":"",
                              "valid_hours":""},
                      "validators": {
-                            "steps": {
-                                    "common_name": {
-                                      "allowed_domains": [
-                                          ".test.com" ]
-                                      }}}}"""
+                             "common_name": {
+                               "allowed_domains": [
+                                   ".test.com" ]
+                               }}}}}"""
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
+        app.validate_config(jsonloader.conf)
 
     @mock.patch('anchor.jsonloader.conf.load_file_data')
     def test_config_paths_env(self, conf):
