@@ -432,7 +432,7 @@ class TestValidators(unittest.TestCase):
                 csr=csr_mock,
                 allowed_usage=allowed_usage)
         self.assertEqual("Found some not allowed key usages: "
-                         "set(['Domination'])", str(e.exception))
+                         "Domination", str(e.exception))
 
     def test_key_usage_good(self):
         allowed_usage = ['Digital Signature',
