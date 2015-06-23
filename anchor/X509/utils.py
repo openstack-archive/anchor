@@ -98,8 +98,7 @@ def asn1_generalizedtime_to_timestamp(gt):
     # ASN1_GENERALIZEDTIME is actually a string in known formats,
     # so the conversion can be done in this code
     string_time = backend._ffi.cast("ASN1_STRING*", gt)
-    string_data = backend._lib.ASN1_STRING_data(string_time)
-    res = backend._ffi.string(string_data)
+    res = asn1_string_to_utf8(string_time)
 
     before_tz = res[:14]
     tz_str = res[14:]
