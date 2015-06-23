@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from cryptography.hazmat.backends.openssl import backend
 
 from anchor.X509 import errors
+from anchor.X509 import utils
 
 
 class X509Name(object):
@@ -65,7 +66,7 @@ class X509Name(object):
             if ret == 0:
                 raise errors.X509Error("Could not convert ASN1_OBJECT to "
                                        "string.")  # pragma: no cover
-            return self._ffi.string(buf)
+            return self._ffi.string(buf).decode('ascii')
 
         def get_value(self):
             """Get the value of this entry.
@@ -73,8 +74,7 @@ class X509Name(object):
             :return: entry value as a python string
             """
             val = self._lib.X509_NAME_ENTRY_get_data(self._entry)
-            data = self._lib.ASN1_STRING_data(val)
-            return self._ffi.string(data)  # Encoding?
+            return utils.asn1_string_to_utf8(val)
 
     def __init__(self, name_obj=None):
         self._lib = backend._lib
@@ -101,7 +101,7 @@ class X509Name(object):
                                    " X509_NAME to string.")  # pragma: no cover
 
         val = self._ffi.gc(val, self._lib.OPENSSL_free)
-        return self._ffi.string(val)
+        return self._ffi.string(val).decode('ascii')
 
     def __len__(self):
         return self._lib.X509_NAME_entry_count(self._name_obj)

@@ -42,7 +42,7 @@ class X509Extension(object):
         ext_obj = self._lib.X509_EXTENSION_get_object(self._ext)
         ext_nid = self._lib.OBJ_obj2nid(ext_obj)
         ext_name_str = self._lib.OBJ_nid2sn(ext_nid)
-        return self._ffi.string(ext_name_str)
+        return self._ffi.string(ext_name_str).decode('ascii')
 
     def get_value(self):
         """Get the extension value as a python string."""
@@ -52,7 +52,7 @@ class X509Extension(object):
         size = 1024
         data = self._ffi.new("char[]", size)
         self._lib.BIO_gets(bio, data, size)
-        return self._ffi.string(data)
+        return self._ffi.string(data).decode('ascii')
 
 
 class X509Certificate(object):
