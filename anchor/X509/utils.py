@@ -31,6 +31,8 @@ def load_pem_private_key(key_data, passwd=None):
     # TODO(tkelsey): look at using backend.read_private_key
     #
 
+    if type(key_data) != bytes:
+        key_data = key_data.encode('ascii')
     lib = backend._lib
     ffi = backend._ffi
     data = backend._bytes_to_bio(key_data)
