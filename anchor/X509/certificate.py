@@ -76,7 +76,9 @@ class X509Certificate(object):
 
         :param data: A data buffer
         """
-        bio = backend._bytes_to_bio(data.encode('ascii'))
+        if type(data) != bytes:
+            data = data.encode('ascii')
+        bio = backend._bytes_to_bio(data)
 
         # NOTE(tkelsey): some versions of OpenSSL dont re-use the cert object
         # properly, so free it and use the new one

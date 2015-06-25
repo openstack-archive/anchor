@@ -47,7 +47,9 @@ class X509Csr(object):
         :param data: The data buffer
         :param password: decryption password, if needed
         """
-        bio = backend._bytes_to_bio(data.encode('ascii'))
+        if type(data) != bytes:
+            data = data.encode('ascii')
+        bio = backend._bytes_to_bio(data)
         ptr = self._ffi.new("X509_REQ **")
         ptr[0] = self._csrObj
         ret = self._lib.PEM_read_bio_X509_REQ(bio[0], ptr,
