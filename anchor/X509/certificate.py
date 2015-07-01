@@ -104,18 +104,22 @@ class X509Certificate(object):
             data = f.read()
         self.from_buffer(data)
 
-    def save(self, path):
-        """Save this X509 certificate object to a file on disk.
+    def as_pem(self):
+        """Serialise this X509 certificate object as PEM string."""
 
-        :param path: Output file path
-        """
-        bio = self._lib.BIO_new_file(path.encode('ascii', 'ignore'), b"w")
+        raw_bio = self._lib.BIO_new(self._lib.BIO_s_mem())
+        bio = self._ffi.gc(raw_bio, self._lib.BIO_free)
         ret = self._lib.PEM_write_bio_X509(bio, self._certObj)
-        self._lib.BIO_free(bio)
 
         if ret == 0:
-            raise X509CertificateError("Could not write X509 certificate to "
-                                       "disk as PEM data.")  # pragma: no cover
+            raise X509CertificateError("Could not write X509 certificate "
+                                       "as PEM data.")  # pragma: no cover
+
+        buf = self._ffi.new("char**")
+        pem_len = self._lib.BIO_get_mem_data(bio, buf)
+        pem = self._ffi.string(buf[0], pem_len)
+
+        return pem
 
     def set_version(self, v):
         """Set the version of this X509 certificate object.
