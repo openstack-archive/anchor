@@ -179,12 +179,10 @@ def sign(csr):
             jsonloader.conf.ca['signing_hash']))
 
     logger.info("Saving certificate to: %s", path)
-    new_cert.save(path)
 
-    # return cert from memory if/when X509 lib supports it
-    with open(path) as f:
-        cert = f.read()
-        if cert:
-            return cert
+    cert_pem = new_cert.as_pem()
 
-    pecan.abort(500, "certificate signing error")
+    with open(path, "w") as f:
+        f.write(cert_pem)
+
+    return cert_pem
