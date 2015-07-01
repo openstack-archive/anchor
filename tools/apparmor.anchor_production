@@ -13,20 +13,20 @@
 
 #include <tunables/global>
 
-@{ECA_BASE}="/path/to/anchor"
-@{ECA_VENV}="@{ECA_BASE}/.venv"
-@{ECA_CA_DIR}="@{ECA_BASE}/CA"
-@{ECA_CERTS_DIR}="@{ECA_BASE}/certs"
+@{ANCHOR_BASE}="/path/to/anchor"
+@{ANCHOR_VENV}="@{ANCHOR_BASE}/.venv"
+@{ANCHOR_CA_DIR}="@{ANCHOR_BASE}/CA"
+@{ANCHOR_CERTS_DIR}="@{ANCHOR_BASE}/certs"
 
 /path/to/anchor/bin/anchor_production {
   #include <abstractions/base>
   #include <abstractions/bash>
 
   /bin/dash ix,
-  @{ECA_BASE}/ r,
-  @{ECA_BASE}/bin/anchor_production mixr,
+  @{ANCHOR_BASE}/ r,
+  @{ANCHOR_BASE}/bin/anchor_production mixr,
 
-  @{ECA_VENV}/bin/uwsgi cix,
+  @{ANCHOR_VENV}/bin/uwsgi cix,
 
   profile /path/to/anchor/.venv/bin/uwsgi {
     #include <abstractions/base>
@@ -44,19 +44,19 @@
 
     @{PROC}/sys/net/core/somaxconn r,
 
-    @{ECA_CA_DIR}/* r,
-    @{ECA_CERTS_DIR}/{,*.crt} w,
+    @{ANCHOR_CA_DIR}/* r,
+    @{ANCHOR_CERTS_DIR}/{,*.crt} w,
 
-    @{ECA_BASE}/ r,
-    @{ECA_BASE}/anchor/**.py{,c} r,
-    @{ECA_BASE}/anchor/{,**/} r,
-    @{ECA_BASE}/config.py r,
+    @{ANCHOR_BASE}/ r,
+    @{ANCHOR_BASE}/anchor/**.py{,c} r,
+    @{ANCHOR_BASE}/anchor/{,**/} r,
+    @{ANCHOR_BASE}/config.py r,
 
-    @{ECA_VENV}/bin/python mixr,
-    @{ECA_VENV}/bin/uwsgi mixr,
-    @{ECA_VENV}/bin/ r,
-    @{ECA_VENV}/lib/python2.7/ r,
-    @{ECA_VENV}/lib/python2.7/** r,
-    @{ECA_VENV}/lib/python2.7/**/*.so m,
+    @{ANCHOR_VENV}/bin/python mixr,
+    @{ANCHOR_VENV}/bin/uwsgi mixr,
+    @{ANCHOR_VENV}/bin/ r,
+    @{ANCHOR_VENV}/lib/python2.7/ r,
+    @{ANCHOR_VENV}/lib/python2.7/** r,
+    @{ANCHOR_VENV}/lib/python2.7/**/*.so m,
   }
 }
