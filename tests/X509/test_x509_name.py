@@ -24,15 +24,18 @@ class TestX509Name(unittest.TestCase):
     def setUp(self):
         super(TestX509Name, self).setUp()
         self.name = x509_name.X509Name()
-        self.name.add_name_entry('C', "UK")  # must be 2 chars
-        self.name.add_name_entry('ST', "test_ST")
-        self.name.add_name_entry('L', "test_L")
-        self.name.add_name_entry('O', "test_O")
-        self.name.add_name_entry('OU', "test_OU")
-        self.name.add_name_entry('CN', "test_CN")
-        self.name.add_name_entry('Email', "test_Email")
-        self.name.add_name_entry('SN', "test_SN")
-        self.name.add_name_entry('GN', "test_GN")
+        self.name.add_name_entry(x509_name.NID_countryName,
+                                 "UK")  # must be 2 chars
+        self.name.add_name_entry(x509_name.NID_stateOrProvinceName, "test_ST")
+        self.name.add_name_entry(x509_name.NID_localityName, "test_L")
+        self.name.add_name_entry(x509_name.NID_organizationName, "test_O")
+        self.name.add_name_entry(x509_name.NID_organizationalUnitName,
+                                 "test_OU")
+        self.name.add_name_entry(x509_name.NID_commonName, "test_CN")
+        self.name.add_name_entry(x509_name.NID_pkcs9_emailAddress,
+                                 "test_Email")
+        self.name.add_name_entry(x509_name.NID_surname, "test_SN")
+        self.name.add_name_entry(x509_name.NID_givenName, "test_GN")
 
     def tearDown(self):
         pass
@@ -40,12 +43,12 @@ class TestX509Name(unittest.TestCase):
     def test_add_bad_entry_throws(self):
         self.assertRaises(x509_errors.X509Error,
                           self.name.add_name_entry,
-                          'BAD', "BAD_WRONG")
+                          -1, "BAD_WRONG")
 
     def test_set_bad_c_throws(self):
         self.assertRaises(x509_errors.X509Error,
                           self.name.add_name_entry,
-                          'C', "BAD_WRONG")
+                          x509_name.NID_countryName, "BAD_WRONG")
 
     def test_name_to_string(self):
         val = str(self.name)
@@ -53,98 +56,54 @@ class TestX509Name(unittest.TestCase):
                                "/CN=test_CN/emailAddress=test_Email/"
                                "SN=test_SN/GN=test_GN"))
 
-    def test_get_c(self):
-        entries = self.name.get_entries_by_nid_name('C')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "countryName")
-        self.assertEqual(entries[0].get_value(), "UK")
-
     def test_get_countryName(self):
-        entries = self.name.get_entries_by_nid_name('countryName')
+        entries = self.name.get_entries_by_nid(x509_name.NID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
-
-    def test_get_st(self):
-        entries = self.name.get_entries_by_nid_name('ST')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "test_ST")
-
-    def test_get_sp(self):
-        entries = self.name.get_entries_by_nid_name('SP')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "test_ST")
 
     def test_get_stateOrProvinceName(self):
-        entries = self.name.get_entries_by_nid_name('stateOrProvinceName')
+        entries = self.name.get_entries_by_nid(
+            x509_name.NID_stateOrProvinceName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "test_ST")
 
-    def test_get_l(self):
-        entries = self.name.get_entries_by_nid_name('L')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "test_L")
-
     def test_get_subject_localityName(self):
-        entries = self.name.get_entries_by_nid_name('localityName')
+        entries = self.name.get_entries_by_nid(x509_name.NID_localityName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "localityName")
         self.assertEqual(entries[0].get_value(), "test_L")
-
-    def test_get_o(self):
-        entries = self.name.get_entries_by_nid_name('O')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationName")
-        self.assertEqual(entries[0].get_value(), "test_O")
 
     def test_get_organizationName(self):
-        entries = self.name.get_entries_by_nid_name('organizationName')
+        entries = self.name.get_entries_by_nid(x509_name.NID_organizationName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationName")
         self.assertEqual(entries[0].get_value(), "test_O")
 
-    def test_get_ou(self):
-        entries = self.name.get_entries_by_nid_name('OU')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationalUnitName")
-        self.assertEqual(entries[0].get_value(), "test_OU")
-
     def test_get_organizationUnitName(self):
-        entries = self.name.get_entries_by_nid_name('organizationalUnitName')
+        entries = self.name.get_entries_by_nid(
+            x509_name.NID_organizationalUnitName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationalUnitName")
         self.assertEqual(entries[0].get_value(), "test_OU")
-
-    def test_get_cn(self):
-        entries = self.name.get_entries_by_nid_name('CN')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "commonName")
-        self.assertEqual(entries[0].get_value(), "test_CN")
 
     def test_get_commonName(self):
-        entries = self.name.get_entries_by_nid_name('commonName')
+        entries = self.name.get_entries_by_nid(x509_name.NID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "test_CN")
 
-    def test_get_email(self):
-        entries = self.name.get_entries_by_nid_name('Email')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "emailAddress")
-        self.assertEqual(entries[0].get_value(), "test_Email")
-
     def test_get_emailAddress(self):
-        entries = self.name.get_entries_by_nid_name('Email')
+        entries = self.name.get_entries_by_nid(
+            x509_name.NID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test_Email")
 
     def test_entry_to_string(self):
-        entries = self.name.get_entries_by_nid_name('Email')
+        entries = self.name.get_entries_by_nid(
+            x509_name.NID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(str(entries[0]), "emailAddress: test_Email")
 
