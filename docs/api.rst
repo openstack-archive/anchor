@@ -26,3 +26,26 @@ Result
 ~~~~~~
 
 Signed certificate
+
+/v1/ca/<registration_authority> (POST)
+----------------------------------------
+
+Requests the CA which would be used to sign the request made to this
+registration authority. It requires the same authentication as an actual
+signing request.
+
+Do *NOT* use this to retrieve the certificate needed to trust communication
+with Anchor. Connection to Anchor *MUST* be fully trusted before using this
+endpoint for further configuration.
+
+Request parameters
+~~~~~~~~~~~~~~~~~~
+
+* ``user``: username used in authentication (optional)
+* ``secret``: secret used in authentication
+* ``encoding``: request encoding - currently supported: "pem"
+
+Result
+~~~~~~
+
+CA certificate used to sign for this RA.
