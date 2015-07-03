@@ -190,3 +190,18 @@ class TestFunctional(unittest.TestCase):
         self.assertTrue(("Internal Validation Error running "
                          "validator 'broken_validator' "
                          "for instance 'default'") in str(resp))
+
+    def test_get_ca(self):
+        data = {'user': 'myusername',
+                'secret': 'simplepassword',
+                'encoding': 'pem'}
+
+        resp = self.app.post('/v1/ca/default', data, expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+
+        cert = X509_cert.X509Certificate()
+        cert.from_buffer(resp.text)
+
+        # make sure the cert is what we asked for
+        self.assertEqual("/C=UK/ST=Some-State/O=OSSG/CN=anchor.example.com",
+                         str(cert.get_subject()))

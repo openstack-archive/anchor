@@ -122,6 +122,13 @@ def validate_csr(instance, auth_result, csr, request):
         pecan.abort(400, "CSR failed validation")
 
 
+def get_ca(instance):
+    instance_conf = jsonloader.for_instance(instance)
+
+    with open(instance_conf['ca']['cert_path']) as f:
+        return f.read()
+
+
 def sign(instance, csr):
     """Generate an X.509 certificate and sign it.
 
