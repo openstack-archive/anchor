@@ -207,6 +207,15 @@ search is done in the configured base.
       }
     }
 
+Available API calls
+===================
+
+* `/v1/{instance}/sign` (POST) - Sign the provided CSR. Required variables are
+  `user`, `secret`, `encoding`, `csr`.
+
+* `/v1/{instance}/ca` (POST) - Get the CA used to sign the CSR. Required
+  variables are: `user`, `secret`.
+
 Reporting bugs and contributing
 ===============================
 
