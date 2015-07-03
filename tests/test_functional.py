@@ -173,3 +173,16 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                          "'broken_validator' for registration authority "
                          "'default_ra'") in str(resp))
         self.assertTrue(derp.called)
+
+    def test_get_ca(self):
+        data = {'encoding': 'pem'}
+
+        resp = self.app.get('/v1/ca/default_ra', data, expect_errors=False)
+        self.assertEqual(200, resp.status_int)
+
+        cert = X509_cert.X509Certificate.from_buffer(resp.text)
+
+        # make sure the cert is what we asked for
+        self.assertEqual("/C=AU/ST=Some-State/O=Herp Derp plc/OU"
+                         "=herp.derp.plc/CN=herp.derp.plc",
+                         str(cert.get_subject()))
