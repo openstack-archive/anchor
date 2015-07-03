@@ -32,12 +32,14 @@ class RobotsController(rest.RestController):
         return "User-agent: *\nDisallow: /\n"
 
 
-class SignInstanceController(rest.RestController):
-    """Handles POST requests to /sign/instance."""
-
+class GenericInstanceController(rest.RestController):
+    """Handles requests to /xxx/instance."""
     def __init__(self, instance):
         self.instance = instance
 
+
+class SignInstanceController(GenericInstanceController):
+    """Handles POST requests to /sign/instance."""
     @pecan.expose(content_type="text/plain")
     def post(self):
         instance = self.instance
@@ -53,16 +55,33 @@ class SignInstanceController(rest.RestController):
         return certificate_ops.sign(instance, csr)
 
 
-class SignController(rest.RestController):
+class CAInstanceController(GenericInstanceController):
+    """Handles POST requests to /ca/instance."""
+    @pecan.expose(content_type="text/plain")
+    def post(self):
+        instance = self.instance
+
+        auth.validate(instance,
+                      pecan.request.POST.get('user'),
+                      pecan.request.POST.get('secret'))
+
+        return certificate_ops.get_ca(instance)
+
+
+class InstanceController(rest.RestController):
+    def __init__(self, subcontroller):
+        self._subcontroller = subcontroller
+
     @pecan.expose()
     def _lookup(self, instance, *remaining):
         if instance in jsonloader.instance_names():
-            return SignInstanceController(instance), remaining
+            return self._subcontroller(instance), remaining
         pecan.abort(404)
 
 
 class V1Controller(rest.RestController):
-    sign = SignController()
+    sign = InstanceController(SignInstanceController)
+    ca = InstanceController(CAInstanceController)
 
 
 class RootController(object):
