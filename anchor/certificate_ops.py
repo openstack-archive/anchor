@@ -133,6 +133,17 @@ def certificate_fingerprint(cert_pem, hash_name):
     return cert.get_fingerprint(hash_name)
 
 
+def get_ca(ra_name):
+    ca_conf = jsonloader.signing_ca_for_registration_authority(ra_name)
+
+    ca_path = ca_conf.get('cert_path')
+    if not ca_path:
+        pecan.abort(404, "CA certificate not available")
+
+    with open(ca_path) as f:
+        return f.read()
+
+
 def dispatch_sign(ra_name, csr):
     """Dispatch the sign call to the configured backend.
 
