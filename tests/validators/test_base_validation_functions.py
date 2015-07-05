@@ -100,7 +100,9 @@ class TestBaseValidators(unittest.TestCase):
         self.assertTrue(validators.check_domains(test_domain, test_allowed))
         self.assertFalse(validators.check_domains('gmail.com', test_allowed))
 
-    def test_check_networks_bad_domain(self):
+    @mock.patch('socket.gethostbyname_ex')
+    def test_check_networks_bad_domain(self, gethostbyname_ex):
+        gethostbyname_ex.side_effect = socket.gaierror()
         bad_domain = 'bad!$domain'
         allowed_networks = ['127/8', '10/8']
         self.assertFalse(validators.check_networks(
