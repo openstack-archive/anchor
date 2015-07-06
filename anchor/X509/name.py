@@ -19,31 +19,19 @@ from anchor.X509 import errors
 from anchor.X509 import utils
 
 
+NID_countryName = backend._lib.NID_countryName
+NID_stateOrProvinceName = backend._lib.NID_stateOrProvinceName
+NID_localityName = backend._lib.NID_localityName
+NID_organizationName = backend._lib.NID_organizationName
+NID_organizationalUnitName = backend._lib.NID_organizationalUnitName
+NID_commonName = backend._lib.NID_commonName
+NID_pkcs9_emailAddress = backend._lib.NID_pkcs9_emailAddress
+NID_surname = backend._lib.NID_surname
+NID_givenName = backend._lib.NID_givenName
+
+
 class X509Name(object):
     """An X509 Name object."""
-
-    # NOTE(tkelsey): this is not exhaustive
-    nid = {'C': backend._lib.NID_countryName,
-           'countryName': backend._lib.NID_countryName,
-           'SP': backend._lib.NID_stateOrProvinceName,
-           'ST': backend._lib.NID_stateOrProvinceName,
-           'stateOrProvinceName': backend._lib.NID_stateOrProvinceName,
-           'L': backend._lib.NID_localityName,
-           'localityName': backend._lib.NID_localityName,
-           'O': backend._lib.NID_organizationName,
-           'organizationName': backend._lib.NID_organizationName,
-           'OU': backend._lib.NID_organizationalUnitName,
-           'organizationalUnitName': backend._lib.NID_organizationalUnitName,
-           'CN': backend._lib.NID_commonName,
-           'commonName': backend._lib.NID_commonName,
-           'Email': backend._lib.NID_pkcs9_emailAddress,
-           'emailAddress': backend._lib.NID_pkcs9_emailAddress,
-           'serialNumber': backend._lib.NID_serialNumber,
-           'SN': backend._lib.NID_surname,
-           'surname': backend._lib.NID_surname,
-           'GN': backend._lib.NID_givenName,
-           'givenName': backend._lib.NID_givenName
-           }
 
     class Entry():
         """An X509 Name sub-entry object."""
@@ -116,12 +104,8 @@ class X509Name(object):
         for i in range(self.entry_count()):
             yield self[i]
 
-    def add_name_entry(self, nid_name, text):
+    def add_name_entry(self, nid, text):
         """Add a name entry by its NID name."""
-        if nid_name not in X509Name.nid:
-            raise errors.X509Error("Unknown NID name: %s" % nid_name)
-
-        nid = X509Name.nid[nid_name]
         ret = self._lib.X509_NAME_add_entry_by_NID(
             self._name_obj, nid,
             self._lib.MBSTRING_UTF8,
@@ -129,23 +113,19 @@ class X509Name(object):
 
         if ret != 1:
             raise errors.X509Error("Failed to add name entry: '%s' '%s'" % (
-                nid_name, text))
+                nid, text))
 
     def entry_count(self):
         """Get the number of entries in the name object."""
         return self._lib.X509_NAME_entry_count(self._name_obj)
 
-    def get_entries_by_nid_name(self, nid_name):
+    def get_entries_by_nid(self, nid):
         """Get a name entry corresponding to an NID name.
 
-        :param nid_name: an NID name, chosen from the X509Name.nid table
+        :param nid: an NID for the new name entry
         :return: An X509Name.Entry object
         """
-        if nid_name not in X509Name.nid:
-            raise errors.X509Error("Unknown NID name: %s" % nid_name)
-
         out = []
-        nid = X509Name.nid[nid_name]
         idx = self._lib.X509_NAME_get_index_by_NID(self._name_obj, nid, -1)
         while idx != -1:
             val = self._lib.X509_NAME_get_entry(self._name_obj, idx)

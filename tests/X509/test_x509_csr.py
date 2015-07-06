@@ -22,6 +22,7 @@ from cryptography.hazmat.backends.openssl import backend
 import mock
 
 from anchor.X509 import errors as x509_errors
+from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request
 
 
@@ -78,7 +79,7 @@ class TestX509Csr(unittest.TestCase):
             csr.from_file("some_path")
 
             name = csr.get_subject()
-            entries = name.get_entries_by_nid_name('C')
+            entries = name.get_entries_by_nid(x509_name.NID_countryName)
             self.assertEqual(entries[0].get_value(), "UK")
 
     def test_bad_data_throws(self):
@@ -91,113 +92,51 @@ class TestX509Csr(unittest.TestCase):
                           csr.from_buffer,
                           bad_data)
 
-    def test_get_bad_elem(self):
-        name = self.csr.get_subject()
-        self.assertRaises(x509_errors.X509Error,
-                          name.get_entries_by_nid_name,
-                          'BAD')
-
-    def test_get_subject_c(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('C')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "countryName")
-        self.assertEqual(entries[0].get_value(), "UK")
-
     def test_get_subject_countryName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('countryName')
+        entries = name.get_entries_by_nid(x509_name.NID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
-
-    def test_get_subject_st(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('ST')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "Narnia")
-
-    def test_get_subject_sp(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('SP')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "Narnia")
 
     def test_get_subject_stateOrProvinceName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('stateOrProvinceName')
+        entries = name.get_entries_by_nid(x509_name.NID_stateOrProvinceName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "Narnia")
 
-    def test_get_subject_l(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('L')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "Funkytown")
-
     def test_get_subject_localityName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('localityName')
+        entries = name.get_entries_by_nid(x509_name.NID_localityName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "localityName")
         self.assertEqual(entries[0].get_value(), "Funkytown")
-
-    def test_get_subject_o(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('O')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationName")
-        self.assertEqual(entries[0].get_value(), "Anchor Testing")
 
     def test_get_subject_organizationName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('organizationName')
+        entries = name.get_entries_by_nid(x509_name.NID_organizationName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationName")
         self.assertEqual(entries[0].get_value(), "Anchor Testing")
 
-    def test_get_subject_ou(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('OU')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationalUnitName")
-        self.assertEqual(entries[0].get_value(), "testing")
-
     def test_get_subject_organizationUnitName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('organizationalUnitName')
+        entries = name.get_entries_by_nid(x509_name.NID_organizationalUnitName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationalUnitName")
         self.assertEqual(entries[0].get_value(), "testing")
-
-    def test_get_subject_cn(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('CN')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "commonName")
-        self.assertEqual(entries[0].get_value(), "anchor.test")
 
     def test_get_subject_commonName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('commonName')
+        entries = name.get_entries_by_nid(x509_name.NID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "anchor.test")
 
-    def test_get_subject_email(self):
-        name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('Email')
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "emailAddress")
-        self.assertEqual(entries[0].get_value(), "test@anchor.test")
-
     def test_get_subject_emailAddress(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid_name('Email')
+        entries = name.get_entries_by_nid(x509_name.NID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test@anchor.test")
