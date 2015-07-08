@@ -182,7 +182,7 @@ def sign(csr):
 
     cert_pem = new_cert.as_pem()
 
-    with open(path, "w") as f:
+    with open(path, "wb") as f:
         f.write(cert_pem)
 
     return cert_pem
