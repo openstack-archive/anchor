@@ -29,7 +29,7 @@ from anchor.X509 import signing_request
 # find the class representing an open file; it depends on the python version
 # it's used later for mocking
 if sys.version_info[0] < 3:
-    file_class = file
+    file_class = file  # noqa
 else:
     import _io
     file_class = _io.TextIOWrapper
