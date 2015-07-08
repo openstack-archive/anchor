@@ -36,8 +36,6 @@ to be present:
 * python (dev files)
 * libffi (dev)
 * libssl (dev)
-* ldap (dev, optional)
-* sasl (dev, optional)
 
 When everything is in place, Anchor can be installed in one of three ways. For
 development, run:
@@ -204,6 +202,8 @@ search is done in the configured base.
         "host": "ldap.example.com",
         "base": "ou=Users,dc=example,dc=com",
         "domain": "example.com"
+        "port": 636,
+        "ssl": true
       }
     }
 
