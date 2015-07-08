@@ -13,8 +13,8 @@
 
 from __future__ import absolute_import
 
-import ldap
-import ldap.filter
+import ldap3
+from ldap3.utils import dn
 
 from anchor.auth import results
 from anchor import jsonloader
@@ -27,8 +27,8 @@ def user_get_groups(attributes):
     :returns: List -- A list of groups that the user is a member of
     """
     groups = attributes.get('memberOf', [])
-    group_dns = [ldap.dn.explode_dn(g, notypes=True) for g in groups]
-    return set(x[0] for x in group_dns if x[1] == 'Groups')
+    group_dns = [dn.parse_dn(g) for g in groups]
+    return set(x[0][1] for x in group_dns if x[1] == ('OU', 'Groups', ','))
 
 
 def login(user, secret):
@@ -38,21 +38,26 @@ def login(user, secret):
     :param secret: Secret/Passphrase
     :returns: AuthDetails -- Class used for authentication information
     """
-    ldo = ldap.initialize("ldap://%s" % (jsonloader.conf.auth['ldap']['host']))
-    ldo.set_option(ldap.OPT_REFERRALS, 0)
+    ldap_port = int(jsonloader.conf.auth['ldap'].get('port', 389))
+    use_ssl = jsonloader.conf.auth['ldap'].get('ssl', ldap_port == 636)
+
+    lds = ldap3.Server(jsonloader.conf.auth['ldap']['host'], port=ldap_port,
+                       get_info=ldap3.ALL, use_ssl=use_ssl)
+
     try:
-        ldo.simple_bind_s("%s@%s" % (user,
-                                     jsonloader.conf.auth['ldap']['domain']),
-                          secret)
+        ldap_user = "%s@%s" % (user, jsonloader.conf.auth['ldap']['domain'])
+        ldc = ldap3.Connection(lds, auto_bind=True, client_strategy=ldap3.SYNC,
+                               user=ldap_user, password=secret,
+                               authentication=ldap3.SIMPLE, check_names=True)
 
         filter_str = ('(sAMAccountName=%s)' %
-                      ldap.filter.escape_filter_chars(user))
-        ret = ldo.search_s(jsonloader.conf.auth['ldap']['base'],
-                           ldap.SCOPE_SUBTREE,
-                           filterstr=filter_str,
-                           attrlist=['memberOf'])
-        user_attrs = [x for x in ret if x[0] is not None][0][1]
+                      ldap3.utils.conv.escape_bytes(user))
+        ldc.search(jsonloader.conf.auth['ldap']['base'], filter_str,
+                   ldap3.SUBTREE, attributes=['memberOf'])
+        if ldc.result['result'] != 0:
+            return None
+        user_attrs = ldc.response[0]['attributes']
         user_groups = user_get_groups(user_attrs)
         return results.AuthDetails(username=user, groups=user_groups)
-    except ldap.INVALID_CREDENTIALS:
+    except ldap3.LDAPBindError:
         return None
