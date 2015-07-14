@@ -130,3 +130,18 @@ class CertificateOpsTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, csr_obj, None)
+
+    def test_custom_ca_backend(self):
+        """Ensure custom signing backend works."""
+
+        mock_backend = mock.MagicMock()
+
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "anchor.jsonloader.conf._config"
+        data = {'ca': {'backend': mock_backend}}
+
+        with mock.patch.dict(config, data):
+            # this should work, it allows people to bypass validation
+            certificate_ops.dispatch_sign(csr_obj)
+
+        mock_backend.sign.assert_called_with(csr_obj, data['ca'])
