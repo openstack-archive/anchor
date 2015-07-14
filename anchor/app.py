@@ -204,6 +204,8 @@ def load_config():
         logger.info("using config: {}".format(config_path))
         jsonloader.conf.load_file_data(config_path)
 
+        jsonloader.conf.load_extensions()
+
 
 def setup_app(config):
     # initial logging, will be re-configured later

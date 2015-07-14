@@ -19,6 +19,8 @@ from __future__ import absolute_import
 import json
 import logging
 
+import stevedore
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,6 +56,13 @@ class AnchorConf():
     def load_str_data(self, data):
         '''Load a config from string data.'''
         self._config = json.loads(data)
+
+    def load_extensions(self):
+        self._signing_backends = stevedore.ExtensionManager(
+            "anchor.signing_backends")
+
+    def get_signing_backend(self, name):
+        return self._signing_backends[name].plugin
 
     @property
     def config(self):

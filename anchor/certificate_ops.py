@@ -20,6 +20,7 @@ import time
 import uuid
 
 import pecan
+from webob import exc as http_status
 
 from anchor import jsonloader
 from anchor import validators
@@ -34,6 +35,10 @@ logger = logging.getLogger(__name__)
 # we only support the PEM encoding for now, but this may grow
 # to support things like DER in the future
 VALID_ENCODINGS = ['pem']
+
+
+class SigningError(Exception):
+    pass
 
 
 def parse_csr(csr, encoding):
@@ -122,26 +127,61 @@ def validate_csr(ra_name, auth_result, csr, request):
         pecan.abort(400, "CSR failed validation")
 
 
-def sign(ra_name, csr):
-    """Generate an X.509 certificate and sign it.
+def certificate_fingerprint(cert_pem, hash_name):
+    """Get certificate fingerprint."""
+    cert = certificate.X509Certificate.from_buffer(cert_pem)
+    return cert.get_fingerprint(hash_name)
 
-    :param ra_name: name of the registration authority
+
+def dispatch_sign(ra_name, csr):
+    """Dispatch the sign call to the configured backend.
+
     :param csr: X509 certificate signing request
+    :return: signed certificate in PEM format
     """
     ca_conf = jsonloader.signing_ca_for_registration_authority(ra_name)
+    backend_name = ca_conf.get('backend', 'anchor')
+    sign_func = jsonloader.conf.get_signing_backend(backend_name)
+    try:
+        cert_pem = sign_func(csr, ca_conf)
+    except http_status.HTTPException:
+        logger.exception("Failed to sign certificate")
+        raise
+    except Exception:
+        logger.exception("Failed to sign the certificate")
+        pecan.abort(500, "certificate signing error")
 
+    if ca_conf.get('output_path') is not None:
+        fingerprint = certificate_fingerprint(cert_pem, 'sha256')
+        path = os.path.join(
+            ca_conf['output_path'],
+            '%s.crt' % fingerprint)
+
+        logger.info("Saving certificate to: %s", path)
+
+        with open(path, "w") as f:
+            f.write(cert_pem)
+
+    return cert_pem
+
+
+def sign(csr, ca_conf):
+    """Generate an X.509 certificate and sign it.
+
+    :param csr: X509 certificate signing request
+    :param ca_conf: signing CA configuration
+    :return: signed certificate in PEM format
+    """
     try:
         ca = certificate.X509Certificate.from_file(
             ca_conf['cert_path'])
     except Exception as e:
-        logger.exception("Cannot load the signing CA: %s", e)
-        pecan.abort(500, "certificate signing error")
+        raise SigningError("Cannot load the signing CA: %s" % (e,))
 
     try:
         key = utils.get_private_key_from_file(ca_conf['key_path'])
     except Exception as e:
-        logger.exception("Cannot load the signing CA key: %s", e)
-        pecan.abort(500, "certificate signing error")
+        raise SigningError("Cannot load the signing CA key: %s" % (e,))
 
     new_cert = certificate.X509Certificate()
     new_cert.set_version(2)
@@ -169,16 +209,6 @@ def sign(ra_name, csr):
 
     new_cert.sign(key, ca_conf['signing_hash'])
 
-    path = os.path.join(
-        ca_conf['output_path'],
-        '%s.crt' % new_cert.get_fingerprint(
-            ca_conf['signing_hash']))
-
-    logger.info("Saving certificate to: %s", path)
-
     cert_pem = new_cert.as_pem()
-
-    with open(path, "w") as f:
-        f.write(cert_pem)
 
     return cert_pem
