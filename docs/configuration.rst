@@ -106,6 +106,7 @@ which uses local files. An example configuration looks like this.
   {
     "signing_ca": {
       "local": {
+        "backend": "anchor",
         "cert_path": "CA/root-ca.crt",
         "key_path": "CA/root-ca-unwrapped.key",
         "output_path": "certs",
@@ -115,11 +116,19 @@ which uses local files. An example configuration looks like this.
     }
   }
 
-Parameters ``cert_path`` and ``key_path`` define the location of respectively
-the CA certificate and its private key. The location where the local copies of
-issued certificates is held is defiend by ``output_path``. The ``signing_hash``
-defines the hash used to sign the results. The validity of issued certificates
-(in hours) is set by ``valid_hours``.
+Anchor allows the use of configurable signing backend. While it provides a
+default implementation (based on cryptography.io and OpenSSL), other
+implementations may be configured. The backend is configured by setting the
+``backend`` value to the name of the right entry point. Backend implementations
+need to provide only one function: ``sign(csr, config)``, taking the parsed CSR
+and their own ``singing_ca`` block of the configuration as parameters and
+returning signed certificate in PEM format.
+
+The backends are loaded using the ``stevedore`` module from the registered
+entry points. The name space is ``anchor.signing_backends``.
+
+Each backend may take different configuration options. Please refer to
+:doc:`signing backends section </signing_backends>`.
 
 
 Virtual registration authority
