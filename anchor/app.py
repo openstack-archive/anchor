@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 
+import importlib
 import logging
 import os
 import stat
@@ -104,6 +105,15 @@ def validate_config(conf):
     logger.info("Validator set OK")
 
 
+def resolve_config_imports(conf):
+    """Change import paths in the config to the actual modules."""
+
+    # certificate signing backend
+    signing_backend = conf.ca.get('backend', 'anchor.certificate_ops')
+    signing_module = importlib.import_module(signing_backend)
+    conf.ca['backend'] = signing_module
+
+
 def check_default_auth(conf):
     default_user = "myusername"
     default_secret = "simplepassword"
@@ -156,6 +166,7 @@ def setup_app(config):
 
     load_config()
     validate_config(jsonloader.conf)
+    resolve_config_imports(jsonloader.conf)
 
     app = pecan.make_app(
         app_conf.pop('root'),
