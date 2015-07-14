@@ -207,6 +207,44 @@ search is done in the configured base.
       }
     }
 
+Signing backends
+================
+
+Anchor allows the use of configurable signing backend. While it provides one
+implementation (based on cryptography.io and OpenSSL), other implementations
+may be configured. The backend is configured by setting ca.backend
+configuration value to the name of the right module. Backend implementations
+need to provide only one function: sign(csr, conf), taking the parsed CSR and
+the "ca" block of the configuration as parameters and returning signed
+certificate in PEM format.
+
+If `ca.backend` is not defined, it defaults to string `anchor.certificate_ops`
+
+The resulting certificate is stored locally if the `output_path` is set to any
+string. This does not depend on the configured backend.
+
+Backends can specify their own options - please refer to the backend
+documentation for the specific list. The default backend takes the following
+options:
+
+* `cert_path`: path where local CA certificate can be found
+
+* `key_path`: path to the key for that certificate
+
+* `signing_hash`: which hash method to use when producing signatures
+
+* `valid_hours`: number of hours the signed certificates are valid for
+
+Sample configuration for the default backend:
+
+    "ca": {
+      "cert_path": "CA/root-ca.crt",
+      "key_path": "CA/root-ca-unwrapped.key",
+      "output_path": "certs",
+      "signing_hash": "sha256",
+      "valid_hours": 24
+    }
+
 Reporting bugs and contributing
 ===============================
 

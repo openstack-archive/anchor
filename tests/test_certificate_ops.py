@@ -135,20 +135,37 @@ class CertificateOpsTests(unittest.TestCase):
         """Test CA certificate read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'ca': {'cert_path': '/xxx/not/a/valid/path',
+        data = {'ca': {'backend': certificate_ops,
+                       'cert_path': '/xxx/not/a/valid/path',
                        'key_path': 'tests/CA/root-ca-unwrapped.key'}}
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPServerError):
-                certificate_ops.sign(csr_obj)
+                certificate_ops.dispatch_sign(csr_obj)
 
     def test_ca_key_read_failure(self):
         """Test CA key read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'ca': {'cert_path': 'tests/CA/root-ca.crt',
+        data = {'ca': {'backend': certificate_ops,
+                       'cert_path': 'tests/CA/root-ca.crt',
                        'key_path': '/xxx/not/a/valid/path'}}
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPServerError):
-                certificate_ops.sign(csr_obj)
+                certificate_ops.dispatch_sign(csr_obj)
+
+    def test_custom_ca_backend(self):
+        """Ensure custom signing backend works."""
+
+        mock_backend = mock.MagicMock()
+
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "anchor.jsonloader.conf._config"
+        data = {'ca': {'backend': mock_backend}}
+
+        with mock.patch.dict(config, data):
+            # this should work, it allows people to bypass validation
+            certificate_ops.dispatch_sign(csr_obj)
+
+        mock_backend.sign.assert_called_with(csr_obj, data['ca'])

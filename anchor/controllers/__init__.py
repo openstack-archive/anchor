@@ -44,7 +44,7 @@ class SignController(rest.RestController):
 
         certificate_ops.validate_csr(auth_result, csr, pecan.request)
 
-        return certificate_ops.sign(csr)
+        return certificate_ops.dispatch_sign(csr)
 
 
 class RootController(object):

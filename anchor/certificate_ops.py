@@ -126,21 +126,52 @@ def validate_csr(auth_result, csr, request):
         pecan.abort(400, "CSR failed validation")
 
 
-def sign(csr):
+def certificate_fingerprint(cert_pem, hash_name):
+    """Get certificate fingerprint."""
+    cert = certificate.X509Certificate()
+    cert.from_buffer(cert_pem)
+    return cert.get_fingerprint(hash_name)
+
+
+def dispatch_sign(csr):
+    """Dispatch the sign call to the configured backend.
+
+    :param csr: X509 certificate signing request
+    :return: signed certificate in PEM format
+    """
+    ca_conf = jsonloader.conf.ca
+    cert_pem = ca_conf['backend'].sign(csr, ca_conf)
+
+    if jsonloader.conf.ca.get('output_path') is not None:
+        fingerprint = certificate_fingerprint(cert_pem, 'sha256')
+        path = os.path.join(
+            jsonloader.conf.ca['output_path'],
+            '%s.crt' % fingerprint)
+
+        logger.info("Saving certificate to: %s", path)
+
+        with open(path, "w") as f:
+            f.write(cert_pem)
+
+    return cert_pem
+
+
+def sign(csr, ca_conf):
     """Generate an X.509 certificate and sign it.
 
     :param csr: X509 certificate signing request
+    :return: signed certificate in PEM format
     """
     try:
         ca = certificate.X509Certificate()
-        ca.from_file(jsonloader.conf.ca["cert_path"])
+        ca.from_file(ca_conf["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")
 
     try:
         key_data = None
-        with open(jsonloader.conf.ca["key_path"]) as f:
+        with open(ca_conf["key_path"]) as f:
             key_data = f.read()
         key = X509_utils.load_pem_private_key(key_data)
     except Exception as e:
@@ -151,7 +182,7 @@ def sign(csr):
     new_cert.set_version(2)
 
     start_time = int(time.time())
-    end_time = start_time + (jsonloader.conf.ca['valid_hours'] * 60 * 60)
+    end_time = start_time + (ca_conf['valid_hours'] * 60 * 60)
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
@@ -171,18 +202,8 @@ def sign(csr):
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)
 
-    new_cert.sign(key, jsonloader.conf.ca['signing_hash'])
-
-    path = os.path.join(
-        jsonloader.conf.ca['output_path'],
-        '%s.crt' % new_cert.get_fingerprint(
-            jsonloader.conf.ca['signing_hash']))
-
-    logger.info("Saving certificate to: %s", path)
+    new_cert.sign(key, ca_conf['signing_hash'])
 
     cert_pem = new_cert.as_pem()
-
-    with open(path, "w") as f:
-        f.write(cert_pem)
 
     return cert_pem
