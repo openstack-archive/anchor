@@ -4,3 +4,4 @@ Paste
 netaddr>=0.7.12
 ldap3>=0.9.8.2  # LGPLv3
 requests>=2.2.0,!=2.4.0
+stevedore>=1.5.0  # Apache-2.0
