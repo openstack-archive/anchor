@@ -149,7 +149,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
-                certificate_ops.sign('default_ra', csr_obj)
+                certificate_ops.dispatch_sign('default_ra', csr_obj)
         self.assertEqual(cm.exception.code, 500)
 
     def test_ca_key_read_failure(self):
@@ -162,5 +162,5 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
-                certificate_ops.sign('default_ra', csr_obj)
+                certificate_ops.dispatch_sign('default_ra', csr_obj)
         self.assertEqual(cm.exception.code, 500)

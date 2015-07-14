@@ -21,6 +21,7 @@ import sys
 import paste
 from paste import translogger  # noqa
 import pecan
+import stevedore
 
 from anchor import jsonloader
 from anchor import validators
@@ -203,6 +204,8 @@ def load_config():
         logger = logging.getLogger("anchor")
         logger.info("using config: {}".format(config_path))
         jsonloader.conf.load_file_data(config_path)
+
+        jsonloader.conf.load_extensions()
 
 
 def setup_app(config):
