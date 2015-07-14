@@ -12,6 +12,7 @@ Contents:
 
    configuration
    api
+   signing_backends
    validators
 
 Indices and tables

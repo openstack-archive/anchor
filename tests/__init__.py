@@ -42,6 +42,7 @@ class DefaultConfigMixin(object):
         }
         self.sample_conf_ca = {
             "default_ca": {
+                "backend": "anchor",
                 "cert_path": "tests/CA/root-ca.crt",
                 "key_path": "tests/CA/root-ca-unwrapped.key",
                 "output_path": "certs",
