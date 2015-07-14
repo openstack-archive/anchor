@@ -58,10 +58,10 @@ def create_timezone(minute_offset):
 
     class SpecificTZ(datetime.tzinfo):
         def utcoffset(self, _dt):
-            return minute_offset
+            return datetime.timedelta(minutes=minute_offset)
 
         def dst(self, _dt):
-            return None
+            return datetime.timedelta(0)
 
         def tzname(self, _dt):
             return None
