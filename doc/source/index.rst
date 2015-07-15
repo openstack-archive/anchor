@@ -17,6 +17,7 @@ Contents:
    signing_backends
    ephemeralPKI
    validators
+   fixups
 
 
 Indices and tables

@@ -151,6 +151,8 @@ and the list of validators applied to each request.
           "source_cidrs": {
             "cidrs": [ "127.0.0.0/8" ]
           }
+        },
+        "fixups": {
         }
       }
     }
@@ -162,7 +164,8 @@ against two validators (``ca_status`` and ``source_cidrs``) and if they pass,
 the CSR will be signed by the previously defined signing ca called ``local``.
 
 Each validator has its own set of parameters described separately in the
-:doc:`validators section </validators>`.
+:doc:`validators section </validators>`. Same for fixups described in
+:doc:`fixups section </fixups>`
 
 
 Example configuration
@@ -200,6 +203,8 @@ Example configuration
           "source_cidrs": {
             "cidrs": [ "127.0.0.0/8" ]
           }
+        },
+        "fixups": {
         }
       }
     }
