@@ -20,7 +20,9 @@ import time
 import uuid
 
 import pecan
+import webob
 
+from anchor import fixups
 from anchor import jsonloader
 from anchor import validators
 from anchor.X509 import certificate
@@ -124,6 +126,56 @@ def validate_csr(auth_result, csr, request):
     # something failed, return a 400 to the client
     if not valid:
         pecan.abort(400, "CSR failed validation")
+
+
+def _run_fixup(name, body, args):
+    """Parse the fixup tuple, call the fixup, and return the new csr.
+
+       :param name: the fixup name
+       :param body: fixup body, directly from config
+       :param args: additional arguments to pass to the fixup function
+       :return: the fixed csr
+    """
+    # careful to not modify the master copy of args with local params
+    new_kwargs = args.copy()
+    new_kwargs.update(body)
+
+    # perform the actual check
+    logger.debug("_run_fixup: fixup <%s> with arguments: %s", name, body)
+    try:
+        fixup = getattr(fixups, name)
+        new_csr = fixup(**new_kwargs)
+        logger.debug("_run_fixup: success: <%s> ", name)
+        return new_csr
+    except Exception:
+        logger.exception("_run_fixup: FAILED: <%s>", name)
+        return None
+
+
+def fixup_csr(csr, request):
+    """Apply configured changes to the certificate.
+
+    :param csr: X509 certificate signing request
+    """
+    args = {'csr': csr,
+            'conf': jsonloader.conf,
+            'request': request}
+
+    try:
+        for fixup_name, fixup in jsonloader.conf.fixups.items():
+            new_csr = _run_fixup(fixup_name, fixup, args)
+            if new_csr is None:
+                pecan.abort(500, "Could not finish all required modifications")
+            args['csr'] = new_csr
+
+    except webob.exc.HTTPInternalServerError:
+        raise
+
+    except Exception:
+        logger.exception("Failed to execute fixups")
+        pecan.abort(500, "Could not finish all required modifications")
+
+    return args['csr']
 
 
 def sign(csr):
