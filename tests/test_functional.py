@@ -118,6 +118,11 @@ class TestFunctional(unittest.TestCase):
         resp = self.app.post('/sign', expect_errors=True)
         self.assertEqual(401, resp.status_int)
 
+    def test_robots(self):
+        resp = self.app.get('/robots.txt')
+        self.assertEqual(200, resp.status_int)
+        self.assertEqual("User-agent: *\nDisallow: /\n", resp.text)
+
     def test_check_missing_csr(self):
         data = {'user': 'myusername',
                 'secret': 'simplepassword',
