@@ -29,13 +29,13 @@ class ValidationError(Exception):
     pass
 
 
-def csr_get_cn(csr):
-    name = csr.get_subject()
-    data = name.get_entries_by_oid(x509_name.OID_commonName)
-    if len(data) > 0:
-        return data[0].get_value()
-    else:
+def csr_require_cn(csr):
+    cns = csr.get_subject_cn()
+    if not cns:
         raise ValidationError("CSR is lacking a CN in the Subject")
+    if len(cns) > 1:
+        raise ValidationError("CSR has too many CN entries")
+    return cns[0]
 
 
 def check_domains(domain, allowed_domains):
@@ -99,7 +99,7 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
                               " subject doesn't")
 
     if len(CNs) > 0:
-        cn = csr_get_cn(csr)
+        cn = csr_require_cn(csr)
         try:
             # is it an IP rather than domain?
             ip = netaddr.IPAddress(cn)
@@ -154,7 +154,7 @@ def blacklist_names(csr, domains=[], **kwargs):
 
     CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
     if len(CNs) > 0:
-        cn = csr_get_cn(csr)
+        cn = csr_require_cn(csr)
         if check_domains(cn, domains):
             raise ValidationError("Domain '%s' not allowed "
                                   "(CN blacklisted)" % cn)
@@ -173,7 +173,7 @@ def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
     verified against the groups the user is a member of.
     """
 
-    cn = csr_get_cn(csr)
+    cn = csr_require_cn(csr)
     parts = cn.split('-')
     if len(parts) == 1 or '.' in parts[0]:
         return  # no prefix
