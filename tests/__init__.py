@@ -55,11 +55,14 @@ class DefaultConfigMixin(object):
                 "allowed_domains": [".test.com"]
             }
         }
+        self.sample_conf_fixups = {
+        }
         self.sample_conf_ra = {
             "default_ra": {
                 "authentication": "default_auth",
                 "signing_ca": "default_ca",
-                "validators": self.sample_conf_validators
+                "validators": self.sample_conf_validators,
+                "fixups": self.sample_conf_fixups,
             }
         }
         self.sample_conf = {
