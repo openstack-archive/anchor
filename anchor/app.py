@@ -169,6 +169,8 @@ def validate_registration_authority_config(ra_name, conf):
                 "Unknown validator <{}> found (for registration "
                 "authority {})".format(step, ra_name))
 
+    # validate fixups
+
     config_check_domains(ra_validators)
     logger.info("Validators OK for registration authority: %s", ra_name)
 

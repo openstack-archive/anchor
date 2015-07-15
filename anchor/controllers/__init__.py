@@ -50,6 +50,7 @@ class SignInstanceController(rest.RestController):
         csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
                                         pecan.request.POST.get('encoding'))
         certificate_ops.validate_csr(ra_name, auth_result, csr, pecan.request)
+        csr = certificate_ops.fixup_csr(ra_name, csr, pecan.request)
 
         return certificate_ops.dispatch_sign(ra_name, csr)
 

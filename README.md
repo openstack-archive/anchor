@@ -241,6 +241,19 @@ Sample configuration for the default backend:
 
 For more information, please refer to the documentation.
 
+Fixups
+======
+
+Anchor can modify the submitted CSRs in order to enforce some rules, remove
+deprecated elements, or just add information. Submitted CSR may be modified or
+entirely redone. Fixup functions live in the anchor.fixup module. You can
+configure them using the "fixups" block and provide function-specific
+arguments.
+
+    "fixups": {
+      "noop": {}
+    }
+
 Reporting bugs and contributing
 ===============================
 
