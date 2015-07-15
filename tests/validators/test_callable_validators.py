@@ -22,6 +22,18 @@ from anchor import validators
 from anchor.X509 import name as x509_name
 
 
+def _csr_with_cn(cn):
+    name = x509_name.X509Name()
+    name.add_name_entry(x509_name.NID_commonName, cn)
+
+    csr_mock = mock.MagicMock()
+    csr_mock.get_subject.return_value = name
+    csr_mock.get_subject_cn.return_value = [cn]
+    csr_mock.get_extensions.return_value = []
+
+    return csr_mock
+
+
 class TestValidators(unittest.TestCase):
     def setUp(self):
         super(TestValidators, self).setUp()
@@ -110,15 +122,7 @@ class TestValidators(unittest.TestCase):
     def test_common_name_good_CN(self, gethostbyname_ex):
         gethostbyname_ex.return_value = ('master.test.com', [], ['10.0.0.1'])
 
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.__len__.return_value': 1,
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr_mock = _csr_with_cn('master.test.com')
 
         self.assertEqual(
             None,
@@ -133,11 +137,7 @@ class TestValidators(unittest.TestCase):
     def test_common_name_bad_CN(self, gethostbyname_ex):
         gethostbyname_ex.return_value = ('master.test.com', [], ['10.0.0.1'])
 
-        name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, 'test.baddomain.com')
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_subject.return_value = name
+        csr_mock = _csr_with_cn('test.baddomain.com')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
@@ -148,15 +148,7 @@ class TestValidators(unittest.TestCase):
                          "match known domains)", str(e.exception))
 
     def test_common_name_good_ip_CN(self):
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = '10.0.0.1'
-
-        csr_config = {
-            'get_subject.return_value.__len__.return_value': 1,
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr_mock = _csr_with_cn('10.0.0.1')
 
         self.assertEqual(
             None,
@@ -168,11 +160,7 @@ class TestValidators(unittest.TestCase):
         )
 
     def test_common_name_bad_ip_CN(self):
-        name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, '12.0.0.1')
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_subject.return_value = name
+        csr_mock = _csr_with_cn('12.0.0.1')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
@@ -346,14 +334,7 @@ class TestValidators(unittest.TestCase):
         auth_result = mock.Mock()
         auth_result.groups = ['nova']
 
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'nv_master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr_mock = _csr_with_cn('nv_master.test.com')
 
         self.assertEqual(
             None,
@@ -368,14 +349,7 @@ class TestValidators(unittest.TestCase):
         auth_result = mock.Mock()
         auth_result.groups = ['glance']
 
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'nv-master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr_mock = _csr_with_cn('nv-master.test.com')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.server_group(

@@ -93,6 +93,15 @@ class X509Csr(object):
 
         return name.X509Name(subs)
 
+    def get_subject_cn(self):
+        """Get the CN part of subject.
+
+        :return subject's CN
+        """
+        subject = self.get_subject()
+        cns = subject.get_entries_by_nid(name.NID_commonName)
+        return [cn.get_value() for cn in cns]
+
     def get_extensions(self):
         """Get the list of all X509 V3 Extensions on this CSR
 
