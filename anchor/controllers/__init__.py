@@ -42,6 +42,7 @@ class SignController(rest.RestController):
         csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
                                         pecan.request.POST.get('encoding'))
 
+        csr = certificate_ops.fixup_csr(csr, pecan.request)
         certificate_ops.validate_csr(auth_result, csr, pecan.request)
 
         return certificate_ops.sign(csr)

@@ -100,6 +100,10 @@ def validate_config(conf):
                     "Validator set <{}> contains an "
                     "unknown validator <{}>".format(name, step))
 
+    if not hasattr(conf, "fixups"):
+        # fixups are not required, but make sure the structure is always there
+        conf.config['fixups'] = {}
+
     config_check_domains(validator_set)
     logger.info("Validator set OK")
 
