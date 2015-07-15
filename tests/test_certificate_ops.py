@@ -130,3 +130,25 @@ class CertificateOpsTests(unittest.TestCase):
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPClientError):
                 certificate_ops.validate_csr(None, csr_obj, None)
+
+    def test_ca_cert_read_failure(self):
+        """Test CA certificate read failure."""
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "anchor.jsonloader.conf._config"
+        data = {'ca': {'cert_path': '/xxx/not/a/valid/path',
+                       'key_path': 'tests/CA/root-ca-unwrapped.key'}}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(http_status.HTTPServerError):
+                certificate_ops.sign(csr_obj)
+
+    def test_ca_key_read_failure(self):
+        """Test CA key read failure."""
+        csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
+        config = "anchor.jsonloader.conf._config"
+        data = {'ca': {'cert_path': 'tests/CA/root-ca.crt',
+                       'key_path': '/xxx/not/a/valid/path'}}
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(http_status.HTTPServerError):
+                certificate_ops.sign(csr_obj)
