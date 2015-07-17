@@ -35,7 +35,8 @@ class X509Name(object):
 
     class Entry():
         """An X509 Name sub-entry object."""
-        def __init__(self, obj):
+        def __init__(self, obj, parent):
+            self._parent = parent
             self._lib = backend._lib
             self._ffi = backend._ffi
             self._entry = obj
@@ -98,7 +99,7 @@ class X509Name(object):
         if not (0 <= idx < self.entry_count()):
             raise IndexError("index out of range")
         ent = self._lib.X509_NAME_get_entry(self._name_obj, idx)
-        return X509Name.Entry(ent)
+        return X509Name.Entry(ent, self)
 
     def __iter__(self):
         for i in range(self.entry_count()):
@@ -130,7 +131,7 @@ class X509Name(object):
         while idx != -1:
             val = self._lib.X509_NAME_get_entry(self._name_obj, idx)
             if val != self._ffi.NULL:
-                out.append(X509Name.Entry(val))
+                out.append(X509Name.Entry(val, self))
 
             idx = self._lib.X509_NAME_get_index_by_NID(self._name_obj,
                                                        nid, idx)
