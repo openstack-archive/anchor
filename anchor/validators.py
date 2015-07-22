@@ -17,6 +17,7 @@ import logging
 
 import netaddr
 
+from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 
 
@@ -29,7 +30,7 @@ class ValidationError(Exception):
 
 def csr_get_cn(csr):
     name = csr.get_subject()
-    data = name.get_entries_by_nid(x509_name.NID_commonName)
+    data = name.get_entries_by_oid(x509_name.OID_commonName)
     if len(data) > 0:
         return data[0].get_value()
     else:
@@ -51,19 +52,14 @@ def check_domains(domain, allowed_domains):
 
 def iter_alternative_names(csr, types, fail_other_types=True):
     for ext in csr.get_extensions():
-        if ext.get_name() == "subjectAltName":
-            alternatives = [alt.strip() for alt in ext.get_value().split(',')]
-            for alternative in alternatives:
-                parts = alternative.split(':', 1)
-                if len(parts) != 2:
-                    # it has at least one part, so parts[0] is valid
-                    raise ValidationError("Alt name should have 2 parts, but "
-                                          "found: '%s'" % parts[0])
-                if parts[0] in types:
-                    yield parts
-                elif fail_other_types:
-                    raise ValidationError("Alt name '%s' has unexpected type "
-                                          "'%s'" % (parts[1], parts[0]))
+        if isinstance(ext, extension.X509ExtensionSubjectAltName):
+            # TODO(stan): fail on other types
+            if 'DNS' in types:
+                for dns_id in ext.get_dns_ids():
+                    yield ('DNS', dns_id)
+            if 'IP Address' in types:
+                for ip in ext.get_ips():
+                    yield ('IP Address', ip)
 
 
 def check_networks(ip, allowed_networks):
@@ -91,15 +87,15 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     alt_present = any(ext.get_name() == "subjectAltName"
                       for ext in csr.get_extensions())
 
-    CNs = csr.get_subject().get_entries_by_nid(x509_name.NID_commonName)
+    CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
 
     if len(CNs) > 1:
         raise ValidationError("Too many CNs in the request")
-    if not alt_present:
-        # rfc5280#section-4.2.1.6 says so
-        if len(CNs) == 0:
-            raise ValidationError("Alt subjects have to exist if the main"
-                                  " subject doesn't")
+
+    # rfc5280#section-4.2.1.6 says so
+    if len(CNs) == 0 and not alt_present:
+        raise ValidationError("Alt subjects have to exist if the main"
+                              " subject doesn't")
 
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
@@ -122,7 +118,7 @@ def alternative_names(csr, allowed_domains=[], **kwargs):
     the list of known suffixes, or network ranges.
     """
 
-    for name_type, name in iter_alternative_names(csr, ['DNS']):
+    for _, name in iter_alternative_names(csr, ['DNS']):
         if not check_domains(name, allowed_domains):
             raise ValidationError("Domain '%s' not allowed (doesn't"
                                   " match known domains)"
@@ -142,9 +138,8 @@ def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
             raise ValidationError("Domain '%s' not allowed (doesn't"
                                   " match known domains)" % name)
         if name_type == 'IP Address':
-            ip = netaddr.IPAddress(name)
-            if not check_networks(ip, allowed_networks):
-                raise ValidationError("Address '%s' not allowed (doesn't"
+            if not check_networks(name, allowed_networks):
+                raise ValidationError("IP '%s' not allowed (doesn't"
                                       " match known networks)" % name)
 
 
@@ -156,7 +151,7 @@ def blacklist_names(csr, domains=[], **kwargs):
                        "consider disabling the step or providing a list")
         return
 
-    CNs = csr.get_subject().get_entries_by_nid(x509_name.NID_commonName)
+    CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
     if len(CNs) > 0:
         cn = csr_get_cn(csr)
         if check_domains(cn, domains):
@@ -198,45 +193,41 @@ def extensions(csr=None, allowed_extensions=[], **kwargs):
 
 def key_usage(csr=None, allowed_usage=None, **kwargs):
     """Ensure only accepted key usages are specified."""
-    allowed = set(allowed_usage)
+    allowed = set(extension.LONG_KEY_USAGE_NAMES.get(x, x) for x in
+                  allowed_usage)
+    denied = set()
 
     for ext in (csr.get_extensions() or []):
-        if ext.get_name() == 'keyUsage':
-            usages = set(usage.strip() for usage in ext.get_value().split(','))
-            if usages & allowed != usages:
-                raise ValidationError("Found some not allowed key usages: %s"
-                                      % ', '.join(usages - allowed))
+        if isinstance(ext, extension.X509ExtensionKeyUsage):
+            usages = set(ext.get_all_usages())
+            denied = denied | (usages - allowed)
+    if denied:
+        raise ValidationError("Found some not allowed key usages: %s"
+                              % ', '.join(denied))
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
     """Ensure the request has/hasn't got the CA flag."""
-
+    request_ca_flags = False
     for ext in (csr.get_extensions() or []):
-        ext_name = ext.get_name()
-        if ext_name == 'basicConstraints':
-            options = [opt.strip() for opt in ext.get_value().split(",")]
-            for option in options:
-                parts = option.split(":")
-                if len(parts) != 2:
-                    raise ValidationError("Invalid basic constraints flag")
-
-                if parts[0] == 'CA':
-                    if parts[1] != str(ca_requested).upper():
-                        raise ValidationError("Invalid CA status, 'CA:%s'"
-                                              " requested" % parts[1])
-                elif parts[0] == 'pathlen':
-                    # errr.. it's ok, I guess
-                    pass
-                else:
-                    raise ValidationError("Invalid basic constraints option")
-        elif ext_name == 'keyUsage':
-            usages = set(usage.strip() for usage in ext.get_value().split(','))
-            has_cert_sign = ('Certificate Sign' in usages)
-            has_crl_sign = ('CRL Sign' in usages)
-            if ca_requested != has_cert_sign or ca_requested != has_crl_sign:
-                raise ValidationError("Key usage doesn't match requested CA"
-                                      " status (keyCertSign/cRLSign: %s/%s)"
-                                      % (has_cert_sign, has_crl_sign))
+        if isinstance(ext, extension.X509ExtensionBasicConstraints):
+            if ext.get_ca():
+                if not ca_requested:
+                    raise ValidationError(
+                        "CA status requested, but not allowed")
+                request_ca_flags = True
+        elif isinstance(ext, extension.X509ExtensionKeyUsage):
+            has_cert_sign = ext.get_usage('keyCertSign')
+            has_crl_sign = ext.get_usage('cRLSign')
+            if has_crl_sign or has_cert_sign:
+                if not ca_requested:
+                    raise ValidationError(
+                        "Key usage doesn't match requested CA status "
+                        "(keyCertSign/cRLSign: %s/%s)"
+                        % (has_cert_sign, has_crl_sign))
+                request_ca_flags = True
+    if ca_requested and not request_ca_flags:
+        raise ValidationError("CA flags required")
 
 
 def source_cidrs(request=None, cidrs=None, **kwargs):

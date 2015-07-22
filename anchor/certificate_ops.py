@@ -25,7 +25,7 @@ from anchor import jsonloader
 from anchor import validators
 from anchor.X509 import certificate
 from anchor.X509 import signing_request
-from anchor.X509 import utils as X509_utils
+from anchor.X509 import utils
 
 
 logger = logging.getLogger(__name__)
@@ -54,8 +54,7 @@ def parse_csr(csr, encoding):
 
     # load the CSR into the backend X509 library
     try:
-        out_req = signing_request.X509Csr()
-        out_req.from_buffer(csr)
+        out_req = signing_request.X509Csr.from_buffer(csr)
         return out_req
     except Exception as e:
         logger.exception("Exception while parsing the CSR: %s", e)
@@ -132,17 +131,14 @@ def sign(csr):
     :param csr: X509 certificate signing request
     """
     try:
-        ca = certificate.X509Certificate()
-        ca.from_file(jsonloader.conf.ca["cert_path"])
+        ca = certificate.X509Certificate.from_file(
+            jsonloader.conf.ca["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")
 
     try:
-        key_data = None
-        with open(jsonloader.conf.ca["key_path"]) as f:
-            key_data = f.read()
-        key = X509_utils.load_pem_private_key(key_data)
+        key = utils.get_private_key_from_file(jsonloader.conf.ca['key_path'])
     except Exception as e:
         logger.exception("Cannot load the signing CA key: %s", e)
         pecan.abort(500, "certificate signing error")
@@ -182,7 +178,7 @@ def sign(csr):
 
     cert_pem = new_cert.as_pem()
 
-    with open(path, "wb") as f:
+    with open(path, "w") as f:
         f.write(cert_pem)
 
     return cert_pem
