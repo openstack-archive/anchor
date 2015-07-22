@@ -16,7 +16,6 @@
 
 import unittest
 
-from anchor.X509 import message_digest
 
 
 class TestMessageDigest(unittest.TestCase):

@@ -78,7 +78,7 @@ class TestValidators(unittest.TestCase):
 
         csr_config = {
             'get_extensions.return_value': [ext_mock],
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 ['dummy_value', 'dummy_value'],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -93,7 +93,7 @@ class TestValidators(unittest.TestCase):
     def test_common_name_no_CN(self):
         csr_config = {
             'get_subject.return_value.__len__.return_value': 0,
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 []
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -115,7 +115,7 @@ class TestValidators(unittest.TestCase):
 
         csr_config = {
             'get_subject.return_value.__len__.return_value': 1,
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -134,7 +134,7 @@ class TestValidators(unittest.TestCase):
         gethostbyname_ex.return_value = ('master.test.com', [], ['10.0.0.1'])
 
         name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, 'test.baddomain.com')
+        name.add_name_entry(x509_name.OID_commonName, 'test.baddomain.com')
 
         csr_mock = mock.MagicMock()
         csr_mock.get_subject.return_value = name
@@ -153,7 +153,7 @@ class TestValidators(unittest.TestCase):
 
         csr_config = {
             'get_subject.return_value.__len__.return_value': 1,
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -169,7 +169,7 @@ class TestValidators(unittest.TestCase):
 
     def test_common_name_bad_ip_CN(self):
         name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, '12.0.0.1')
+        name.add_name_entry(x509_name.OID_commonName, '12.0.0.1')
 
         csr_mock = mock.MagicMock()
         csr_mock.get_subject.return_value = name
@@ -308,7 +308,7 @@ class TestValidators(unittest.TestCase):
         cn_mock.get_value.return_value = 'master.test.com'
 
         csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -327,7 +327,7 @@ class TestValidators(unittest.TestCase):
         cn_mock.get_value.return_value = 'nv_master.test.com'
 
         csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -350,7 +350,7 @@ class TestValidators(unittest.TestCase):
         cn_mock.get_value.return_value = 'nv_master.test.com'
 
         csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -372,7 +372,7 @@ class TestValidators(unittest.TestCase):
         cn_mock.get_value.return_value = 'nv-master.test.com'
 
         csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)
@@ -682,7 +682,7 @@ class TestValidators(unittest.TestCase):
         cn_mock.get_value.return_value = 'blah.bad'
 
         csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
+            'get_subject.return_value.get_entries_by_oid.return_value':
                 [cn_mock],
         }
         csr_mock = mock.MagicMock(**csr_config)

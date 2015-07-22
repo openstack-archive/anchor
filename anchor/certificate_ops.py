@@ -54,8 +54,7 @@ def parse_csr(csr, encoding):
 
     # load the CSR into the backend X509 library
     try:
-        out_req = signing_request.X509Csr()
-        out_req.from_buffer(csr)
+        out_req = signing_request.X509Csr.from_buffer(csr.encode('ascii'))
         return out_req
     except Exception as e:
         logger.exception("Exception while parsing the CSR: %s", e)
@@ -132,8 +131,7 @@ def sign(csr):
     :param csr: X509 certificate signing request
     """
     try:
-        ca = certificate.X509Certificate()
-        ca.from_file(jsonloader.conf.ca["cert_path"])
+        ca = certificate.X509Certificate.from_file(jsonloader.conf.ca["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")

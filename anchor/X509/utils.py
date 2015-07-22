@@ -15,36 +15,22 @@ from __future__ import absolute_import
 
 import calendar
 import datetime
+import importlib
 
-from cryptography.hazmat.backends.openssl import backend
+from Crypto.PublicKey import RSA
+from pyasn1_modules import rfc2459
+from pyasn1.type import useful as asn1_useful
 
 from anchor.X509 import errors
 
 
-def load_pem_private_key(key_data, passwd=None):
+def load_pem_private_key(key_data):
     """Load and return an OpenSSL EVP_PKEY public key object from a data buffer
 
     :param key_data: The data buffer
-    :param passwd: Decryption password if neded (not used for now)
     :return: an OpenSSL EVP_PKEY public key object
     """
-    # TODO(tkelsey): look at using backend.read_private_key
-    #
-
-    if type(key_data) != bytes:
-        key_data = key_data.encode('ascii')
-    lib = backend._lib
-    ffi = backend._ffi
-    data = backend._bytes_to_bio(key_data)
-
-    evp_pkey = lib.EVP_PKEY_new()
-    evp_pkey_ptr = ffi.new("EVP_PKEY**")
-    evp_pkey_ptr[0] = evp_pkey
-    evp_pkey = lib.PEM_read_bio_PrivateKey(data[0], evp_pkey_ptr,
-                                           ffi.NULL, ffi.NULL)
-
-    evp_pkey = ffi.gc(evp_pkey, lib.EVP_PKEY_free)
-    return evp_pkey
+    return RSA.importKey(key_data)
 
 
 def create_timezone(minute_offset):
@@ -80,18 +66,16 @@ def asn1_time_to_timestamp(t):
 
     :param t: ASN1_TIME to convert
     """
-
-    gen_time = backend._lib.ASN1_TIME_to_generalizedtime(t, backend._ffi.NULL)
-    if gen_time == backend._ffi.NULL:
-        raise errors.ASN1TimeError("time conversion failure")
-
-    try:
-        return asn1_generalizedtime_to_timestamp(gen_time)
-    finally:
-        backend._lib.ASN1_GENERALIZEDTIME_free(gen_time)
+    timestring = t.getComponent().asOctets()
+    if isinstance(t.getComponent(), asn1_useful.UTCTime):
+        if int(timestring[0]) >= 5:
+            timestring = "19" + timestring
+        else:
+            timestring = "20" + timestring
+    return asn1_timestring_to_timestamp(timestring)
 
 
-def asn1_generalizedtime_to_timestamp(gt):
+def asn1_timestring_to_timestamp(timestring):
     """Convert from ASN1_GENERALIZEDTIME to UTC-based timestamp.
 
     :param gt: ASN1_GENERALIZEDTIME to convert
@@ -99,11 +83,8 @@ def asn1_generalizedtime_to_timestamp(gt):
 
     # ASN1_GENERALIZEDTIME is actually a string in known formats,
     # so the conversion can be done in this code
-    string_time = backend._ffi.cast("ASN1_STRING*", gt)
-    res = asn1_string_to_utf8(string_time)
-
-    before_tz = res[:14]
-    tz_str = res[14:]
+    before_tz = timestring[:14]
+    tz_str = timestring[14:]
     d = datetime.datetime.strptime(before_tz, "%Y%m%d%H%M%S")
     if tz_str == 'Z':
         # YYYYMMDDhhmmssZ
@@ -126,25 +107,44 @@ def timestamp_to_asn1_time(t):
     """
 
     d = datetime.datetime.utcfromtimestamp(t)
-    # use the ASN1_GENERALIZEDTIME format
-    time_str = d.strftime("%Y%m%d%H%M%SZ").encode('ascii')
-    asn1_time = backend._lib.ASN1_STRING_type_new(
-        backend._lib.V_ASN1_GENERALIZEDTIME)
-    backend._lib.ASN1_STRING_set(asn1_time, time_str, len(time_str))
-    asn1_gentime = backend._ffi.cast("ASN1_GENERALIZEDTIME*", asn1_time)
-    if backend._lib.ASN1_GENERALIZEDTIME_check(asn1_gentime) == 0:
-        raise errors.ASN1TimeError("timestamp not accepted by ASN1 check")
-
-    # ASN1_GENERALIZEDTIME is a form of ASN1_TIME, so a pointer cast is valid
-    return backend._ffi.cast("ASN1_TIME*", asn1_time)
+    asn1time = rfc2459.Time()
+    if d.year <= 2049:
+        time_str = d.strftime("%y%m%d%H%M%SZ").encode('ascii')
+        asn1time['utcTime'] = time_str
+    else:
+        time_str = d.strftime("%Y%m%d%H%M%SZ").encode('ascii')
+        asn1time['generalTime'] = time_str
+    return asn1time
 
 
-def asn1_string_to_utf8(asn1_string):
-    buf = backend._ffi.new("unsigned char **")
-    res = backend._lib.ASN1_STRING_to_UTF8(buf, asn1_string)
-    if res < 0 or buf[0] == backend._ffi.NULL:
-        raise errors.ASN1StringError("cannot convert asn1 to python string")
-    buf = backend._ffi.gc(
-        buf, lambda buffer: backend._lib.OPENSSL_free(buffer[0])
-    )
-    return backend._ffi.buffer(buf[0], res)[:].decode('utf8')
+# functions needed for converting the pyasn1 signature fields
+def bin_to_bytes(bits):
+    """Convert bit string to byte string."""
+    bits = ''.join(str(b) for b in bits)
+    bits = _pad_byte(bits)
+    octets = [bits[8*i:8*(i+1)] for i in range(len(bits)/8)]
+    bytes = [chr(int(x, 2)) for x in octets]
+    return "".join(bytes)
+  
+def _pad_byte(bits):
+    """Pad a string of bits with zeros to make its length a multiple of 8."""
+    r = len(bits) % 8
+    return ((8-r) % 8)*'0' + bits
+
+def bytes_to_bin(bytes):
+    """Convert byte string to bit string."""
+    return "".join([_pad_byte(_int_to_bin(ord(byte))) for byte in bytes])
+
+def _int_to_bin(n):
+    if n == 0 or n == 1:
+        return str(n)
+    elif n % 2 == 0:
+        return _int_to_bin(n/2) + "0"
+    else:
+        return _int_to_bin(n/2) + "1"
+
+def get_hash_module(md):
+    md = md.upper()
+    if md == "SHA1":
+        md = "SHA"
+    return md, importlib.import_module("Crypto.Hash.%s" % (md,))
