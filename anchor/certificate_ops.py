@@ -20,6 +20,8 @@ import time
 import uuid
 
 import pecan
+from cryptography.hazmat import backends as cio_backends
+from cryptography.hazmat.primitives import serialization as cio_serialization
 
 from anchor import jsonloader
 from anchor import validators
@@ -54,8 +56,7 @@ def parse_csr(csr, encoding):
 
     # load the CSR into the backend X509 library
     try:
-        out_req = signing_request.X509Csr()
-        out_req.from_buffer(csr)
+        out_req = signing_request.X509Csr.from_buffer(csr)
         return out_req
     except Exception as e:
         logger.exception("Exception while parsing the CSR: %s", e)
@@ -132,17 +133,15 @@ def sign(csr):
     :param csr: X509 certificate signing request
     """
     try:
-        ca = certificate.X509Certificate()
-        ca.from_file(jsonloader.conf.ca["cert_path"])
+        ca = certificate.X509Certificate.from_file(jsonloader.conf.ca["cert_path"])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")
 
     try:
-        key_data = None
-        with open(jsonloader.conf.ca["key_path"]) as f:
+        with open(jsonloader.conf.ca["key_path"], 'rb') as f:
             key_data = f.read()
-        key = X509_utils.load_pem_private_key(key_data)
+        key = cio_serialization.load_pem_private_key(key_data, None, cio_backends.default_backend())
     except Exception as e:
         logger.exception("Cannot load the signing CA key: %s", e)
         pecan.abort(500, "certificate signing error")
@@ -182,7 +181,7 @@ def sign(csr):
 
     cert_pem = new_cert.as_pem()
 
-    with open(path, "wb") as f:
+    with open(path, "w") as f:
         f.write(cert_pem)
 
     return cert_pem

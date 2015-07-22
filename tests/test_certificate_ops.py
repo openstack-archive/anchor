@@ -29,7 +29,7 @@ class CertificateOpsTests(unittest.TestCase):
     def setUp(self):
         # This is a CSR with CN=anchor-test.example.com
         self.expected_cn = "anchor-test.example.com"
-        self.csr = textwrap.dedent("""
+        self.csr = textwrap.dedent(u"""
             -----BEGIN CERTIFICATE REQUEST-----
             MIIEsDCCApgCAQAwazELMAkGA1UEBhMCVVMxEzARBgNVBAgTCkNhbGlmb3JuaWEx
             FjAUBgNVBAcTDU1vdW50YWluIFZpZXcxDTALBgNVBAoTBEFjbWUxIDAeBgNVBAMT
@@ -67,16 +67,16 @@ class CertificateOpsTests(unittest.TestCase):
         """Test basic success path for parse_csr."""
         result = certificate_ops.parse_csr(self.csr, 'pem')
         subject = result.get_subject()
-        actual_cn = subject.get_entries_by_nid(
-            x509_name.NID_commonName)[0].get_value()
+        actual_cn = subject.get_entries_by_oid(
+            x509_name.OID_commonName)[0].get_value()
         self.assertEqual(actual_cn, self.expected_cn)
 
     def test_parse_csr_success2(self):
         """Test basic success path for parse_csr."""
         result = certificate_ops.parse_csr(self.csr, 'PEM')
         subject = result.get_subject()
-        actual_cn = subject.get_entries_by_nid(
-            x509_name.NID_commonName)[0].get_value()
+        actual_cn = subject.get_entries_by_oid(
+            x509_name.OID_commonName)[0].get_value()
         self.assertEqual(actual_cn, self.expected_cn)
 
     def test_parse_csr_fail1(self):

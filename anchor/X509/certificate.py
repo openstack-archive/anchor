@@ -13,127 +13,104 @@
 
 from __future__ import absolute_import
 
-from cryptography.hazmat.backends.openssl import backend
+import binascii
+import io
+
+from pyasn1.codec.der import decoder
+from pyasn1.codec.der import encoder
+from pyasn1.type import univ as asn1_univ
+from pyasn1.type import namedtype as asn1_namedtype
+from pyasn1.type import constraint as asn1_constraint
+from pyasn1.type import tag as asn1_tag
+from pyasn1_modules import pem
+from pyasn1_modules import rfc2459  # X509v3
+from cryptography.hazmat import backends as cio_backends
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import dsa
+from cryptography.hazmat.primitives import hashes
 
 from anchor.X509 import errors
-from anchor.X509 import message_digest
 from anchor.X509 import name
 from anchor.X509 import utils
+from anchor.X509 import extension
+
+
+SIGNING_ALGORITHMS = {
+    ('RSA', 'MD5'): rfc2459.md5WithRSAEncryption,
+    ('RSA', 'SHA1'): rfc2459.sha1WithRSAEncryption,
+    ('RSA', 'SHA224'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.14'),
+    ('RSA', 'SHA256'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.11'),
+    ('RSA', 'SHA384'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.12'),
+    ('RSA', 'SHA512'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.13'),
+    ('DSA', 'SHA1'): rfc2459.id_dsa_with_sha1,
+    ('DSA', 'SHA224'): asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.1'),
+    ('DSA', 'SHA256'): asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.2'),
+}
 
 
 class X509CertificateError(errors.X509Error):
     """Specific error for X509 certificate operations."""
-    def __init__(self, what):
-        super(X509CertificateError, self).__init__(what)
-
-
-class X509Extension(object):
-    """An X509 V3 Certificate extension."""
-    def __init__(self, ext):
-        self._lib = backend._lib
-        self._ffi = backend._ffi
-        self._ext = ext
-
-    def __str__(self):
-        return "%s %s" % (self.get_name(), self.get_value())
-
-    def get_name(self):
-        """Get the extension name as a python string."""
-        ext_obj = self._lib.X509_EXTENSION_get_object(self._ext)
-        ext_nid = self._lib.OBJ_obj2nid(ext_obj)
-        ext_name_str = self._lib.OBJ_nid2sn(ext_nid)
-        return self._ffi.string(ext_name_str).decode('ascii')
-
-    def get_value(self):
-        """Get the extension value as a python string."""
-        bio = self._lib.BIO_new(self._lib.BIO_s_mem())
-        bio = self._ffi.gc(bio, self._lib.BIO_free)
-        self._lib.X509V3_EXT_print(bio, self._ext, 0, 0)
-        size = 1024
-        data = self._ffi.new("char[]", size)
-        self._lib.BIO_gets(bio, data, size)
-        return self._ffi.string(data).decode('ascii')
+    pass
 
 
 class X509Certificate(object):
     """X509 certificate class."""
-    def __init__(self):
-        self._lib = backend._lib
-        self._ffi = backend._ffi
-        certObj = self._lib.X509_new()
-        if certObj == self._ffi.NULL:
-            raise X509CertificateError("Could not create X509 certificate "
-                                       "object")  # pragma: no cover
+    def __init__(self, certificate=None):
+        if certificate is None:
+            self._cert = rfc2459.Certificate()
+            self._cert['tbsCertificate'] = rfc2459.TBSCertificate()
+        else:
+            self._cert = certificate
 
-        self._certObj = certObj
+    @staticmethod
+    def from_open_file(f):
+        try:
+            der_content = pem.readPemFromFile(f)
+            certificate = decoder.decode(der_content, asn1Spec=rfc2459.Certificate())[0]
+            return X509Certificate(certificate)
+        except Exception:
+            raise X509CertificateError("Could not read X509 certificate from "
+                                       "PEM data.")
 
-    def __del__(self):
-        if getattr(self, '_certObj', None):
-            self._lib.X509_free(self._certObj)
-
-    def from_buffer(self, data):
+    @staticmethod
+    def from_buffer(data):
         """Build this X509 object from a data buffer in memory.
 
         :param data: A data buffer
         """
-        if type(data) != bytes:
-            data = data.encode('ascii')
-        bio = backend._bytes_to_bio(data)
+        
+        return X509Certificate.from_open_file(io.StringIO(data))
 
-        # NOTE(tkelsey): some versions of OpenSSL dont re-use the cert object
-        # properly, so free it and use the new one
-        #
-        certObj = self._lib.PEM_read_bio_X509(bio[0],
-                                              self._ffi.NULL,
-                                              self._ffi.NULL,
-                                              self._ffi.NULL)
-        if certObj == self._ffi.NULL:
-            raise X509CertificateError("Could not read X509 certificate from "
-                                       "PEM data.")
-
-        self._lib.X509_free(self._certObj)
-        self._certObj = certObj
-
-    def from_file(self, path):
+    @staticmethod
+    def from_file(path):
         """Build this X509 certificate object from a data file on disk.
 
         :param path: A data buffer
         """
-        data = None
-        with open(path, 'rb') as f:
-            data = f.read()
-        self.from_buffer(data)
+        with open(path, 'r') as f:
+            return X509Certificate.from_open_file(f)
 
     def as_pem(self):
         """Serialise this X509 certificate object as PEM string."""
 
-        raw_bio = self._lib.BIO_new(self._lib.BIO_s_mem())
-        bio = self._ffi.gc(raw_bio, self._lib.BIO_free)
-        ret = self._lib.PEM_write_bio_X509(bio, self._certObj)
-
-        if ret == 0:
-            raise X509CertificateError("Could not write X509 certificate "
-                                       "as PEM data.")  # pragma: no cover
-
-        buf = self._ffi.new("char**")
-        pem_len = self._lib.BIO_get_mem_data(bio, buf)
-        pem = self._ffi.string(buf[0], pem_len)
-
-        return pem
+        header = '-----BEGIN CERTIFICATE-----'
+        footer = '-----END CERTIFICATE-----'
+        der_cert = encoder.encode(self._cert)
+        b64_encoder = pem.base64.encodestring if str is bytes else pem.base64.encodebytes
+        b64_cert = b64_encoder(der_cert).decode('ascii')
+        return "%s\n%s%s\n" % (header, b64_cert, footer)
 
     def set_version(self, v):
         """Set the version of this X509 certificate object.
 
         :param v: The version
         """
-        ret = self._lib.X509_set_version(self._certObj, v)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "version.")  # pragma: no cover
+        self._cert['tbsCertificate']['version'] = v
 
     def get_version(self):
         """Get the version of this X509 certificate object."""
-        return self._lib.X509_get_version(self._certObj)
+        return self._cert['tbsCertificate']['version']
 
     def set_not_before(self, t):
         """Set the 'not before' date field.
@@ -141,15 +118,13 @@ class X509Certificate(object):
         :param t: time in seconds since the epoch
         """
         asn1_time = utils.timestamp_to_asn1_time(t)
-        ret = self._lib.X509_set_notBefore(self._certObj, asn1_time)
-        self._lib.ASN1_TIME_free(asn1_time)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "not before time.")  # pragma: no cover
+        if self._cert['tbsCertificate']['validity'] is None:
+            self._cert['tbsCertificate']['validity'] = rfc2459.Validity()
+        self._cert['tbsCertificate']['validity']['notBefore'] = asn1_time
 
     def get_not_before(self):
         """Get the 'not before' date field as seconds since the epoch."""
-        not_before = self._lib.X509_get_notBefore(self._certObj)
+        not_before = self._cert['tbsCertificate']['validity']['notBefore']
         return utils.asn1_time_to_timestamp(not_before)
 
     def set_not_after(self, t):
@@ -158,37 +133,28 @@ class X509Certificate(object):
         :param t: time in seconds since the epoch
         """
         asn1_time = utils.timestamp_to_asn1_time(t)
-        ret = self._lib.X509_set_notAfter(self._certObj, asn1_time)
-        self._lib.ASN1_TIME_free(asn1_time)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "not after time.")  # pragma: no cover
+        if self._cert['tbsCertificate']['validity'] is None:
+            self._cert['tbsCertificate']['validity'] = rfc2459.Validity()
+        self._cert['tbsCertificate']['validity']['notAfter'] = asn1_time
 
     def get_not_after(self):
         """Get the 'not after' date field as seconds since the epoch."""
-        not_after = self._lib.X509_get_notAfter(self._certObj)
+        not_after = self._cert['tbsCertificate']['validity']['notAfter']
         return utils.asn1_time_to_timestamp(not_after)
 
     def set_pubkey(self, pkey):
         """Set the public key field.
 
-        :param pkey: The public key, an EVP_PKEY ssl type
+        :param pkey: The public key, rfc2459.SubjectPublicKeyInfo description
         """
-        ret = self._lib.X509_set_pubkey(self._certObj, pkey)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "pubkey.")  # pragma: no cover
+        self._cert['tbsCertificate']['subjectPublicKeyInfo'] = pkey
 
     def get_subject(self):
         """Get the subject name field value.
 
         :return: An X509Name object instance
         """
-        val = self._lib.X509_get_subject_name(self._certObj)
-        if val == self._ffi.NULL:
-            raise X509CertificateError("Could not get subject from X509 "
-                                       "certificate.")  # pragma: no cover
-
+        val = self._cert['tbsCertificate']['subject'][0]
         return name.X509Name(val)
 
     def set_subject(self, subject):
@@ -197,10 +163,9 @@ class X509Certificate(object):
         :param subject: An X509Name object instance
         """
         val = subject._name_obj
-        ret = self._lib.X509_set_subject_name(self._certObj, val)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "subject.")  # pragma: no cover
+        if self._cert['tbsCertificate']['subject'] is None:
+            self._cert['tbsCertificate']['subject'] = rfc2459.Name()
+        self._cert['tbsCertificate']['subject'][0] = val
 
     def set_issuer(self, issuer):
         """Set the issuer name field value.
@@ -208,20 +173,16 @@ class X509Certificate(object):
         :param issuer: An X509Name object instance
         """
         val = issuer._name_obj
-        ret = self._lib.X509_set_issuer_name(self._certObj, val)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "issuer.")  # pragma: no cover
+        if self._cert['tbsCertificate']['issuer'] is None:
+            self._cert['tbsCertificate']['issuer'] = rfc2459.Name()
+        self._cert['tbsCertificate']['issuer'][0] = val
 
     def get_issuer(self):
         """Get the issuer name field value.
 
         :return: An X509Name object instance
         """
-        val = self._lib.X509_get_issuer_name(self._certObj)
-        if val == self._ffi.NULL:
-            raise X509CertificateError("Could not get subject from X509 "
-                                       "certificate.")  # pragma: no cover
+        val = self._cert['tbsCertificate']['issuer'][0]
         return name.X509Name(val)
 
     def set_serial_number(self, serial):
@@ -232,14 +193,7 @@ class X509Certificate(object):
 
         :param serial: The serial number, 32 bit integer
         """
-        asn1_int = self._lib.ASN1_INTEGER_new()
-        ret = self._lib.ASN1_INTEGER_set(asn1_int, serial)
-        if ret != 0:
-            ret = self._lib.X509_set_serialNumber(self._certObj, asn1_int)
-        self._lib.ASN1_INTEGER_free(asn1_int)
-        if ret == 0:
-            raise X509CertificateError("Could not set X509 certificate "
-                                       "serial number.")  # pragma: no cover
+        self._cert['tbsCertificate']['serialNumber'] = serial
 
     def add_extension(self, ext, index):
         """Add an X509 V3 Certificate extension.
@@ -247,10 +201,13 @@ class X509Certificate(object):
         :param ext: An X509Extension instance
         :param index: The index of the extension
         """
-        ret = self._lib.X509_add_ext(self._certObj, ext._ext, index)
-        if ret == 0:
-            raise X509CertificateError("Could not add X509 certificate "
-                                       "extension.")  # pragma: no cover
+        if not isinstance(ext, extension.X509Extension):
+            raise AttributeError("ext needs to be a pyasn1 extension")
+
+        if self._cert['tbsCertificate']['extensions'] is None:
+            # this actually initialises the extensions tag rather than assign None
+            self._cert['tbsCertificate']['extensions'] = None
+        self._cert['tbsCertificate']['extensions'][index] = ext.as_asn1()
 
     def sign(self, key, md='sha1'):
         """Sign the X509 certificate with a key using a message digest algorithm
@@ -262,28 +219,42 @@ class X509Certificate(object):
                    - sha1
                    - sha256
         """
-        mda = getattr(self._lib, "EVP_%s" % md, None)
-        if mda is None:
-            msg = 'X509 signing error: Unknown algorithm {a}'.format(a=md)
-            raise X509CertificateError(msg)
-        ret = self._lib.X509_sign(self._certObj, key, mda())
-        if ret == 0:
-            raise X509CertificateError("X509 signing error: Could not sign "
-                                       " certificate.")  # pragma: no cover
+        md = md.upper()
+
+        if isinstance(key, rsa.RSAPrivateKey):
+            encryption = 'RSA'
+        elif isinstance(key, dsa.DSAPrivateKey):
+            encryption = 'DSA'
+        else:
+            raise errors.X509Error("Unknown key type: %s" % (key.__class__,))
+
+        hash_class = utils.get_hash_class(md)
+        signature_type = SIGNING_ALGORITHMS.get((encryption, md))
+        if signature_type is None:
+            raise errors.X509Error("Unknown encryption/hash combination %s/%s" % (encryption, md))
+
+        algo_id = rfc2459.AlgorithmIdentifier()
+        algo_id['algorithm'] = signature_type
+        if encryption == 'RSA':
+            algo_id['parameters'] = encoder.encode(asn1_univ.Null())
+        elif encryption == 'DSA':
+            pass  # parameters should be omitted, see RFC3279
+
+        self._cert['tbsCertificate']['signature'] = algo_id
+
+        to_sign = encoder.encode(self._cert['tbsCertificate'])
+        if encryption == 'RSA':
+            signer = key.signer(padding.PKCS1v15(), hash_class())
+        elif encryption == 'DSA':
+            signer = key.signer(hash_class())
+        signer.update(to_sign)
+        signature = signer.finalize()
+        self._cert['signatureValue'] = "'%s'B" % (utils.bytes_to_bin(signature),)
+        self._cert['signatureAlgorithm'] = algo_id
 
     def as_der(self):
         """Return this X509 certificate as DER encoded data."""
-        buf = None
-        num = self._lib.i2d_X509(self._certObj, self._ffi.NULL)
-        if num != 0:
-            buf = self._ffi.new("unsigned char[]", num + 1)
-            buf_ptr = self._ffi.new("unsigned char**")
-            buf_ptr[0] = buf
-            num = self._lib.i2d_X509(self._certObj, buf_ptr)
-        else:
-            raise X509CertificateError("Could not encode X509 certificate "
-                                       "as DER.")  # pragma: no cover
-        return buf
+        return encoder.encode(self._cert)
 
     def get_fingerprint(self, md='md5'):
         """Get the fingerprint of this X509 certificate.
@@ -291,7 +262,7 @@ class X509Certificate(object):
         :param md: The message digest algorthim used to compute the fingerprint
         :return: The fingerprint encoded as a hex string
         """
-        der = self.as_der()
-        md = message_digest.MessageDigest(md)
-        md.update(der)
-        return md.final()
+        hash_class = utils.get_hash_class(md)
+        hasher = hashes.Hash(hash_class(), backend=cio_backends.default_backend())
+        hasher.update(self.as_der())
+        return binascii.hexlify(hasher.finalize()).upper()
