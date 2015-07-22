@@ -18,21 +18,13 @@ import unittest
 
 import mock
 
+import io
 import sys
 import textwrap
 
 from anchor.X509 import certificate
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import name as x509_name
-
-
-# find the class representing an open file; it depends on the python version
-# it's used later for mocking
-if sys.version_info[0] < 3:
-    file_class = file
-else:
-    import _io
-    file_class = _io.TextIOWrapper
 
 
 class TestX509Cert(unittest.TestCase):
@@ -54,8 +46,7 @@ class TestX509Cert(unittest.TestCase):
 
     def setUp(self):
         super(TestX509Cert, self).setUp()
-        self.cert = certificate.X509Certificate()
-        self.cert.from_buffer(TestX509Cert.cert_data)
+        self.cert = certificate.X509Certificate.from_buffer(TestX509Cert.cert_data)
 
     def tearDown(self):
         pass
@@ -72,119 +63,117 @@ class TestX509Cert(unittest.TestCase):
 
     def test_get_subject_countryName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_countryName)
+        entries = name.get_entries_by_oid(x509_name.OID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
 
     def test_get_subject_stateOrProvinceName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_stateOrProvinceName)
+        entries = name.get_entries_by_oid(x509_name.OID_stateOrProvinceName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "Narnia")
 
     def test_get_subject_localityName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_localityName)
+        entries = name.get_entries_by_oid(x509_name.OID_localityName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "localityName")
         self.assertEqual(entries[0].get_value(), "Funkytown")
 
     def test_get_subject_organizationName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_organizationName)
+        entries = name.get_entries_by_oid(x509_name.OID_organizationName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationName")
         self.assertEqual(entries[0].get_value(), "Anchor Testing")
 
     def test_get_subject_organizationUnitName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_organizationalUnitName)
+        entries = name.get_entries_by_oid(x509_name.OID_organizationalUnitName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationalUnitName")
         self.assertEqual(entries[0].get_value(), "testing")
 
     def test_get_subject_commonName(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_commonName)
+        entries = name.get_entries_by_oid(x509_name.OID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "anchor.test")
 
     def test_get_subject_emailAddress(self):
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_pkcs9_emailAddress)
+        entries = name.get_entries_by_oid(x509_name.OID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test@anchor.test")
 
     def test_get_issuer_countryName(self):
         name = self.cert.get_issuer()
-        entries = name.get_entries_by_nid(x509_name.NID_countryName)
+        entries = name.get_entries_by_oid(x509_name.OID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "AU")
 
     def test_get_issuer_stateOrProvinceName(self):
         name = self.cert.get_issuer()
-        entries = name.get_entries_by_nid(x509_name.NID_stateOrProvinceName)
+        entries = name.get_entries_by_oid(x509_name.OID_stateOrProvinceName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "Some-State")
 
     def test_get_issuer_organizationName(self):
         name = self.cert.get_issuer()
-        entries = name.get_entries_by_nid(x509_name.NID_organizationName)
+        entries = name.get_entries_by_oid(x509_name.OID_organizationName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationName")
         self.assertEqual(entries[0].get_value(), "Herp Derp plc")
 
     def test_get_issuer_commonName(self):
         name = self.cert.get_issuer()
-        entries = name.get_entries_by_nid(x509_name.NID_commonName)
+        entries = name.get_entries_by_oid(x509_name.OID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "herp.derp.plc")
 
     def test_set_subject(self):
         name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_countryName, 'UK')
+        name.add_name_entry(x509_name.OID_countryName, 'UK')
         self.cert.set_subject(name)
 
         name = self.cert.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_countryName)
+        entries = name.get_entries_by_oid(x509_name.OID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
 
     def test_set_issuer(self):
         name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_countryName, 'UK')
+        name.add_name_entry(x509_name.OID_countryName, 'UK')
         self.cert.set_issuer(name)
 
         name = self.cert.get_issuer()
-        entries = name.get_entries_by_nid(x509_name.NID_countryName)
+        entries = name.get_entries_by_oid(x509_name.OID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
 
     def test_read_from_file(self):
         open_name = 'anchor.X509.certificate.open'
+        f = io.BytesIO(TestX509Cert.cert_data)
         with mock.patch(open_name, create=True) as mock_open:
-            mock_open.return_value = mock.MagicMock(spec=file_class)
-            m_file = mock_open.return_value.__enter__.return_value
-            m_file.read.return_value = TestX509Cert.cert_data
+            mock_open.return_value = f
 
-            cert = certificate.X509Certificate()
-            cert.from_file("some_path")
+            cert = certificate.X509Certificate.from_file("some_path")
             name = cert.get_subject()
-            entries = name.get_entries_by_nid(x509_name.NID_countryName)
+            entries = name.get_entries_by_oid(x509_name.OID_countryName)
             self.assertEqual(entries[0].get_value(), "UK")
 
     def test_get_fingerprint(self):
         fp = self.cert.get_fingerprint()
-        self.assertEqual(fp, "56D61AC583BDDD4B44EEB479EF6C998F")
+        self.assertEqual(fp, "634A8CD10C81F1CD7A7E140921B4D9CA")
 
     def test_sign_bad_md(self):
         self.assertRaises(x509_errors.X509Error,
@@ -194,7 +183,7 @@ class TestX509Cert(unittest.TestCase):
     def test_sign_bad_key(self):
         self.assertRaises(x509_errors.X509Error,
                           self.cert.sign,
-                          self.cert._ffi.NULL)
+                          None)
 
     def test_get_version(self):
         v = self.cert.get_version()

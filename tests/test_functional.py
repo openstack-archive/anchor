@@ -149,8 +149,7 @@ class TestFunctional(unittest.TestCase):
         resp = self.app.post('/sign', data, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
-        cert = X509_cert.X509Certificate()
-        cert.from_buffer(resp.text)
+        cert = X509_cert.X509Certificate.from_buffer(resp.text.encode('ascii'))
 
         # make sure the cert is what we asked for
         self.assertEqual(("/C=GB/ST=California/L=San Francsico/O=OSSG"

@@ -1,4 +1,6 @@
-cryptography>=0.9.1
+pyasn1
+pyasn1_modules
+pycrypto
 pecan>=0.8.0
 Paste
 netaddr>=0.7.12

@@ -30,7 +30,7 @@ class ValidationError(Exception):
 
 def csr_get_cn(csr):
     name = csr.get_subject()
-    data = name.get_entries_by_nid(x509_name.NID_commonName)
+    data = name.get_entries_by_oid(x509_name.OID_commonName)
     if len(data) > 0:
         return data[0].get_value()
     else:
@@ -124,7 +124,7 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     alt_present = any(ext.get_name() == "subjectAltName"
                       for ext in csr.get_extensions())
 
-    CNs = csr.get_subject().get_entries_by_nid(x509_name.NID_commonName)
+    CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
 
     if alt_present:
         if len(CNs) > 1:

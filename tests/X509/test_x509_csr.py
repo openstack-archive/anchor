@@ -17,22 +17,15 @@
 import sys
 import textwrap
 import unittest
+import io
 
-from cryptography.hazmat.backends.openssl import backend
 import mock
+from Crypto.PublicKey import RSA
+from pyasn1_modules import rfc2459
 
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request
-
-
-# find the class representing an open file; it depends on the python version
-# it's used later for mocking
-if sys.version_info[0] < 3:
-    file_class = file
-else:
-    import _io
-    file_class = _io.TextIOWrapper
 
 
 class TestX509Csr(unittest.TestCase):
@@ -46,21 +39,18 @@ class TestX509Csr(unittest.TestCase):
         oCkwJwYJKoZIhvcNAQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkq
         hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ
         VMs9DuTAxljX7t7Eug==
-        -----END CERTIFICATE REQUEST-----""")
+        -----END CERTIFICATE REQUEST-----""").encode('utf-8')
 
     def setUp(self):
         super(TestX509Csr, self).setUp()
-        self.csr = signing_request.X509Csr()
-        self.csr.from_buffer(TestX509Csr.csr_data)
+        self.csr = signing_request.X509Csr.from_buffer(TestX509Csr.csr_data)
 
     def tearDown(self):
         pass
 
-    def test_get_pubkey_bits(self):
-        # some OpenSSL gumph to test a reasonable attribute of the pubkey
+    def test_get_pubkey(self):
         pubkey = self.csr.get_pubkey()
-        size = backend._lib.EVP_PKEY_bits(pubkey)
-        self.assertEqual(size, 384)
+        self.assertEqual(pubkey['algorithm']['algorithm'], rfc2459.rsaEncryption)
 
     def test_get_extensions(self):
         exts = self.csr.get_extensions()
@@ -71,15 +61,13 @@ class TestX509Csr(unittest.TestCase):
 
     def test_read_from_file(self):
         open_name = 'anchor.X509.signing_request.open'
+        f = io.BytesIO(TestX509Csr.csr_data)
         with mock.patch(open_name, create=True) as mock_open:
-            mock_open.return_value = mock.MagicMock(spec=file_class)
-            m_file = mock_open.return_value.__enter__.return_value
-            m_file.read.return_value = TestX509Csr.csr_data
-            csr = signing_request.X509Csr()
-            csr.from_file("some_path")
+            mock_open.return_value = f
+            csr = signing_request.X509Csr.from_file("some_path")
 
             name = csr.get_subject()
-            entries = name.get_entries_by_nid(x509_name.NID_countryName)
+            entries = name.get_entries_by_oid(x509_name.OID_countryName)
             self.assertEqual(entries[0].get_value(), "UK")
 
     def test_bad_data_throws(self):
@@ -94,49 +82,49 @@ class TestX509Csr(unittest.TestCase):
 
     def test_get_subject_countryName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_countryName)
+        entries = name.get_entries_by_oid(x509_name.OID_countryName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "countryName")
         self.assertEqual(entries[0].get_value(), "UK")
 
     def test_get_subject_stateOrProvinceName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_stateOrProvinceName)
+        entries = name.get_entries_by_oid(x509_name.OID_stateOrProvinceName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
         self.assertEqual(entries[0].get_value(), "Narnia")
 
     def test_get_subject_localityName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_localityName)
+        entries = name.get_entries_by_oid(x509_name.OID_localityName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "localityName")
         self.assertEqual(entries[0].get_value(), "Funkytown")
 
     def test_get_subject_organizationName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_organizationName)
+        entries = name.get_entries_by_oid(x509_name.OID_organizationName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationName")
         self.assertEqual(entries[0].get_value(), "Anchor Testing")
 
     def test_get_subject_organizationUnitName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_organizationalUnitName)
+        entries = name.get_entries_by_oid(x509_name.OID_organizationalUnitName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "organizationalUnitName")
         self.assertEqual(entries[0].get_value(), "testing")
 
     def test_get_subject_commonName(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_commonName)
+        entries = name.get_entries_by_oid(x509_name.OID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
         self.assertEqual(entries[0].get_value(), "anchor.test")
 
     def test_get_subject_emailAddress(self):
         name = self.csr.get_subject()
-        entries = name.get_entries_by_nid(x509_name.NID_pkcs9_emailAddress)
+        entries = name.get_entries_by_oid(x509_name.OID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test@anchor.test")
