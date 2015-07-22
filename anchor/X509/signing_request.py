@@ -13,11 +13,21 @@
 
 from __future__ import absolute_import
 
-from cryptography.hazmat.backends.openssl import backend
+import io
 
-from anchor.X509 import certificate
+from pyasn1.codec.der import decoder
+from pyasn1.codec.der import encoder
+from pyasn1.type import univ as asn1_univ
+from pyasn1_modules import pem
+from pyasn1_modules import rfc2314  # PKCS#10 / CSR
+from pyasn1_modules import rfc2459  # X509
+
 from anchor.X509 import errors
+from anchor.X509 import extension
 from anchor.X509 import name
+
+
+OID_extensionRequest = asn1_univ.ObjectIdentifier('1.2.840.113549.1.9.14')
 
 
 class X509CsrError(errors.X509Error):
@@ -27,84 +37,108 @@ class X509CsrError(errors.X509Error):
 
 class X509Csr(object):
     """An X509 Certificate Signing Request."""
-    def __init__(self):
-        self._lib = backend._lib
-        self._ffi = backend._ffi
-        csrObj = self._lib.X509_REQ_new()
-        if csrObj == self._ffi.NULL:
-            raise X509CsrError(
-                "Could not create X509 CSR Object.")  # pragma: no cover
+    def __init__(self, csr=None):
+        if csr is None:
+            self._csr = rfc2314.CertificationRequest()
+        else:
+            self._csr = csr
 
-        self._csrObj = csrObj
+    @staticmethod
+    def from_open_file(f):
+        try:
+            der_content = pem.readPemFromFile(
+                f, startMarker='-----BEGIN CERTIFICATE REQUEST-----',
+                endMarker='-----END CERTIFICATE REQUEST-----')
+            csr = decoder.decode(der_content,
+                                 asn1Spec=rfc2314.CertificationRequest())[0]
+            return X509Csr(csr)
+        except Exception:
+            raise X509CsrError("Could not read X509 certificate from "
+                               "PEM data.")
 
-    def __del__(self):
-        if getattr(self, '_csrObj', None):
-            self._lib.X509_REQ_free(self._csrObj)
-
-    def from_buffer(self, data, password=None):
+    @staticmethod
+    def from_buffer(data):
         """Create this CSR from a buffer
 
         :param data: The data buffer
-        :param password: decryption password, if needed
         """
-        if type(data) != bytes:
-            data = data.encode('ascii')
-        bio = backend._bytes_to_bio(data)
-        ptr = self._ffi.new("X509_REQ **")
-        ptr[0] = self._csrObj
-        ret = self._lib.PEM_read_bio_X509_REQ(bio[0], ptr,
-                                              self._ffi.NULL,
-                                              self._ffi.NULL)
-        if ret == self._ffi.NULL:
-            raise X509CsrError("Could not read X509 CSR from PEM data.")
+        return X509Csr.from_open_file(io.StringIO(data))
 
-    def from_file(self, path, password=None):
+    @staticmethod
+    def from_file(path):
         """Create this CSR from a file on disk
 
         :param path: Path to the file on disk
-        :param password: decryption password, if needed
         """
-        data = None
-        with open(path, 'rb') as f:
-            data = f.read()
-        self.from_buffer(data, password)
+        with open(path, 'r') as f:
+            return X509Csr.from_open_file(f)
 
     def get_pubkey(self):
         """Get the public key from the CSR
 
         :return: an OpenSSL EVP_PKEY object
         """
-        pkey = self._lib.X509_REQ_get_pubkey(self._csrObj)
-        if pkey == self._ffi.NULL:
-            raise X509CsrError(
-                "Could not get pubkey from X509 CSR.")  # pragma: no cover
+        return self._csr['certificationRequestInfo']['subjectPublicKeyInfo']
 
-        return pkey
+    def get_request_info(self):
+        if self._csr['certificationRequestInfo'] is None:
+            self._csr['certificationRequestInfo'] = None
+        return self._csr['certificationRequestInfo']
 
     def get_subject(self):
         """Get the subject name field from the CSR
 
         :return: an X509Name object
         """
-        subs = self._lib.X509_REQ_get_subject_name(self._csrObj)
-        if subs == self._ffi.NULL:
-            raise X509CsrError(
-                "Could not get subject from X509 CSR.")  # pragma: no cover
+        ri = self.get_request_info()
+        if ri['subject'] is None:
+            ri['subject'] = None
+            # setup first RDN sequence
+            ri['subject'][0] = None
 
-        return name.X509Name(subs)
+        subject = ri['subject'][0]
+        return name.X509Name(subject)
 
-    def get_extensions(self):
+    def get_attributes(self):
+        ri = self.get_request_info()
+        if ri['attributes'] is None:
+            ri['attributes'] = None
+        return ri['attributes']
+
+    def get_extensions(self, ext_type=None):
         """Get the list of all X509 V3 Extensions on this CSR
 
         :return: a list of X509Extension objects
         """
-        # TODO(tkelsey): I assume the ext list copies data and this is safe
-        # TODO(tkelsey): Error checking needed here
-        ret = []
-        exts = self._lib.X509_REQ_get_extensions(self._csrObj)
-        num = self._lib.sk_X509_EXTENSION_num(exts)
-        for i in range(0, num):
-            ext = self._lib.sk_X509_EXTENSION_value(exts, i)
-            ret.append(certificate.X509Extension(ext))
-        self._lib.sk_X509_EXTENSION_free(exts)
-        return ret
+        ext_attrs = [a for a in self.get_attributes()
+                     if a['type'] == OID_extensionRequest]
+        if len(ext_attrs) == 0:
+            return []
+        else:
+            exts_der = ext_attrs[0]['vals'][0].asOctets()
+            exts = decoder.decode(exts_der, asn1Spec=rfc2459.Extensions())[0]
+            return [extension.construct_extension(e) for e in exts
+                    if ext_type is None or e['extnID'] == ext_type._oid]
+
+    def add_extension(self, ext):
+        if not isinstance(ext, extension.X509Extension):
+            raise errors.X509Error("ext is not an anchor X509Extension")
+        attributes = self.get_attributes()
+        ext_attrs = [a for a in attributes
+                     if a['type'] == OID_extensionRequest]
+        if not ext_attrs:
+            new_attr_index = len(attributes)
+            attributes[new_attr_index] = None
+            ext_attr = attributes[new_attr_index]
+            ext_attr['type'] = OID_extensionRequest
+            ext_attr['vals'] = None
+            exts = rfc2459.Extensions()
+        else:
+            ext_attr = ext_attrs[0]
+            exts = decoder.decode(ext_attr['vals'][0].asOctets(),
+                                  asn1Spec=rfc2459.Extensions())[0]
+
+        new_ext_index = len(exts)
+        exts[new_ext_index] = ext._ext
+
+        ext_attr['vals'][0] = encoder.encode(exts)

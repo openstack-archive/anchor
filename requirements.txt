@@ -2,6 +2,8 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 cryptography>=0.9.1 # Apache-2.0
+pyasn1
+pyasn1_modules
 pecan>=0.8.0
 Paste
 netaddr>=0.7.12

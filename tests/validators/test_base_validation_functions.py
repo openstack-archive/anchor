@@ -24,7 +24,7 @@ from anchor.X509 import signing_request
 
 
 class TestBaseValidators(unittest.TestCase):
-    csr_data_with_cn = textwrap.dedent("""
+    csr_data_with_cn = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIDBTCCAe0CAQAwgb8xCzAJBgNVBAYTAlVTMRMwEQYDVQQIEwpDYWxpZm9ybmlh
         MRYwFAYDVQQHEw1TYW4gRnJhbmNpc2NvMSEwHwYDVQQKExhPcGVuU3RhY2sgU2Vj
@@ -51,7 +51,7 @@ class TestBaseValidators(unittest.TestCase):
         CN=ossg.test.com/emailAddress=openstack-security@lists.openstack.org
     """
 
-    csr_data_without_cn = textwrap.dedent("""
+    csr_data_without_cn = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIC7TCCAdUCAQAwgacxCzAJBgNVBAYTAlVTMRMwEQYDVQQIDApDYWxpZm9ybmlh
         MRYwFAYDVQQHDA1TYW4gRnJhbmNpc2NvMSEwHwYDVQQKDBhPcGVuU3RhY2sgU2Vj
@@ -79,8 +79,8 @@ class TestBaseValidators(unittest.TestCase):
 
     def setUp(self):
         super(TestBaseValidators, self).setUp()
-        self.csr = signing_request.X509Csr()
-        self.csr.from_buffer(TestBaseValidators.csr_data_with_cn)
+        self.csr = signing_request.X509Csr.from_buffer(
+            TestBaseValidators.csr_data_with_cn)
 
     def tearDown(self):
         super(TestBaseValidators, self).tearDown()
@@ -89,7 +89,8 @@ class TestBaseValidators(unittest.TestCase):
         name = validators.csr_get_cn(self.csr)
         self.assertEqual(name, "ossg.test.com")
 
-        self.csr.from_buffer(TestBaseValidators.csr_data_without_cn)
+        self.csr = signing_request.X509Csr.from_buffer(
+            TestBaseValidators.csr_data_without_cn)
         with self.assertRaises(validators.ValidationError):
             validators.csr_get_cn(self.csr)
 
