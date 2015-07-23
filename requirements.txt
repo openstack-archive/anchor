@@ -1,6 +1,9 @@
-cryptography>=0.9.1
+# The order of packages is significant, because pip processes them in the order
+# of appearance. Changing the order has an impact on the overall integration
+# process, which may cause wedges in the gate later.
+cryptography>=0.9.1 # Apache-2.0
 pecan>=0.8.0
 Paste
 netaddr>=0.7.12
-python-ldap>=2.4
-requests>=2.2.0,!=2.4.0
+python-ldap>=2.4;python_version=='2.7'
+requests>=2.5.2
