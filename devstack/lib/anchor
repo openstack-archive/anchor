@@ -1,0 +1,98 @@
+#!/bin/bash
+
+XTRACE=$(set +o | grep xtrace)
+set +o xtrace
+
+
+#TODO (DELETE THIS!)
+ANCHOR_REPO="https://github.com/Daviey/anchor.git"
+ANCHOR_BRANCH="devstack-plugin"
+#######
+
+# Set Anchor repository
+ANCHOR_REPO=${ANCHOR_REPO:-${GIT_BASE}/openstack/anchor.git}
+ANCHOR_BRANCH=${ANCHOR_BRANCH:-master}
+ANCHOR_DIR=${DEST}/anchor
+
+# Public facing bits
+ANCHOR_SERVICE_HOST=${ANCHOR_SERVICE_HOST:-$SERVICE_HOST}
+ANCHOR_SERVICE_PORT=${ANCHOR_SERVICE_PORT:-5001}
+ANCHOR_SERVICE_PORT_INT=${ANCHOR_SERVICE_PORT_INT:-15001}
+ANCHOR_SERVICE_PROTOCOL=${ANCHOR_SERVICE_PROTOCOL:-$SERVICE_PROTOCOL}
+
+function pre_install_anchor() {
+    # Install OS packages if necessary with "install_package ...".
+    echo "pre_install_anchor"
+}
+
+function install_anchor() {
+    # Install the service.
+    echo "install_anchor"
+    ERROR_ON_CLONE=False
+    git_clone ${ANCHOR_REPO} ${ANCHOR_DIR} ${ANCHOR_BRANCH}
+    setup_develop ${ANCHOR_DIR}
+}
+
+function configure_anchor() {
+    # Configure the service.
+    echo "configure_anchor"
+
+    # create a private key with password 'x', and then decrypt it:
+    cd ${ANCHOR_DIR}
+
+    openssl req -out CA/root-ca.crt -keyout CA/root-ca-unwrapped.key \
+        -newkey rsa:4096 -subj "/CN=Anchor Test CA" -nodes -x509 -days 365
+    chmod 400 CA/root-ca-unwrapped.key
+
+    if is_service_enabled keystone; then
+        cp ${ANCHOR_DIR}/config.json ${ANCHOR_DIR}/config.json.orig
+        cat <<EOF > ${ANCHOR_DIR}/config.json.patch
+        [
+          {
+              "op": "remove",
+              "path": "/auth/static"
+          },
+          {
+              "op": "add",
+              "path": "/auth/keystone",
+              "value": {
+                  "url": "##KEYSTONE_SERVICE_URI##"
+              }
+          }
+        ]
+EOF
+
+        jsonpatch --indent 2 ${ANCHOR_DIR}/config.json.orig ${ANCHOR_DIR}/config.json.patch > ${ANCHOR_DIR}/config.json
+        sed -i "s,##KEYSTONE_SERVICE_URI##,${KEYSTONE_SERVICE_URI}," ${ANCHOR_DIR}/config.json
+        rm ${ANCHOR_DIR}/config.json.patch
+
+        cp ${ANCHOR_DIR}/config.py ${ANCHOR_DIR}/config.py.orig
+        sed -i "s/5000/${ANCHOR_SERVICE_PORT}/" ${ANCHOR_DIR}/config.py
+    fi
+
+}
+
+function init_anchor() {
+    # Initialize and start the service.
+    echo "init_anchor"
+
+    local service_port=${ANCHOR_SERVICE_PORT}
+    local service_protocol=${ANCHOR_SERVICE_PROTOCOL}
+
+    run_process anchor "cd ${ANCHOR_DIR} ; pecan serve config.py"
+    echo "Waiting for anchor to start..."
+    if ! wait_for_service $SERVICE_TIMEOUT $service_protocol://$SERVICE_HOST:$service_port; then
+        die $LINENO "anchor did not start"
+    fi
+
+}
+
+function shutdown_anchor() {
+    # Shut the service down.
+    rm -f ${ANCHOR_DIR}/CA/*
+}
+
+function cleanup_anchor() {
+    # Cleanup the service.
+    echo "cleanup_anchor"
+}
