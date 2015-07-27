@@ -13,7 +13,6 @@
 
 from __future__ import absolute_import
 
-import json
 import logging
 
 import requests
@@ -31,16 +30,10 @@ def login(_, token):
     :param token: A Keystone Token
     :returns: AuthDetails -- Class used for authentication information
     """
-    data = json.dumps({"auth": {
-        "identity": {
-            "methods": ["token"],
-            "token": {
-                "id": token
-            }}}})
-    req = requests.post(jsonloader.conf.auth['keystone']['url'] +
-                        '/v3/auth/tokens',
-                        headers={'Content-Type': 'application/json'},
-                        data=data)
+    req = requests.get(jsonloader.conf.auth['keystone']['url'] +
+                       '/v3/auth/tokens',
+                       headers={'X-Auth-Token': token,
+                                'X-Subject-Token': token})
     if req.status_code != 200:
         logger.info("Authentication failed for token <%s>, status %s",
                     token, req.status_code)
