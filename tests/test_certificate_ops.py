@@ -128,8 +128,9 @@ class CertificateOpsTests(unittest.TestCase):
         data = {'validators': validators}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPClientError):
+            with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.validate_csr(None, csr_obj, None)
+        self.assertEqual(cm.exception.code, 400)
 
     def test_ca_cert_read_failure(self):
         """Test CA certificate read failure."""
@@ -139,8 +140,9 @@ class CertificateOpsTests(unittest.TestCase):
                        'key_path': 'tests/CA/root-ca-unwrapped.key'}}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPServerError):
+            with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.sign(csr_obj)
+        self.assertEqual(cm.exception.code, 500)
 
     def test_ca_key_read_failure(self):
         """Test CA key read failure."""
@@ -150,5 +152,6 @@ class CertificateOpsTests(unittest.TestCase):
                        'key_path': '/xxx/not/a/valid/path'}}
 
         with mock.patch.dict(config, data):
-            with self.assertRaises(http_status.HTTPServerError):
+            with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.sign(csr_obj)
+        self.assertEqual(cm.exception.code, 500)
