@@ -1,0 +1,11 @@
+Verified+2: Jenkins
+Code-Review+1: Dave Walker <email@daviey.com>
+Workflow+1: Stanislaw Pitucha <stanislaw.pitucha@hp.com>
+Code-Review+2: Robert Clark <robert.clark@hp.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hp.com>
+Workflow+1: Tim Kelsey <tim.kelsey@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Thu, 30 Jul 2015 08:24:01 +0000
+Reviewed-on: https://review.openstack.org/206920
+Project: openstack/anchor
+Branch: refs/heads/master
