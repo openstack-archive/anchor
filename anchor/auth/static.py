@@ -51,15 +51,6 @@ def login(user, secret):
         logger.warning("auth conf missing static user or secret")
         return None
 
-    # In python, len(<string>) is O(1)
-    # Short circuit this if lengths don't match
-    if len(user) != len(expected_user):
-        logger.info("failed static auth: invalid username ({})".format(user))
-        return None
-    if len(secret) != len(expected_secret):
-        logger.info("failed static auth: invalid password")
-        return None
-
     # This technique is used to provide a constant time string compare
     # between the user input and the expected values.
     valid_user = util.constant_time_compare(user, expected_user)
