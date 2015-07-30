@@ -15,6 +15,7 @@
 # under the License.
 
 
+import json
 import stat
 import unittest
 
@@ -22,15 +23,17 @@ import mock
 
 from anchor import app
 from anchor import jsonloader
+import tests
 
 
-class TestValidDN(unittest.TestCase):
+class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def setUp(self):
         self.expected_key_permissions = (stat.S_IRUSR | stat.S_IFREG)
-        super(TestValidDN, self).setUp()
+        super(TestApp, self).setUp()
 
     def tearDown(self):
-        pass
+        jsonloader.conf._config = {}
+        super(TestApp, self).tearDown()
 
     def test_self_test(self):
         self.assertTrue(True)
@@ -38,57 +41,29 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('anchor.app._check_file_exists')
     @mock.patch('anchor.app._check_file_permissions')
     def test_config_check_domains_good(self, a, b):
-        good_config_domains = jsonloader.AnchorConf(None)
-        good_config_domains._config = {
-            "auth": {"static": {}},
-            "ca": {
-                "cert_path": "no_cert_file",
-                "key_path": "no_key_file",
-                "output_path": "",
-                "signing_hash": "",
-                "valid_hours": ""
-                },
-            "validators": {
-                "steps": {
-                    "common_name": {
-                        "allowed_domains": [".test.com"]
-                    }
-                }
-            }
-        }
+        steps = self.sample_conf_validators['steps']
+        steps['common_name']['allowed_domains'] = ['.test.com']
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
 
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
-            self.assertEqual(app.validate_config(good_config_domains), None)
+            self.assertEqual(app.validate_config(jsonloader.conf), None)
 
     @mock.patch('anchor.app._check_file_exists')
     @mock.patch('anchor.app._check_file_permissions')
     def test_config_check_domains_bad(self, a, b):
-        bad_config_domains = jsonloader.AnchorConf(None)
-        bad_config_domains._config = {
-            "auth": {"static": {}},
-            "ca": {
-                "cert_path": "no_cert_file",
-                "key_path": "no_key_file",
-                "output_path": "",
-                "signing_hash": "",
-                "valid_hours": ""
-                },
-            "validators": {
-                "steps": {
-                    "common_name": {
-                        "allowed_domains": ["error.test.com"]
-                    }
-                }
-            }
-        }
+        steps = self.sample_conf_validators['steps']
+        steps['common_name']['allowed_domains'] = ['error.test.com']
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
 
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
             self.assertRaises(
                 app.ConfigValidationException,
                 app.validate_config,
-                bad_config_domains
+                jsonloader.conf
             )
 
     def test_check_file_permissions_good(self):
@@ -103,13 +78,18 @@ class TestValidDN(unittest.TestCase):
                               app._check_file_permissions, "/mock/path")
 
     def test_validate_config_no_auth(self):
-        jsonloader.conf.load_str_data("{}")
+        del self.sample_conf['auth']
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
         self.assertRaisesRegexp(app.ConfigValidationException,
                                 "No authentication configured",
                                 app.validate_config, jsonloader.conf)
 
     def test_validate_config_no_ca(self):
-        jsonloader.conf.load_str_data("""{"auth" : { "static": {}} }""")
+        del self.sample_conf['ca']
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
+
         self.assertRaisesRegexp(app.ConfigValidationException,
                                 "No ca configuration present",
                                 app.validate_config, jsonloader.conf)
@@ -118,9 +98,8 @@ class TestValidDN(unittest.TestCase):
         ca_config_requirements = ["cert_path", "key_path", "output_path",
                                   "signing_hash", "valid_hours"]
 
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"", "key_path":"", "output_path":"",
-                            "signing_hash":"", "valid_hours":""} }"""
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
 
         # Iterate through the ca_config_requirements, replace each one in turn
         # with 'missing_req', perform validation. Each should raise in turn
@@ -132,25 +111,19 @@ class TestValidDN(unittest.TestCase):
 
     @mock.patch('os.path.isfile')
     def test_validate_config_no_ca_cert_file(self, isfile):
-        json_config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                     "key_path":"no_key_file", "output_path":"",
-                     "signing_hash":"", "valid_hours":""} } """
-        jsonloader.conf.load_str_data(json_config)
+        config = json.dumps(self.sample_conf)
+        jsonloader.conf.load_str_data(config)
         isfile.return_value = False
         self.assertRaisesRegexp(app.ConfigValidationException,
-                                "could not read file: no_cert_file",
+                                "could not read file: tests/CA/root-ca.crt",
                                 app.validate_config, jsonloader.conf)
 
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_no_validators(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""} } """
+        del self.sample_conf['validators']
+        config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
@@ -163,13 +136,9 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_no_validator_steps(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": { "no_steps" : {}}}
-                 """
+        del self.sample_conf_validators['steps']
+        self.sample_conf_validators['no_steps'] = {}
+        config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
@@ -182,17 +151,8 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_unknown_validator(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": {
-                        "steps": {
-                          "unknown_validator": {}
-                        }
-                    }}
-                 """
+        self.sample_conf_validators['steps']['unknown_validator'] = {}
+        config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
@@ -206,17 +166,7 @@ class TestValidDN(unittest.TestCase):
     @mock.patch('os.access')
     @mock.patch('os.stat')
     def test_validate_config_good(self, stat, access, isfile):
-        config = """{"auth" : { "static": {}},
-                     "ca": { "cert_path":"no_cert_file",
-                             "key_path":"no_key_file",
-                             "output_path":"","signing_hash":"",
-                             "valid_hours":""},
-                     "validators": {
-                            "steps": {
-                                    "common_name": {
-                                      "allowed_domains": [
-                                          ".test.com" ]
-                                      }}}}"""
+        config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
         isfile.return_value = True
         access.return_value = True
