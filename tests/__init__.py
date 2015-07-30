@@ -22,3 +22,41 @@ import logging
 #
 handler = logging.NullHandler()
 logging.getLogger().addHandler(handler)
+
+
+class DefaultConfigMixin(object):
+    """Mixin for reuse in any test class which needs to load a config.
+
+    `sample_conf` is always a valid, no thrills configuration. It can be
+    reused in any test case. Constructing it in setUp() guarantees that it
+    can be changed without affecting other tests.
+    """
+
+    def setUp(self):
+        self.sample_conf_auth = {
+            "static": {
+                "user": "myusername",
+                "secret": "simplepassword"
+            }
+        }
+        self.sample_conf_ca = {
+            "cert_path": "tests/CA/root-ca.crt",
+            "key_path": "tests/CA/root-ca-unwrapped.key",
+            "output_path": "certs",
+            "signing_hash": "sha256",
+            "valid_hours": 24
+        }
+        self.sample_conf_validators = {
+            "steps": {
+                "common_name": {
+                    "allowed_domains": [".test.com"]
+                }
+            }
+        }
+        self.sample_conf = {
+            "auth": self.sample_conf_auth,
+            "ca": self.sample_conf_ca,
+            "validators": self.sample_conf_validators,
+        }
+
+        super(DefaultConfigMixin, self).setUp()
