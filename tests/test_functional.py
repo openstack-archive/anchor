@@ -15,6 +15,7 @@
 # under the License.
 
 import copy
+import json
 import os
 import stat
 import tempfile
@@ -28,36 +29,10 @@ from anchor import jsonloader
 from anchor import validators
 from anchor.X509 import certificate as X509_cert
 import config
+import tests
 
 
-class TestFunctional(unittest.TestCase):
-    config = """
-    {
-        "auth": {
-        "static": {
-          "secret": "simplepassword",
-          "user": "myusername"
-        }
-      },
-      "ca": {
-        "cert_path": "tests/CA/root-ca.crt",
-        "key_path": "tests/CA/root-ca-unwrapped.key",
-        "output_path": "certs",
-        "signing_hash": "sha1",
-        "valid_hours": 24
-      },
-      "validators": {
-        "default": {
-          "common_name": {
-            "allowed_domains": [
-              ".test.com"
-                ]
-              }
-           }
-        }
-    }
-    """
-
+class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
     csr_good = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIEDzCCAncCAQAwcjELMAkGA1UEBhMCR0IxEzARBgNVBAgTCkNhbGlmb3JuaWEx
@@ -97,8 +72,10 @@ class TestFunctional(unittest.TestCase):
         -----END CERTIFICATE REQUEST-----""")
 
     def setUp(self):
+        super(TestFunctional, self).setUp()
+
         # Load config from json test config
-        jsonloader.conf.load_str_data(TestFunctional.config)
+        jsonloader.conf.load_str_data(json.dumps(self.sample_conf))
         self.conf = getattr(jsonloader.conf, "_config")
         self.conf["ca"]["output_path"] = tempfile.mkdtemp()
 
@@ -170,10 +147,10 @@ class TestFunctional(unittest.TestCase):
             raise Exception("BOOM")
 
         validators.broken_validator = derp
-        jsonloader.conf.validators["default"]["broken_validator"] = {}
+        jsonloader.conf.validators["steps"]["broken_validator"] = {}
 
         resp = self.app.post('/sign', data, expect_errors=True)
         self.assertEqual(500, resp.status_int)
         self.assertTrue(("Internal Validation Error running "
                          "validator 'broken_validator' "
-                         "in set 'default'") in str(resp))
+                         "in set 'steps'") in str(resp))
