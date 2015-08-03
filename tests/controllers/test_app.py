@@ -29,6 +29,7 @@ import tests
 class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def setUp(self):
         self.expected_key_permissions = (stat.S_IRUSR | stat.S_IFREG)
+        jsonloader.conf.load_extensions()
         super(TestApp, self).setUp()
 
     def tearDown(self):
