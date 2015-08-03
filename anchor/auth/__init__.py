@@ -35,8 +35,8 @@ def validate(ra_name, user, secret):
     """
     auth_conf = jsonloader.authentication_for_registration_authority(ra_name)
     backend_name = auth_conf['backend']
-    module = globals()[backend_name]
-    res = module.login(ra_name, user, secret)
+    backend = jsonloader.conf.get_authentication(backend_name)
+    res = backend(ra_name, user, secret)
     if res:
         return res
 

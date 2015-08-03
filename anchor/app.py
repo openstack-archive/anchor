@@ -23,7 +23,6 @@ from paste import translogger  # noqa
 import pecan
 
 from anchor import jsonloader
-from anchor import validators
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +162,9 @@ def validate_registration_authority_config(ra_name, conf):
     ra_validators = ra_conf['validators']
 
     for step in ra_validators.keys():
-        if not hasattr(validators, step):
+        try:
+            jsonloader.conf.get_validator(step)
+        except KeyError:
             raise ConfigValidationException(
                 "Unknown validator <{}> found (for registration "
                 "authority {})".format(step, ra_name))
