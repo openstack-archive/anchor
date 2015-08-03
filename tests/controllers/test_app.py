@@ -63,6 +63,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         }
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
+        jsonloader.conf.load_extensions()
 
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
@@ -162,6 +163,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def test_validate_config_no_ca_cert_file(self, isfile):
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
+        jsonloader.conf.load_extensions()
         isfile.return_value = False
         self.assertRaisesRegexp(app.ConfigValidationException,
                                 "could not read file: tests/CA/root-ca.crt",
