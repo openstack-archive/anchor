@@ -14,7 +14,6 @@
 from __future__ import absolute_import
 
 import logging
-import socket
 
 import netaddr
 
@@ -67,71 +66,38 @@ def iter_alternative_names(csr, types, fail_other_types=True):
                                           "'%s'" % (parts[1], parts[0]))
 
 
-def check_networks(domain, allowed_networks):
-    """Check the domain resolves to an IP that is within an allowed network
+def check_networks(ip, allowed_networks):
+    """Check the IP is within an allowed network."""
+    if not isinstance(ip, netaddr.IPAddress):
+        raise TypeError("ip must be a netaddr ip address")
 
-    Resolve all of the IP addresses for 'domain' and ensure that
-    at least one of the IP addresses is listed in allowed_networks for the
-    deployment.
-    """
     if not allowed_networks:
         # no valid networks were provided, so we can't make any assertions
         logger.warning("No valid network IP ranges were given, skipping")
         return True
 
-    try:
-        networks = socket.gethostbyname_ex(domain)
-    except socket.gaierror:
-        # the domain is not a valid ip address
-        return False
-
-    for possible_network in networks[2]:
-        ip = netaddr.IPAddress(possible_network)
-        if any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
-            return True
+    if any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
+        return True
 
     return False
 
 
-def check_networks_strict(domain, allowed_networks):
-    """Check the domain resolves to an IP that is within an allowed network
-
-    Resolve all of the IP addresses for 'domain' and ensure that
-    at each of the IP addresses is listed in allowed_networks for the
-    deployment. This is the stricter form of check_networks.
-    """
-    try:
-        networks = socket.gethostbyname_ex(domain)[2]
-    except socket.gaierror:
-        # the domain is not a valid ip address
-        return False
-
-    for possible_network in networks:
-        ip = netaddr.IPAddress(possible_network)
-        if not any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
-            return False
-
-    return True
-
-
-def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
+def common_name(csr, allowed_domains=[], **kwargs):
     """Check the CN entry is a known domain.
 
     Refuse requests for certificates if they contain multiple CN
-    entries, or the domain does not match the list of known suffixes
-    or network ranges.
+    entries, or the domain does not match the list of known suffixes.
     """
     alt_present = any(ext.get_name() == "subjectAltName"
                       for ext in csr.get_extensions())
 
     CNs = csr.get_subject().get_entries_by_nid(x509_name.NID_commonName)
 
-    if alt_present:
-        if len(CNs) > 1:
-            raise ValidationError("Too many CNs in the request")
-    else:
+    if len(CNs) > 1:
+        raise ValidationError("Too many CNs in the request")
+    if not alt_present:
         # rfc5280#section-4.2.1.6 says so
-        if len(csr.get_subject()) == 0:
+        if len(CNs) == 0:
             raise ValidationError("Alt subjects have to exist if the main"
                                   " subject doesn't")
 
@@ -140,10 +106,6 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
         if not (check_domains(cn, allowed_domains)):
             raise ValidationError("Domain '%s' not allowed (does not match"
                                   " known domains)" % cn)
-
-        if not (check_networks(cn, allowed_networks)):
-            raise ValidationError("Network '%s' not allowed (does not match"
-                                  " known networks)" % cn)
 
 
 def alternative_names(csr, allowed_domains=[], **kwargs):
@@ -169,11 +131,14 @@ def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
     """
 
     for name_type, name in iter_alternative_names(csr, ['DNS', 'IP Address']):
-        if not (check_domains(name, allowed_domains) or
-                check_networks(name, allowed_networks)):
+        if name_type == 'DNS' and not check_domains(name, allowed_domains):
             raise ValidationError("Domain '%s' not allowed (doesn't"
-                                  " match known domains or networks)"
-                                  % name)
+                                  " match known domains)" % name)
+        if name_type == 'IP Address':
+            ip = netaddr.IPAddress(name)
+            if not check_networks(ip, allowed_networks):
+                raise ValidationError("Address '%s' not allowed (doesn't"
+                                      " match known networks)" % name)
 
 
 def blacklist_names(csr, domains=[], **kwargs):

@@ -133,8 +133,7 @@ matching conditions.
 
 Currenly available validators are:
 
-* `common_name` ensures CN matches one of names in `allowed_domains` or ranges
-  in `allowed_networks`
+* `common_name` ensures CN matches one of names in `allowed_domains`
 
 * `alternative_names` ensures alternative names match one of the names in
   `allowed_domains`
