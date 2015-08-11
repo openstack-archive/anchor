@@ -25,6 +25,8 @@ from pyasn1_modules import rfc2459  # X509
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name
+from anchor.X509 import signature
+from anchor.X509 import utils
 
 
 OID_extensionRequest = asn1_univ.ObjectIdentifier('1.2.840.113549.1.9.14')
@@ -35,7 +37,7 @@ class X509CsrError(errors.X509Error):
         super(X509CsrError, self).__init__(what)
 
 
-class X509Csr(object):
+class X509Csr(signature.SignatureMixin):
     """An X509 Certificate Signing Request."""
     def __init__(self, csr=None):
         if csr is None:
@@ -142,3 +144,26 @@ class X509Csr(object):
         exts[new_ext_index] = ext._ext
 
         ext_attr['vals'][0] = encoder.encode(exts)
+
+    def _get_signature(self):
+        return utils.bin_to_bytes(self._csr['signature'])
+
+    def _get_signing_algorithm(self):
+        return self._csr['signatureAlgorithm']['algorithm']
+
+    def _get_public_key(self):
+        csr_info = self._csr['certificationRequestInfo']
+        key_info = csr_info['subjectPublicKeyInfo']
+        csr_public_key = key_info['subjectPublicKey']
+        return utils.get_public_key_from_der(
+            utils.bin_to_bytes(csr_public_key))
+
+    def _get_bytes_to_sign(self):
+        return encoder.encode(self._csr['certificationRequestInfo'])
+
+    def _embed_signature_algorithm(self, algo_id):
+        pass
+
+    def _embed_signature(self, algo_id, signature):
+        self._csr['signatureAlgorithm'] = algo_id
+        self._csr['signature'] = "'%s'B" % (utils.bytes_to_bin(signature),)
