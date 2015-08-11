@@ -112,18 +112,22 @@ def timestamp_to_asn1_time(t):
     return asn1time
 
 
+# chr good for py2 and py3
+_chr = chr if str is bytes else lambda x: bytes([x])
+
+
 # functions needed for converting the pyasn1 signature fields
 def bin_to_bytes(bits):
     """Convert bit string to byte string."""
     bits = ''.join(str(b) for b in bits)
     bits = _pad_byte(bits)
-    octets = [bits[8*i:8*(i+1)] for i in range(len(bits)/8)]
-    bytes = [chr(int(x, 2)) for x in octets]
-    return "".join(bytes)
+    octets = [bits[8*i:8*(i+1)] for i in range(len(bits)//8)]
+    byte_list = [_chr(int(x, 2)) for x in octets]
+    return b"".join(byte_list)
 
 
 # ord good for py2 and py3
-local_ord = ord if str is bytes else lambda x: x
+_ord = ord if str is bytes else lambda x: x
 
 
 def _pad_byte(bits):
@@ -134,7 +138,7 @@ def _pad_byte(bits):
 
 def bytes_to_bin(bytes):
     """Convert byte string to bit string."""
-    return "".join([_pad_byte(_int_to_bin(local_ord(byte))) for byte in bytes])
+    return "".join([_pad_byte(_int_to_bin(_ord(byte))) for byte in bytes])
 
 
 def _int_to_bin(n):
@@ -150,15 +154,19 @@ def get_hash_class(md):
     return getattr(hashes, md.upper(), None)
 
 
-def get_private_key_from_bytes(data):
-    key = serialization.load_pem_private_key(
+def get_private_key_from_pem(data):
+    return serialization.load_pem_private_key(
         data, None, backend=backends.default_backend())
-    return key
+
+
+def get_public_key_from_der(data):
+    return serialization.load_der_public_key(
+        data, backend=backends.default_backend())
 
 
 def get_private_key_from_file(path):
     with open(path, 'rb') as f:
-        return get_private_key_from_bytes(f.read())
+        return get_private_key_from_pem(f.read())
 
 
 def asn1_to_netaddr(octet_string):

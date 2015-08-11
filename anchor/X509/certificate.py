@@ -18,9 +18,6 @@ import binascii
 import io
 
 from cryptography.hazmat import backends as cio_backends
-from cryptography.hazmat.primitives.asymmetric import dsa
-from cryptography.hazmat.primitives.asymmetric import padding
-from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
 from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
@@ -31,6 +28,7 @@ from pyasn1_modules import rfc2459  # X509v3
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name
+from anchor.X509 import signature
 from anchor.X509 import utils
 
 
@@ -47,12 +45,15 @@ SIGNING_ALGORITHMS = {
 }
 
 
+SIGNING_ALGORITHMS_INV = dict((v, k) for k, v in SIGNING_ALGORITHMS.items())
+
+
 class X509CertificateError(errors.X509Error):
     """Specific error for X509 certificate operations."""
     pass
 
 
-class X509Certificate(object):
+class X509Certificate(signature.SignatureMixin):
     """X509 certificate class."""
     def __init__(self, certificate=None):
         if certificate is None:
@@ -222,50 +223,27 @@ class X509Certificate(object):
         extensions = self._get_extensions()
         extensions[index] = ext.as_asn1()
 
-    def sign(self, key, md='sha1'):
-        """Sign the X509 certificate with a key using a message digest algorithm
+    def _get_bytes_to_sign(self):
+        return encoder.encode(self._cert['tbsCertificate'])
 
-        :param key: The signing key, an EVP_PKEY OpenSSL object
-        :param md: The name of a message digest algorithm to use, it must be
-                   valid and known to OpenSSL, possible values are
-                   - md5
-                   - sha1
-                   - sha256
-        """
-        md = md.upper()
-
-        if isinstance(key, rsa.RSAPrivateKey):
-            encryption = 'RSA'
-        elif isinstance(key, dsa.DSAPrivateKey):
-            encryption = 'DSA'
-        else:
-            raise errors.X509Error("Unknown key type: %s" % (key.__class__,))
-
-        hash_class = utils.get_hash_class(md)
-        signature_type = SIGNING_ALGORITHMS.get((encryption, md))
-        if signature_type is None:
-            raise errors.X509Error(
-                "Unknown encryption/hash combination %s/%s" % (encryption, md))
-
-        algo_id = rfc2459.AlgorithmIdentifier()
-        algo_id['algorithm'] = signature_type
-        if encryption == 'RSA':
-            algo_id['parameters'] = encoder.encode(asn1_univ.Null())
-        elif encryption == 'DSA':
-            pass  # parameters should be omitted, see RFC3279
-
+    def _embed_signature_algorithm(self, algo_id):
         self._cert['tbsCertificate']['signature'] = algo_id
 
-        to_sign = encoder.encode(self._cert['tbsCertificate'])
-        if encryption == 'RSA':
-            signer = key.signer(padding.PKCS1v15(), hash_class())
-        elif encryption == 'DSA':
-            signer = key.signer(hash_class())
-        signer.update(to_sign)
-        signature = signer.finalize()
+    def _embed_signature(self, algo_id, signature):
         self._cert['signatureValue'] = "'%s'B" % (
             utils.bytes_to_bin(signature),)
         self._cert['signatureAlgorithm'] = algo_id
+
+    def _get_signature(self):
+        return utils.bin_to_bytes(self._cert['signatureValue'])
+
+    def _get_signing_algorithm(self):
+        tbs_signature = self._cert['tbsCertificate']['signature']
+        cert_signature = self._cert['signatureAlgorithm']
+        if tbs_signature != cert_signature:
+            raise errors.X509Error("algorithms mismatch")
+
+        return tbs_signature['algorithm']
 
     def as_der(self):
         """Return this X509 certificate as DER encoded data."""
