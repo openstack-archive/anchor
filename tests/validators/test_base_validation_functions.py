@@ -14,11 +14,10 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import socket
 import textwrap
 import unittest
 
-import mock
+import netaddr
 
 from anchor import validators
 from anchor.X509 import signing_request
@@ -100,58 +99,17 @@ class TestBaseValidators(unittest.TestCase):
         self.assertTrue(validators.check_domains(test_domain, test_allowed))
         self.assertFalse(validators.check_domains('gmail.com', test_allowed))
 
-    @mock.patch('socket.gethostbyname_ex')
-    def test_check_networks_bad_domain(self, gethostbyname_ex):
-        gethostbyname_ex.side_effect = socket.gaierror()
-        bad_domain = 'bad!$domain'
-        allowed_networks = ['127/8', '10/8']
-        self.assertFalse(validators.check_networks(
-            bad_domain, allowed_networks))
+    def test_check_networks(self):
+        good_ip = netaddr.IPAddress('10.2.3.4')
+        bad_ip = netaddr.IPAddress('88.2.3.4')
+        test_allowed = ['10/8']
+        self.assertTrue(validators.check_networks(good_ip, test_allowed))
+        self.assertFalse(validators.check_networks(bad_ip, test_allowed))
 
-    @mock.patch('socket.gethostbyname_ex')
-    def test_check_networks_both(self, gethostbyname_ex):
-        allowed_networks = ['15/8', '74.125/16']
-        gethostbyname_ex.return_value = (
-            'example.com',
-            [],
-            [
-                '74.125.224.64',
-                '74.125.224.67',
-                '74.125.224.68',
-                '74.125.224.70',
-            ]
-        )
-        self.assertTrue(validators.check_networks(
-            'example.com', allowed_networks))
-        self.assertTrue(validators.check_networks_strict(
-            'example.com', allowed_networks))
+    def test_check_networks_invalid(self):
+        with self.assertRaises(TypeError):
+            validators.check_networks('1.2.3.4', ['10/8'])
 
-        gethostbyname_ex.return_value = ('example.com', [], ['12.2.2.2'])
-        self.assertFalse(validators.check_networks(
-            'example.com', allowed_networks))
-
-        gethostbyname_ex.return_value = (
-            'example.com',
-            [],
-            [
-                '15.8.2.2',
-                '15.8.2.1',
-                '16.1.1.1',
-            ]
-        )
-        self.assertFalse(validators.check_networks_strict(
-            'example.com', allowed_networks))
-
-    @mock.patch('socket.gethostbyname_ex')
-    def test_check_networks_exception(self, gethostbyname_ex):
-        gethostbyname_ex.side_effect = socket.gaierror()
-        self.assertFalse(
-            validators.check_networks('mock', ['mock']),
-        )
-
-    @mock.patch('socket.gethostbyname_ex')
-    def test_check_networks_strict_exception(self, gethostbyname_ex):
-        gethostbyname_ex.side_effect = socket.gaierror()
-        self.assertFalse(
-            validators.check_networks_strict('mock', ['mock']),
-        )
+    def test_check_networks_passthrough(self):
+        good_ip = netaddr.IPAddress('10.2.3.4')
+        self.assertTrue(validators.check_networks(good_ip, []))
