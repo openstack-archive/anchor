@@ -17,6 +17,7 @@ import logging
 
 import netaddr
 
+from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 
@@ -242,3 +243,12 @@ def source_cidrs(request=None, cidrs=None, **kwargs):
                                   " network" % cidr)
     raise ValidationError("No network matched the request source '%s'" %
                           request.client_addr)
+
+
+def csr_signature(csr=None, **kwargs):
+    """Ensure that the CSR has a valid self-signature."""
+    try:
+        if not csr.verify():
+            raise ValidationError("Signature on the CSR is not valid")
+    except errors.X509Error:
+        raise ValidationError("Signature on the CSR is not valid")
