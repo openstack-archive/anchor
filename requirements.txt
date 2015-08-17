@@ -2,7 +2,7 @@
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
 cryptography>=0.9.1 # Apache-2.0
-pecan>=0.8.0
+pecan>=1.0.0
 Paste
 netaddr>=0.7.12
 ldap3>=0.9.8.2 # LGPLv3
