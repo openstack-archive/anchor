@@ -58,7 +58,7 @@ class TestFunctional(unittest.TestCase):
     }
     """
 
-    csr_good = textwrap.dedent("""
+    csr_good = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIEDzCCAncCAQAwcjELMAkGA1UEBhMCR0IxEzARBgNVBAgTCkNhbGlmb3JuaWEx
         FjAUBgNVBAcTDVNhbiBGcmFuY3NpY28xDTALBgNVBAoTBE9TU0cxDTALBgNVBAsT
@@ -84,7 +84,7 @@ class TestFunctional(unittest.TestCase):
         tR7XqQGqJKca/vRTfJ+zIAxMEeH1N9Lx7YBO6VdVja+yG1E=
         -----END CERTIFICATE REQUEST-----""")
 
-    csr_bad = textwrap.dedent("""
+    csr_bad = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIBWTCCARMCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ
         BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
@@ -149,8 +149,7 @@ class TestFunctional(unittest.TestCase):
         resp = self.app.post('/sign', data, expect_errors=False)
         self.assertEqual(200, resp.status_int)
 
-        cert = X509_cert.X509Certificate()
-        cert.from_buffer(resp.text)
+        cert = X509_cert.X509Certificate.from_buffer(resp.text)
 
         # make sure the cert is what we asked for
         self.assertEqual(("/C=GB/ST=California/L=San Francsico/O=OSSG"

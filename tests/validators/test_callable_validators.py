@@ -20,7 +20,9 @@ import mock
 import netaddr
 
 from anchor import validators
+from anchor.X509 import extension as x509_ext
 from anchor.X509 import name as x509_name
+from anchor.X509 import signing_request as x509_csr
 
 
 class TestValidators(unittest.TestCase):
@@ -45,262 +47,174 @@ class TestValidators(unittest.TestCase):
             'example.com', []))
 
     def test_common_name_with_two_CN(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = "subjectAltName"
-
-        csr_config = {
-            'get_extensions.return_value': [ext_mock],
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                ['dummy_value', 'dummy_value'],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "dummy_value")
+        name.add_name_entry(x509_name.OID_commonName, "dummy_value")
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=[],
                 allowed_networks=[])
         self.assertEqual("Too many CNs in the request", str(e.exception))
 
     def test_common_name_no_CN(self):
-        csr_config = {
-            'get_subject.return_value.__len__.return_value': 0,
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                []
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=[],
                 allowed_networks=[])
         self.assertEqual("Alt subjects have to exist if the main subject"
                          " doesn't", str(e.exception))
 
     def test_common_name_good_CN(self):
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.__len__.return_value': 1,
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "master.test.com")
 
         self.assertEqual(
             None,
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
             )
         )
 
     def test_common_name_bad_CN(self):
-        name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, 'test.baddomain.com')
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_subject.return_value = name
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, 'test.baddomain.com')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (does not "
                          "match known domains)", str(e.exception))
 
     def test_common_name_ip_good(self):
-        name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, '10.1.1.1')
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_subject.return_value = name
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, '10.1.1.1')
 
         self.assertEqual(
             None,
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8']
             )
         )
 
     def test_common_name_ip_bad(self):
-        name = x509_name.X509Name()
-        name.add_name_entry(x509_name.NID_commonName, '15.1.1.1')
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_subject.return_value = name
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, '15.1.1.1')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8'])
         self.assertEqual("Address '15.1.1.1' not allowed (does not "
                          "match known networks)", str(e.exception))
 
     def test_alternative_names_good_domain(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:master.test.com'
-        ext_mock.get_name.return_value = 'subjectAltName'
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('master.test.com')
+        csr.add_extension(ext)
 
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
         self.assertEqual(
             None,
             validators.alternative_names(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
             )
         )
 
     def test_alternative_names_bad_domain(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:test.baddomain.com'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('test.baddomain.com')
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
                          "match known domains)", str(e.exception))
 
-    def test_alternative_names_ext(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'BAD,10.1.1.1'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names(
-                csr=csr_mock,
-                allowed_domains=['.test.com'])
-        self.assertEqual("Alt name should have 2 parts, but found: 'BAD'",
-                         str(e.exception))
-
     def test_alternative_names_ip_good(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'IP Address:10.1.1.1'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_ip(netaddr.IPAddress('10.1.1.1'))
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.alternative_names_ip(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8']
             )
         )
 
     def test_alternative_names_ip_bad(self):
-
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'IP Address:10.1.1.1'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_ip(netaddr.IPAddress('10.1.1.1'))
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names_ip(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['99/8'])
-        self.assertEqual("Address '10.1.1.1' not allowed (doesn't match known "
+        self.assertEqual("IP '10.1.1.1' not allowed (doesn't match known "
                          "networks)", str(e.exception))
 
     def test_alternative_names_ip_bad_domain(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:test.baddomain.com'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('test.baddomain.com')
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names_ip(
-                csr=csr_mock,
+                csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
                          "match known domains)", str(e.exception))
 
-    def test_alternative_names_ip_ext(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'BAD,10.1.1.1'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names_ip(
-                csr=csr_mock,
-                allowed_domains=['.test.com'])
-        self.assertEqual("Alt name should have 2 parts, but found: 'BAD'",
-                         str(e.exception))
-
-    def test_alternative_names_ip_bad_ext(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'BAD:VALUE'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names_ip(
-                csr=csr_mock,
-                allowed_domains=['.test.com'],
-                allowed_networks=['99/8'])
-        self.assertEqual("Alt name 'VALUE' has unexpected type 'BAD'",
-                         str(e.exception))
-
     def test_server_group_no_prefix1(self):
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "master.test.com")
 
         self.assertEqual(
             None,
             validators.server_group(
                 auth_result=None,
-                csr=csr_mock,
+                csr=csr,
                 group_prefixes={}
             )
         )
 
     def test_server_group_no_prefix2(self):
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'nv_master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "nv_master.test.com")
 
         self.assertEqual(
             None,
             validators.server_group(
                 auth_result=None,
-                csr=csr_mock,
+                csr=csr,
                 group_prefixes={}
             )
         )
@@ -310,20 +224,15 @@ class TestValidators(unittest.TestCase):
         auth_result = mock.Mock()
         auth_result.groups = ['nova']
 
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'nv_master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "nv_master.test.com")
 
         self.assertEqual(
             None,
             validators.server_group(
                 auth_result=auth_result,
-                csr=csr_mock,
+                csr=csr,
                 group_prefixes={'nv': 'nova', 'sw': 'swift'}
             )
         )
@@ -332,50 +241,41 @@ class TestValidators(unittest.TestCase):
         auth_result = mock.Mock()
         auth_result.groups = ['glance']
 
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'nv-master.test.com'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "nv-master.test.com")
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.server_group(
                 auth_result=auth_result,
-                csr=csr_mock,
+                csr=csr,
                 group_prefixes={'nv': 'nova', 'sw': 'swift'})
         self.assertEqual("Server prefix doesn't match user groups",
                          str(e.exception))
 
     def test_extensions_bad(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'BAD'
-        ext_mock.get_value.return_value = 'BAD'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.extensions(
-                csr=csr_mock,
-                allowed_extensions=['GOOD-1', 'GOOD-2'])
-        self.assertEqual("Extension 'BAD' not allowed", str(e.exception))
+                csr=csr,
+                allowed_extensions=['basicConstraints', 'nameConstraints'])
+        self.assertEqual("Extension 'keyUsage' not allowed", str(e.exception))
 
     def test_extensions_good(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'GOOD-1'
-        ext_mock.get_value.return_value = 'GOOD-1'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.extensions(
-                csr=csr_mock,
-                allowed_extensions=['GOOD-1', 'GOOD-2']
+                csr=csr,
+                allowed_extensions=['basicConstraints', 'keyUsage']
             )
         )
 
@@ -384,204 +284,158 @@ class TestValidators(unittest.TestCase):
                          'Non Repudiation',
                          'Key Encipherment']
 
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'Domination'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.key_usage(
-                csr=csr_mock,
+                csr=csr,
                 allowed_usage=allowed_usage)
         self.assertEqual("Found some not allowed key usages: "
-                         "Domination", str(e.exception))
+                         "keyCertSign", str(e.exception))
 
     def test_key_usage_good(self):
         allowed_usage = ['Digital Signature',
                          'Non Repudiation',
                          'Key Encipherment']
 
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'Key Encipherment, Digital Signature'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyEncipherment', True)
+        ext.set_usage('digitalSignature', True)
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.key_usage(
-                csr=csr_mock,
+                csr=csr,
                 allowed_usage=allowed_usage
             )
         )
 
     def test_ca_status_good1(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'CA:TRUE'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionBasicConstraints()
+        ext.set_ca(True)
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.ca_status(
-                csr=csr_mock,
+                csr=csr,
                 ca_requested=True
             )
         )
 
     def test_ca_status_good2(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'CA:FALSE'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionBasicConstraints()
+        ext.set_ca(False)
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.ca_status(
-                csr=csr_mock,
+                csr=csr,
                 ca_requested=False
             )
         )
 
-    def test_ca_status_bad(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'CA:FALSE'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+    def test_ca_status_forbidden(self):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionBasicConstraints()
+        ext.set_ca(True)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.ca_status(
-                csr=csr_mock,
-                ca_requested=True)
-        self.assertEqual("Invalid CA status, 'CA:FALSE' requested",
+                csr=csr,
+                ca_requested=False)
+        self.assertEqual("CA status requested, but not allowed",
                          str(e.exception))
 
-    def test_ca_status_bad_format1(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'CA~FALSE'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+    def test_ca_status_bad(self):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionBasicConstraints()
+        ext.set_ca(False)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.ca_status(
-                csr=csr_mock,
-                ca_requested=False)
-        self.assertEqual("Invalid basic constraints flag", str(e.exception))
-
-    def test_ca_status_bad_format2(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'CA:FALSE:DERP'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
-                csr=csr_mock,
-                ca_requested=False)
-        self.assertEqual("Invalid basic constraints flag", str(e.exception))
+                csr=csr,
+                ca_requested=True)
+        self.assertEqual("CA flags required",
+                         str(e.exception))
 
     def test_ca_status_pathlen(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'pathlen:somthing'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionBasicConstraints()
+        ext.set_path_len_constraint(1)
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.ca_status(
-                csr=csr_mock,
+                csr=csr,
                 ca_requested=False
             )
         )
 
-    def test_ca_status_bad_value(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'basicConstraints'
-        ext_mock.get_value.return_value = 'BAD:VALUE'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
-                csr=csr_mock,
-                ca_requested=False)
-        self.assertEqual("Invalid basic constraints option", str(e.exception))
-
     def test_ca_status_key_usage_bad1(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'Certificate Sign'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.ca_status(
-                csr=csr_mock,
+                csr=csr,
                 ca_requested=False)
         self.assertEqual("Key usage doesn't match requested CA status "
                          "(keyCertSign/cRLSign: True/False)", str(e.exception))
 
     def test_ca_status_key_usage_good1(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'Certificate Sign'
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
 
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
+        self.assertEqual(
+            None,
             validators.ca_status(
-                csr=csr_mock,
-                ca_requested=True)
-        self.assertEqual("Key usage doesn't match requested CA status "
-                         "(keyCertSign/cRLSign: True/False)", str(e.exception))
+                csr=csr,
+                ca_requested=True
+            )
+        )
 
     def test_ca_status_key_usage_bad2(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'CRL Sign'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('cRLSign', True)
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.ca_status(
-                csr=csr_mock,
+                csr=csr,
                 ca_requested=False)
         self.assertEqual("Key usage doesn't match requested CA status "
                          "(keyCertSign/cRLSign: False/True)", str(e.exception))
 
     def test_ca_status_key_usage_good2(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_name.return_value = 'keyUsage'
-        ext_mock.get_value.return_value = 'CRL Sign'
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('cRLSign', True)
+        csr.add_extension(ext)
 
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        with self.assertRaises(validators.ValidationError) as e:
+        self.assertEqual(
+            None,
             validators.ca_status(
-                csr=csr_mock,
-                ca_requested=True)
-        self.assertEqual("Key usage doesn't match requested CA status "
-                         "(keyCertSign/cRLSign: False/True)", str(e.exception))
+                csr=csr,
+                ca_requested=True
+            )
+        )
 
     def test_source_cidrs_good(self):
         request = mock.Mock(client_addr='127.0.0.1')
@@ -612,99 +466,65 @@ class TestValidators(unittest.TestCase):
                          str(e.exception))
 
     def test_blacklist_names_good(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:blah.good'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('blah.good')
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.blacklist_names(
-                csr=csr_mock,
+                csr=csr,
                 domains=['.bad'],
             )
         )
 
     def test_blacklist_names_bad(self):
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:blah.bad'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('blah.bad')
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
-                csr=csr_mock,
+                csr=csr,
                 domains=['.bad'],
             )
 
     def test_blacklist_names_bad_cn(self):
-        cn_mock = mock.MagicMock()
-        cn_mock.get_value.return_value = 'blah.bad'
-
-        csr_config = {
-            'get_subject.return_value.get_entries_by_nid.return_value':
-                [cn_mock],
-        }
-        csr_mock = mock.MagicMock(**csr_config)
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, "blah.bad")
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
-                csr=csr_mock,
+                csr=csr,
                 domains=['.bad'],
             )
 
     def test_blacklist_names_mix(self):
-        ext1_mock = mock.MagicMock()
-        ext1_mock.get_value.return_value = 'DNS:blah.good'
-        ext1_mock.get_name.return_value = 'subjectAltName'
-
-        ext2_mock = mock.MagicMock()
-        ext2_mock.get_value.return_value = 'DNS:blah.bad'
-        ext2_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext1_mock, ext2_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('blah.bad')
+        ext.add_dns_id('blah.good')
+        csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
-                csr=csr_mock,
+                csr=csr,
                 domains=['.bad'],
             )
-
-    def test_blacklist_names_ignore_unknown(self):
-        # only validate the DNS type - other types may look like domains
-        # by accident
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'RANDOM_TYPE:random.bad'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
-
-        self.assertEqual(
-            None,
-            validators.blacklist_names(
-                csr=csr_mock,
-                domains=['.bad'],
-            )
-        )
 
     def test_blacklist_names_empty_list(self):
         # empty blacklist should pass everything through
-        ext_mock = mock.MagicMock()
-        ext_mock.get_value.return_value = 'DNS:some.name'
-        ext_mock.get_name.return_value = 'subjectAltName'
-
-        csr_mock = mock.MagicMock()
-        csr_mock.get_extensions.return_value = [ext_mock]
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id('blah.good')
+        csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.blacklist_names(
-                csr=csr_mock,
+                csr=csr,
             )
         )
