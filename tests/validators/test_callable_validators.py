@@ -14,10 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import textwrap
 import unittest
 
 import mock
 import netaddr
+from pyasn1_modules import rfc2459
 
 from anchor import validators
 from anchor.X509 import extension as x509_ext
@@ -26,6 +28,18 @@ from anchor.X509 import signing_request as x509_csr
 
 
 class TestValidators(unittest.TestCase):
+    csr_data = textwrap.dedent(u"""
+        -----BEGIN CERTIFICATE REQUEST-----
+        MIIBWTCCARMCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ
+        BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
+        BAsTB3Rlc3RpbmcxFDASBgNVBAMTC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
+        FhB0ZXN0QGFuY2hvci50ZXN0MEwwDQYJKoZIhvcNAQEBBQADOwAwOAIxAOpvxkCx
+        NNTc86GVnP4rWvaniOnHaemXbhBOoFxhMwaghiq7u5V9ZKkUZfbu+L+ZSQIDAQAB
+        oCkwJwYJKoZIhvcNAQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkq
+        hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ
+        VMs9DuTAxljX7t7Eug==
+        -----END CERTIFICATE REQUEST-----""")
+
     def setUp(self):
         super(TestValidators, self).setUp()
 
@@ -528,3 +542,23 @@ class TestValidators(unittest.TestCase):
                 csr=csr,
             )
         )
+
+    def test_csr_signature(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        self.assertEqual(None, validators.csr_signature(csr=csr))
+
+    def test_csr_signature_bad_sig(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        with mock.patch.object(x509_csr.X509Csr, '_get_signature',
+                               return_value=(b'A'*49)):
+            with self.assertRaisesRegexp(validators.ValidationError,
+                                         "Signature on the CSR is not valid"):
+                validators.csr_signature(csr=csr)
+
+    def test_csr_signature_bad_algo(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        with mock.patch.object(x509_csr.X509Csr, '_get_signing_algorithm',
+                               return_value=rfc2459.id_dsa_with_sha1):
+            with self.assertRaisesRegexp(validators.ValidationError,
+                                         "Signature on the CSR is not valid"):
+                validators.csr_signature(csr=csr)
