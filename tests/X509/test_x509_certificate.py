@@ -235,14 +235,15 @@ class TestX509Cert(unittest.TestCase):
             self.cert.get_fingerprint('no_such_hash')
 
     def test_sign_bad_md(self):
+        key = utils.get_private_key_from_pem(self.key_rsa_data)
         self.assertRaises(x509_errors.X509Error,
                           self.cert.sign,
-                          None, "BAD")
+                          key, "BAD")
 
     def test_sign_bad_key(self):
         self.assertRaises(x509_errors.X509Error,
                           self.cert.sign,
-                          None)
+                          "BAD")
 
     def test_get_version(self):
         v = self.cert.get_version()
@@ -286,17 +287,18 @@ class TestX509Cert(unittest.TestCase):
             self.cert.add_extension("abcdef", 2)
 
     def test_sign_rsa_sha1(self):
-        key = utils.get_private_key_from_bytes(self.key_rsa_data)
+        key = utils.get_private_key_from_pem(self.key_rsa_data)
         self.cert.sign(key, 'sha1')
         self.assertEqual(self.cert.get_fingerprint(),
                          "BA1B5C97D68EAE738FD10657E6F0B143")
+        self.assertTrue(self.cert.verify(key.public_key()))
 
     def test_sign_dsa_sha1(self):
-        key = utils.get_private_key_from_bytes(self.key_dsa_data)
+        key = utils.get_private_key_from_pem(self.key_dsa_data)
         self.cert.sign(key, 'sha1')
-        # TODO(stan): add verification; DSA signatures are not
-        # deterministic which means right now we can only make sure it
-        # doesn't raise exceptions
+        # DSA signatures are not deterministic which means we can only
+        # verify the signature, not make sure it's always the same
+        self.assertTrue(self.cert.verify(key.public_key()))
 
     def test_sign_unknown_key(self):
         key = object()
@@ -304,6 +306,10 @@ class TestX509Cert(unittest.TestCase):
             self.cert.sign(key, 'sha1')
 
     def test_sign_unknown_hash(self):
-        key = utils.get_private_key_from_bytes(self.key_rsa_data)
+        key = utils.get_private_key_from_pem(self.key_rsa_data)
         with self.assertRaises(x509_errors.X509Error):
             self.cert.sign(key, 'no_such_hash')
+
+    def test_verify_unknown_key(self):
+        with self.assertRaises(x509_errors.X509Error):
+            self.cert.verify("abc")

@@ -25,6 +25,7 @@ from anchor.X509 import errors as x509_errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request
+from anchor.X509 import utils
 
 
 class TestX509Csr(unittest.TestCase):
@@ -39,6 +40,23 @@ class TestX509Csr(unittest.TestCase):
         hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ
         VMs9DuTAxljX7t7Eug==
         -----END CERTIFICATE REQUEST-----""")
+
+    key_rsa_data = textwrap.dedent("""
+        -----BEGIN RSA PRIVATE KEY-----
+        MIICXAIBAAKBgQCeeqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd
+        6kFLcOP8xzwwvx/eFY6Sux52enQ197o8aMwyP77hMhZqtd8NCgLJMVlUbRhwLti0
+        SkHFPic0wAg+esfXa6yhd5TxC+bti7MgV/ljA80XQxHH8xOjdOoGN0DHfQIDAQAB
+        AoGBAJ2ozJpe+7qgGJPaCz3f0izvBwtq7kR49fqqRZbo8HHnx7OxWVVI7LhOkKEy
+        2/Bq0xsvOu1CdiXL4LynvIDIiQqLaeINzG48Rbk+0HadbXblt3nDkIWdYII6zHKI
+        W9ewX4KpHEPbrlEO9BjAlAcYsDIvFIMYpQhtQ+0R/gmZ99WJAkEAz5C2a6FIcMbE
+        o3aTc9ECq99zY7lxh+6aLpUdIeeHyb/QzfGDBdlbpBAkA6EcxSqp0aqH4xIQnYHa
+        3P5ZCShqSwJBAMN1sb76xq94xkg2cxShPFPAE6xKRFyKqLgsBYVtulOdfOtOnjh9
+        1SK2XQQfBRIRdG4Q/gDoCP8XQHpJcWMk+FcCQDnuJqulaOVo5GrG5mJ1nCxCAh98
+        G06X7lo/7dCPoRtSuMExvaK9RlFk29hTeAcjYCAPWzupyA9dtarmJg1jRT8CQCKf
+        gYnb8D/6+9yk0IPR/9ayCooVacCeyz48hgnZowzWs98WwQ4utAd/GED3obVOpDov
+        Bl9wus889i3zPoOac+cCQCZHredQcJGd4dlthbVtP2NhuPXz33JuETGR9pXtsDUZ
+        uX/nSq1oo9kUh/dPOz6aP5Ues1YVe3LExmExPBQfwIE=
+        -----END RSA PRIVATE KEY-----""").encode('ascii')
 
     def setUp(self):
         super(TestX509Csr, self).setUp()
@@ -144,3 +162,13 @@ class TestX509Csr(unittest.TestCase):
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
         self.assertEqual(entries[0].get_value(), "test@anchor.test")
+
+    def test_sign(self):
+        key = utils.get_private_key_from_pem(self.key_rsa_data)
+        self.csr.sign(key)
+        # 10 bytes is definitely enough for non malicious case, right?
+        self.assertEqual(b'5I\xc2\x03\x97\xd2\xf0\xd6\x06\x8c',
+                         self.csr._get_signature()[:10])
+
+    def test_verify(self):
+        self.assertTrue(self.csr.verify())
