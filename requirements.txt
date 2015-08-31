@@ -6,6 +6,6 @@ pyasn1
 pyasn1-modules
 pecan>=1.0.0
 Paste
-netaddr>=0.7.12
+netaddr!=0.7.16,>=0.7.12
 ldap3>=0.9.8.2 # LGPLv3
 requests>=2.5.2
