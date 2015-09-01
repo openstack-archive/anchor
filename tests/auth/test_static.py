@@ -21,9 +21,10 @@ from webob import exc as http_status
 
 from anchor import auth
 from anchor.auth import results
+import tests
 
 
-class AuthStaticTests(unittest.TestCase):
+class AuthStaticTests(tests.DefaultConfigMixin, unittest.TestCase):
 
     def setUp(self):
         super(AuthStaticTests, self).setUp()
@@ -34,8 +35,9 @@ class AuthStaticTests(unittest.TestCase):
     def test_validate_static(self):
         """Test all static user/pass authentication paths."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {'static': {'secret': 'simplepassword',
-                                    'user': 'myusername'}}}
+        self.sample_conf_auth['static'] = {'secret': 'simplepassword',
+                                           'user': 'myusername'}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             valid_user = data['auth']['static']['user']
@@ -53,7 +55,8 @@ class AuthStaticTests(unittest.TestCase):
     def test_validate_static_malformed1(self):
         """Test static user/pass authentication with malformed config."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {'static': {}}}
+        self.sample_conf_auth['static'] = {}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPUnauthorized):
@@ -62,7 +65,8 @@ class AuthStaticTests(unittest.TestCase):
     def test_validate_static_malformed2(self):
         """Test static user/pass authentication with malformed config."""
         config = "anchor.jsonloader.conf._config"
-        data = {'auth': {}}
+        self.sample_conf['auth'] = {}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPUnauthorized):

@@ -22,9 +22,10 @@ from webob import exc as http_status
 
 from anchor import certificate_ops
 from anchor.X509 import name as x509_name
+import tests
 
 
-class CertificateOpsTests(unittest.TestCase):
+class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
 
     def setUp(self):
         # This is a CSR with CN=anchor-test.example.com
@@ -103,8 +104,9 @@ class CertificateOpsTests(unittest.TestCase):
         """Test basic success path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = {'steps': {'extensions': {'allowed_extensions': []}}}
-        data = {'validators': validators}
+        self.sample_conf_validators['steps'] = {'extensions': {
+            'allowed_extensions': []}}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             certificate_ops.validate_csr(None, csr_obj, None)
@@ -113,7 +115,8 @@ class CertificateOpsTests(unittest.TestCase):
         """Test empty validator set for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'validators': {}}
+        self.sample_conf['validators'] = {}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             # this should work, it allows people to bypass validation
@@ -123,9 +126,9 @@ class CertificateOpsTests(unittest.TestCase):
         """Test failure path for validate_csr."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        validators = {'steps': {'common_name': {'allowed_domains':
-                                                ['.testing.com']}}}
-        data = {'validators': validators}
+        self.sample_conf_validators['steps'] = {'common_name': {
+            'allowed_domains': ['.testing.com']}}
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
@@ -136,8 +139,9 @@ class CertificateOpsTests(unittest.TestCase):
         """Test CA certificate read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'ca': {'cert_path': '/xxx/not/a/valid/path',
-                       'key_path': 'tests/CA/root-ca-unwrapped.key'}}
+        self.sample_conf_ca['cert_path'] = '/xxx/not/a/valid/path'
+        self.sample_conf_ca['key_path'] = 'tests/CA/root-ca-unwrapped.key'
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
@@ -148,8 +152,9 @@ class CertificateOpsTests(unittest.TestCase):
         """Test CA key read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
         config = "anchor.jsonloader.conf._config"
-        data = {'ca': {'cert_path': 'tests/CA/root-ca.crt',
-                       'key_path': '/xxx/not/a/valid/path'}}
+        self.sample_conf_ca['cert_path'] = 'tests/CA/root-ca.crt'
+        self.sample_conf_ca['key_path'] = '/xxx/not/a/valid/path'
+        data = self.sample_conf
 
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
