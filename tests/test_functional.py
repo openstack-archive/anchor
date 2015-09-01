@@ -76,6 +76,7 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
 
         # Load config from json test config
         jsonloader.conf.load_str_data(json.dumps(self.sample_conf))
+        jsonloader.conf.load_extensions()
         self.conf = jsonloader.conf._config
         ca_conf = self.conf["signing_ca"]["default_ca"]
         ca_conf["output_path"] = tempfile.mkdtemp()
