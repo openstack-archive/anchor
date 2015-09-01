@@ -81,7 +81,7 @@ def _run_validator(name, body, args):
     # perform the actual check
     logger.debug("_run_validator: checking <%s> with rules: %s", name, body)
     try:
-        validator = getattr(validators, name)
+        validator = jsonloader.conf.get_validator(name)
         validator(**new_kwargs)
         logger.debug("_run_validator: success: <%s> ", name)
         return True  # validator passed b/c no exceptions

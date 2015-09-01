@@ -21,6 +21,7 @@ from webob import exc as http_status
 
 from anchor import auth
 from anchor.auth import results
+from anchor import jsonloader
 import tests
 
 
@@ -34,6 +35,7 @@ class AuthStaticTests(tests.DefaultConfigMixin, unittest.TestCase):
 
     def test_validate_static(self):
         """Test all static user/pass authentication paths."""
+        jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
         self.sample_conf_auth['default_auth'] = {
             "backend": "static",
@@ -58,6 +60,7 @@ class AuthStaticTests(tests.DefaultConfigMixin, unittest.TestCase):
 
     def test_validate_static_malformed1(self):
         """Test static user/pass authentication with malformed config."""
+        jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
         self.sample_conf_auth['default_auth'] = {'backend': 'static'}
         data = self.sample_conf

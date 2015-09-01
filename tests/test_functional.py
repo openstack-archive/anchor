@@ -22,11 +22,12 @@ import tempfile
 import textwrap
 import unittest
 
+import mock
 import pecan
 from pecan import testing as pecan_testing
+import stevedore
 
 from anchor import jsonloader
-from anchor import validators
 from anchor.X509 import certificate as X509_cert
 import config
 import tests
@@ -154,15 +155,20 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                 'encoding': 'pem',
                 'csr': TestFunctional.csr_good}
 
-        def derp(**kwdargs):
-            raise Exception("BOOM")
+        derp = mock.MagicMock()
+        derp.side_effect = Exception("BOOM")
 
-        validators.broken_validator = derp
+        derp_ext = stevedore.extension.Extension("broken_validator", None,
+                                                 derp, None)
+        manager = jsonloader.conf._validators.make_test_instance([derp_ext])
+        jsonloader.conf._validators = manager
+
         ra = jsonloader.conf.registration_authority['default_ra']
-        ra['validators']["broken_validator"] = {}
+        ra['validators'] = {"broken_validator": {}}
 
         resp = self.app.post('/v1/sign/default_ra', data, expect_errors=True)
         self.assertEqual(500, resp.status_int)
         self.assertTrue(("Internal Validation Error running validator "
                          "'broken_validator' for registration authority "
                          "'default_ra'") in str(resp))
+        self.assertTrue(derp.called)
