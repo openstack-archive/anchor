@@ -1,0 +1,9 @@
+Verified+2: Jenkins
+Code-Review+2: Robert Clark <robert.clark@hp.com>
+Workflow+1: Robert Clark <robert.clark@hp.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hp.com>
+Submitted-by: Jenkins
+Submitted-at: Tue, 01 Sep 2015 18:04:50 +0000
+Reviewed-on: https://review.openstack.org/207752
+Project: openstack/anchor
+Branch: refs/heads/master
