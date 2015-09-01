@@ -36,18 +36,20 @@ class AnchorConf():
         self._logger = logger
         self._config = {}
 
-    def load_file_data(self, config_file):
-        '''Load a config from a file.'''
+    def _load_json_file(self, config_file):
         try:
             with open(config_file, 'r') as f:
-                self._config = json.load(f)
-
+                return json.load(f)
         except IOError:
             logger.error("could not open config file: %s" % config_file)
             raise
-        except Exception:
+        except ValueError:
             logger.error("error parsing config file: %s" % config_file)
             raise
+
+    def load_file_data(self, config_file):
+        '''Load a config from a file.'''
+        self._config = self._load_json_file(config_file)
 
     def load_str_data(self, data):
         '''Load a config from string data.'''
@@ -70,3 +72,33 @@ class AnchorConf():
 
 
 conf = AnchorConf(logger)
+
+
+def config_for_registration_authority(ra_name):
+    """Get configuration for a given name."""
+    return conf.registration_authority[ra_name]
+
+
+def authentication_for_registration_authority(ra_name):
+    """Get authentication config for a given name.
+
+    This is only supposed to be called after config validation. All the right
+    elements are expected to be in place.
+    """
+    auth_name = conf.registration_authority[ra_name]['authentication']
+    return conf.authentication[auth_name]
+
+
+def signing_ca_for_registration_authority(ra_name):
+    """Get signing ca config for a given name.
+
+    This is only supposed to be called after config validation. All the right
+    elements are expected to be in place.
+    """
+    ca_name = conf.registration_authority[ra_name]['signing_ca']
+    return conf.signing_ca[ca_name]
+
+
+def registration_authority_names():
+    """List the names of supported registration authorities."""
+    return conf.registration_authority.keys()

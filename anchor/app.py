@@ -60,60 +60,116 @@ def _check_file_exists(path):
 
 
 def validate_config(conf):
-    logger = logging.getLogger("anchor")
+    for old_name in ['auth', 'ca', 'validators']:
+        if old_name in conf.config:
+            raise ConfigValidationException("The config seems to be for an "
+                                            "old version of Anchor. Please "
+                                            "check documentation.")
 
-    if not hasattr(conf, "auth") or not conf.auth:
-        raise ConfigValidationException("No authentication configured")
+    if not conf.config.get('registration_authority'):
+        raise ConfigValidationException("No registration authorities present")
 
-    if not hasattr(conf, "ca") or not conf.ca:
-        raise ConfigValidationException("No ca configuration present")
+    if not conf.config.get('signing_ca'):
+        raise ConfigValidationException("No signing CA configurations present")
+
+    if not conf.config.get('authentication'):
+        raise ConfigValidationException("No authentication methods present")
+
+    for name in conf.registration_authority.keys():
+        logger.info("Checking config for registration authority: %s", name)
+        validate_registration_authority_config(name, conf)
+
+    for name in conf.signing_ca.keys():
+        logger.info("Checking config for signing ca: %s", name)
+        validate_signing_ca_config(name, conf)
+
+    for name in conf.authentication.keys():
+        logger.info("Checking config for authentication method: %s", name)
+        validate_authentication_config(name, conf)
+
+
+def validate_authentication_config(name, conf):
+    auth_conf = conf.authentication[name]
+
+    default_user = "myusername"
+    default_secret = "simplepassword"
+
+    if not auth_conf.get('backend'):
+        raise ConfigValidationException(
+            "Authentication method %s doesn't define backend" % name)
+
+    if auth_conf['backend'] not in ('static', 'keystone', 'ldap'):
+        raise ConfigValidationException(
+            "Authentication backend % unknown" % (auth_conf['backend'],))
+
+    # Check for anchor being run with default user/secret
+    if auth_conf['backend'] == 'static':
+        if auth_conf['user'] == default_user:
+            logger.warning("default user for static auth in use")
+        if auth_conf['secret'] == default_secret:
+            logger.warning("default secret for static auth in use")
+
+
+def validate_signing_ca_config(name, conf):
+    ca_conf = conf.signing_ca[name]
 
     # mandatory CA settings
     ca_config_requirements = ["cert_path", "key_path", "output_path",
                               "signing_hash", "valid_hours"]
 
     for requirement in ca_config_requirements:
-        if requirement not in conf.ca.keys():
-            raise ConfigValidationException("CA config missing: %s" %
-                                            requirement)
+        if requirement not in ca_conf.keys():
+            raise ConfigValidationException(
+                "CA config missing: %s (for signing CA %s)" % (requirement,
+                                                               name))
 
     # all are specified, check the CA certificate and key are readable with
     # sane permissions
-    _check_file_exists(conf.ca['cert_path'])
-    _check_file_exists(conf.ca['key_path'])
+    _check_file_exists(ca_conf['cert_path'])
+    _check_file_exists(ca_conf['key_path'])
 
-    _check_file_permissions(conf.ca['key_path'])
+    _check_file_permissions(ca_conf['key_path'])
 
-    if not hasattr(conf, "validators"):
-        raise ConfigValidationException("No validators configured")
 
-    logger.info("Found {} validator sets.".format(len(conf.validators)))
-    for name, validator_set in conf.validators.items():
-        logger.info("Checking validator set <{}> ....".format(name))
-        if len(validator_set) == 0:
+def validate_registration_authority_config(ra_name, conf):
+    ra_conf = conf.registration_authority[ra_name]
+    auth_name = ra_conf.get('authentication')
+    if not auth_name:
+        raise ConfigValidationException(
+            "No authentication configured for registration authority: %s" %
+            ra_name)
+
+    if not conf.authentication.get(auth_name):
+        raise ConfigValidationException(
+            "Authentication method %s configured for registration authority "
+            "%s doesn't exist" % (auth_name, ra_name))
+
+    ca_name = ra_conf.get('signing_ca')
+    if not ca_name:
+        raise ConfigValidationException(
+            "No signing CA configuration present for registration authority: "
+            "%s" % ra_name)
+
+    if not conf.signing_ca.get(ca_name):
+        raise ConfigValidationException(
+            "Signing CA %s configured for registration authority %s doesn't "
+            "exist" % (ca_name, ra_name))
+
+    if not ra_conf.get("validators"):
+        raise ConfigValidationException(
+            "No validators configured for registration authority: %s" %
+            ra_name)
+
+    ra_validators = ra_conf['validators']
+
+    for step in ra_validators.keys():
+        if not hasattr(validators, step):
             raise ConfigValidationException(
-                "Validator set <{}> is empty".format(name))
+                "Unknown validator <{}> found (for registration "
+                "authority {})".format(step, ra_name))
 
-        for step in validator_set.keys():
-            if not hasattr(validators, step):
-                raise ConfigValidationException(
-                    "Validator set <{}> contains an "
-                    "unknown validator <{}>".format(name, step))
-
-    config_check_domains(validator_set)
-    logger.info("Validator set OK")
-
-
-def check_default_auth(conf):
-    default_user = "myusername"
-    default_secret = "simplepassword"
-
-    # Check for anchor being run with default user/secret
-    if 'static' in conf.auth.keys():
-        if conf.auth['static']['user'] == default_user:
-            logger.warning("default user for static auth in use")
-        if conf.auth['static']['secret'] == default_secret:
-            logger.warning("default secret for static auth in use")
+    config_check_domains(ra_validators)
+    logger.info("Validators OK for registration authority: %s", ra_name)
 
 
 def load_config():
@@ -134,7 +190,7 @@ def load_config():
 
     sys_config_path = os.path.join(os.sep, 'etc', 'anchor', 'config.json')
 
-    if 'auth' not in jsonloader.conf.config:
+    if 'registration_authority' not in jsonloader.conf.config:
         config_path = ""
         if config_name in os.environ:
             config_path = os.environ[config_name]
@@ -162,7 +218,5 @@ def setup_app(config):
         logging=config.logging,
         **app_conf
     )
-
-    check_default_auth(jsonloader.conf)
 
     return paste.translogger.TransLogger(app, setup_console_handler=False)

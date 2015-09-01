@@ -85,60 +85,60 @@ def _run_validator(name, body, args):
         return False
 
 
-def validate_csr(auth_result, csr, request):
+def validate_csr(ra_name, auth_result, csr, request):
     """Validates various aspects of the CSR based on the loaded config.
 
        The arguments of this method are passed to the underlying validate
        methods. Therefore, some may be optional, depending on which
        validation routines are specified in the configuration.
 
+       :param ra_name: name of the registration authority
        :param auth_result: AuthDetails value from auth.validate
        :param csr: CSR value from certificate_ops.parse_csr
        :param request: pecan request object associated with this action
     """
-    # TODO(tkelsey): make this more robust
 
+    ra_conf = jsonloader.config_for_registration_authority(ra_name)
     args = {'auth_result': auth_result,
             'csr': csr,
-            'conf': jsonloader.conf,
+            'conf': ra_conf,
             'request': request}
 
     # It is ok if the config doesn't have any validators listed
-    # so we set the initial state to valid.
     valid = True
-
     try:
-        for name, vset in jsonloader.conf.validators.items():
-            logger.debug("validate_csr: checking with set {}".format(name))
-            for vname, validator in vset.items():
-                valid = _run_validator(vname, validator, args)
-                if not valid:
-                    break  # early out at the first error
+        for vname, validator in ra_conf['validators'].items():
+            valid = _run_validator(vname, validator, args)
+            if not valid:
+                break
 
     except Exception as e:
         logger.exception("Error running validator <%s> - %s", vname, e)
         pecan.abort(500, "Internal Validation Error running validator "
-                         "'{}' in set '{}'".format(vname, name))
+                         "'{}' for registration authority "
+                         "'{}'".format(vname, ra_name))
 
-    # something failed, return a 400 to the client
     if not valid:
         pecan.abort(400, "CSR failed validation")
 
 
-def sign(csr):
+def sign(ra_name, csr):
     """Generate an X.509 certificate and sign it.
 
+    :param ra_name: name of the registration authority
     :param csr: X509 certificate signing request
     """
+    ca_conf = jsonloader.signing_ca_for_registration_authority(ra_name)
+
     try:
         ca = certificate.X509Certificate.from_file(
-            jsonloader.conf.ca["cert_path"])
+            ca_conf['cert_path'])
     except Exception as e:
         logger.exception("Cannot load the signing CA: %s", e)
         pecan.abort(500, "certificate signing error")
 
     try:
-        key = utils.get_private_key_from_file(jsonloader.conf.ca['key_path'])
+        key = utils.get_private_key_from_file(ca_conf['key_path'])
     except Exception as e:
         logger.exception("Cannot load the signing CA key: %s", e)
         pecan.abort(500, "certificate signing error")
@@ -147,7 +147,7 @@ def sign(csr):
     new_cert.set_version(2)
 
     start_time = int(time.time())
-    end_time = start_time + (jsonloader.conf.ca['valid_hours'] * 60 * 60)
+    end_time = start_time + (ca_conf['valid_hours'] * 60 * 60)
     new_cert.set_not_before(start_time)
     new_cert.set_not_after(end_time)
 
@@ -167,12 +167,12 @@ def sign(csr):
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)
 
-    new_cert.sign(key, jsonloader.conf.ca['signing_hash'])
+    new_cert.sign(key, ca_conf['signing_hash'])
 
     path = os.path.join(
-        jsonloader.conf.ca['output_path'],
+        ca_conf['output_path'],
         '%s.crt' % new_cert.get_fingerprint(
-            jsonloader.conf.ca['signing_hash']))
+            ca_conf['signing_hash']))
 
     logger.info("Saving certificate to: %s", path)
 
