@@ -265,7 +265,7 @@ class TestValidators(unittest.TestCase):
                 allowed_extensions=['basicConstraints', 'nameConstraints'])
         self.assertEqual("Extension 'keyUsage' not allowed", str(e.exception))
 
-    def test_extensions_good(self):
+    def test_extensions_good_name(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionKeyUsage()
         ext.set_usage('keyCertSign', True)
@@ -276,6 +276,20 @@ class TestValidators(unittest.TestCase):
             validators.extensions(
                 csr=csr,
                 allowed_extensions=['basicConstraints', 'keyUsage']
+            )
+        )
+
+    def test_extensions_good_oid(self):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionKeyUsage()
+        ext.set_usage('keyCertSign', True)
+        csr.add_extension(ext)
+
+        self.assertEqual(
+            None,
+            validators.extensions(
+                csr=csr,
+                allowed_extensions=['basicConstraints', '2.5.29.15']
             )
         )
 

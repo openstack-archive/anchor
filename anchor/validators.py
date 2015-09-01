@@ -186,7 +186,8 @@ def extensions(csr=None, allowed_extensions=[], **kwargs):
     """Ensure only accepted extensions are used."""
     exts = csr.get_extensions() or []
     for ext in exts:
-        if ext.get_name() not in allowed_extensions:
+        if (ext.get_name() not in allowed_extensions and
+                str(ext.get_oid()) not in allowed_extensions):
             raise ValidationError("Extension '%s' not allowed"
                                   % ext.get_name())
 
