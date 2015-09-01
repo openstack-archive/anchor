@@ -31,18 +31,21 @@ from anchor.X509 import utils
 class TestX509Cert(unittest.TestCase):
     cert_data = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE-----
-        MIICKjCCAZOgAwIBAgIIfeW6dwGe6wMwDQYJKoZIhvcNAQEFBQAwUjELMAkGA1UE
-        BhMCQVUxEzARBgNVBAgTClNvbWUtU3RhdGUxFjAUBgNVBAoTDUhlcnAgRGVycCBw
-        bGMxFjAUBgNVBAMTDWhlcnAuZGVycC5wbGMwHhcNMTUwMTE0MTQxMDE5WhcNMTUw
-        MTE1MTQxMDE5WjCBlDELMAkGA1UEBhMCVUsxDzANBgNVBAgTBk5hcm5pYTESMBAG
-        A1UEBxMJRnVua3l0b3duMRcwFQYDVQQKEw5BbmNob3IgVGVzdGluZzEQMA4GA1UE
-        CxMHdGVzdGluZzEUMBIGA1UEAxMLYW5jaG9yLnRlc3QxHzAdBgkqhkiG9w0BCQEW
-        EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m/GQLE0
-        1NzzoZWc/ita9qeI6cdp6ZduEE6gXGEzBqCGKru7lX1kqRRl9u74v5lJAgMBAAGj
-        GjAYMAkGA1UdEwQCMAAwCwYDVR0PBAQDAgXgMA0GCSqGSIb3DQEBBQUAA4GBAGeX
-        hSul19/DgwM5m3cj6y9+dkOhXCdImG1O6wjDHxa/xU+hlPJwGZr5zrcBsk/8jaIP
-        z1FWAhsmZBl0zSJY7XEZ9jmw7JIaCy3XpYMVEA2LGEofydr7N3CRqIE5ehdAh5rz
-        gTLni27WuVJFVBNoTU1JfoxBSm/RBLdTj92g9N5g
+        MIICuDCCAiGgAwIBAgIJAIaZlZ0Oms2fMA0GCSqGSIb3DQEBCwUAMGoxCzAJBgNV
+        BAYTAkFVMRMwEQYDVQQIDApTb21lLVN0YXRlMRYwFAYDVQQKDA1IZXJwIERlcnAg
+        cGxjMRYwFAYDVQQLDA1oZXJwLmRlcnAucGxjMRYwFAYDVQQDDA1oZXJwLmRlcnAu
+        cGxjMB4XDTE1MDkwMTIzNDcwNVoXDTE1MDkwMjIzNDcwNVowgZQxCzAJBgNVBAYT
+        AlVLMQ8wDQYDVQQIDAZOYXJuaWExEjAQBgNVBAcMCUZ1bmt5dG93bjEXMBUGA1UE
+        CgwOQW5jaG9yIFRlc3RpbmcxEDAOBgNVBAsMB3Rlc3RpbmcxFDASBgNVBAMMC2Fu
+        Y2hvci50ZXN0MR8wHQYJKoZIhvcNAQkBFhB0ZXN0QGFuY2hvci50ZXN0MIGfMA0G
+        CSqGSIb3DQEBAQUAA4GNADCBiQKBgQCeeqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8
+        plPb5t4sLo8UYfZd6kFLcOP8xzwwvx/eFY6Sux52enQ197o8aMwyP77hMhZqtd8N
+        CgLJMVlUbRhwLti0SkHFPic0wAg+esfXa6yhd5TxC+bti7MgV/ljA80XQxHH8xOj
+        dOoGN0DHfQIDAQABozswOTAfBgNVHSMEGDAWgBTe1pcxYWGrNC/uksuFloCGv41g
+        3TAJBgNVHRMEAjAAMAsGA1UdDwQEAwIE8DANBgkqhkiG9w0BAQsFAAOBgQAy+2HQ
+        kXyNc5SwjvCXMDWMTKSB5bEWPxuJw3Lf1G4czHAyANzGlm1HJ/h6Z8NSwEy9x0xj
+        iFnpbc39fGoeApkEqVhY0WyJ7qbCuJsExE+ra6w+iPIKvjez+Ymp+zCDsiTIJEnf
+        2jsyzhghVa/FgDpQYQEJHAuGTEAvkQITp8IUvg==
         -----END CERTIFICATE-----""")
 
     key_dsa_data = textwrap.dedent("""
@@ -228,7 +231,8 @@ class TestX509Cert(unittest.TestCase):
 
     def test_get_fingerprint(self):
         fp = self.cert.get_fingerprint()
-        self.assertEqual(fp, "634A8CD10C81F1CD7A7E140921B4D9CA")
+        self.assertEqual(fp, '03C6B30446157984C28A3C97F1616B96'
+                             '5DED16744573F203A4EA51AB1AFA1F10')
 
     def test_get_fingerprint_invalid_hash(self):
         with self.assertRaises(x509_errors.X509Error):
@@ -256,7 +260,7 @@ class TestX509Cert(unittest.TestCase):
 
     def test_get_not_before(self):
         val = self.cert.get_not_before()
-        self.assertEqual(1421244619.0, val)
+        self.assertEqual(1441151225.0, val)
 
     def test_set_not_before(self):
         self.cert.set_not_before(0)  # seconds since epoch
@@ -265,7 +269,7 @@ class TestX509Cert(unittest.TestCase):
 
     def test_get_not_after(self):
         val = self.cert.get_not_after()
-        self.assertEqual(1421331019.0, val)
+        self.assertEqual(1441237625.0, val)
 
     def test_set_not_after(self):
         self.cert.set_not_after(0)  # seconds since epoch
@@ -274,7 +278,7 @@ class TestX509Cert(unittest.TestCase):
 
     def test_get_extensions(self):
         exts = self.cert.get_extensions()
-        self.assertEqual(2, len(exts))
+        self.assertEqual(3, len(exts))
 
     def test_add_extensions(self):
         bc = extension.X509ExtensionBasicConstraints()
@@ -285,20 +289,6 @@ class TestX509Cert(unittest.TestCase):
     def test_add_extensions_invalid(self):
         with self.assertRaises(x509_errors.X509Error):
             self.cert.add_extension("abcdef", 2)
-
-    def test_sign_rsa_sha1(self):
-        key = utils.get_private_key_from_pem(self.key_rsa_data)
-        self.cert.sign(key, 'sha1')
-        self.assertEqual(self.cert.get_fingerprint(),
-                         "BA1B5C97D68EAE738FD10657E6F0B143")
-        self.assertTrue(self.cert.verify(key.public_key()))
-
-    def test_sign_dsa_sha1(self):
-        key = utils.get_private_key_from_pem(self.key_dsa_data)
-        self.cert.sign(key, 'sha1')
-        # DSA signatures are not deterministic which means we can only
-        # verify the signature, not make sure it's always the same
-        self.assertTrue(self.cert.verify(key.public_key()))
 
     def test_sign_unknown_key(self):
         key = object()

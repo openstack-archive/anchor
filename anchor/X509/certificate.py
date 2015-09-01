@@ -33,13 +33,10 @@ from anchor.X509 import utils
 
 
 SIGNING_ALGORITHMS = {
-    ('RSA', 'MD5'): rfc2459.md5WithRSAEncryption,
-    ('RSA', 'SHA1'): rfc2459.sha1WithRSAEncryption,
     ('RSA', 'SHA224'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.14'),
     ('RSA', 'SHA256'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.11'),
     ('RSA', 'SHA384'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.12'),
     ('RSA', 'SHA512'): asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.13'),
-    ('DSA', 'SHA1'): rfc2459.id_dsa_with_sha1,
     ('DSA', 'SHA224'): asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.1'),
     ('DSA', 'SHA256'): asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.2'),
 }
@@ -249,7 +246,7 @@ class X509Certificate(signature.SignatureMixin):
         """Return this X509 certificate as DER encoded data."""
         return encoder.encode(self._cert)
 
-    def get_fingerprint(self, md='md5'):
+    def get_fingerprint(self, md='sha256'):
         """Get the fingerprint of this X509 certificate.
 
         :param md: The message digest algorthim used to compute the fingerprint

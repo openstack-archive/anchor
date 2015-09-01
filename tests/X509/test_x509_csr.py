@@ -31,14 +31,17 @@ from anchor.X509 import utils
 class TestX509Csr(unittest.TestCase):
     csr_data = textwrap.dedent(u"""
         -----BEGIN CERTIFICATE REQUEST-----
-        MIIBWTCCARMCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ
-        BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
-        BAsTB3Rlc3RpbmcxFDASBgNVBAMTC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
-        FhB0ZXN0QGFuY2hvci50ZXN0MEwwDQYJKoZIhvcNAQEBBQADOwAwOAIxAOpvxkCx
-        NNTc86GVnP4rWvaniOnHaemXbhBOoFxhMwaghiq7u5V9ZKkUZfbu+L+ZSQIDAQAB
-        oCkwJwYJKoZIhvcNAQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkq
-        hkiG9w0BAQUFAAMxALaK8/HR73ZSvHiWo7Mduin0S519aJBm+gO8d9iliUkK00gQ
-        VMs9DuTAxljX7t7Eug==
+        MIIB/jCCAWcCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIDAZOYXJuaWExEjAQ
+        BgNVBAcMCUZ1bmt5dG93bjEXMBUGA1UECgwOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
+        BAsMB3Rlc3RpbmcxFDASBgNVBAMMC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
+        FhB0ZXN0QGFuY2hvci50ZXN0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCe
+        eqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd6kFLcOP8xzwwvx/e
+        FY6Sux52enQ197o8aMwyP77hMhZqtd8NCgLJMVlUbRhwLti0SkHFPic0wAg+esfX
+        a6yhd5TxC+bti7MgV/ljA80XQxHH8xOjdOoGN0DHfQIDAQABoCkwJwYJKoZIhvcN
+        AQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkqhkiG9w0BAQsFAAOB
+        gQA+6qIFRsgkGFgeLvl+Jt3/mfAkkUTes0r4Kh+vPpuzzthEEafaVFRqA0UI+opN
+        QwNMvjwkS4hTZZFlvQJLCUOzKIOkTcvCu1WIUvkA9vfnvz6orw2dU9A6Rj6hU/Bd
+        vXaHXDbliCzG9yPHrLk5VQpy3HODjyfQMdhday2n1Q4P3Q==
         -----END CERTIFICATE REQUEST-----""")
 
     key_rsa_data = textwrap.dedent("""
@@ -167,7 +170,7 @@ class TestX509Csr(unittest.TestCase):
         key = utils.get_private_key_from_pem(self.key_rsa_data)
         self.csr.sign(key)
         # 10 bytes is definitely enough for non malicious case, right?
-        self.assertEqual(b'5I\xc2\x03\x97\xd2\xf0\xd6\x06\x8c',
+        self.assertEqual(b'>\xea\xa2\x05F\xc8$\x18X\x1e',
                          self.csr._get_signature()[:10])
 
     def test_verify(self):

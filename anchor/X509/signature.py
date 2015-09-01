@@ -38,13 +38,10 @@ id_dsa_with_sha224 = asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.1')
 id_dsa_with_sha256 = asn1_univ.ObjectIdentifier('2.16.840.1.101.3.4.3.2')
 
 SIGNING_ALGORITHMS = {
-    ('RSA', 'MD5'): rfc2459.md5WithRSAEncryption,
-    ('RSA', 'SHA1'): rfc2459.sha1WithRSAEncryption,
     ('RSA', 'SHA224'): sha224WithRSAEncryption,
     ('RSA', 'SHA256'): sha256WithRSAEncryption,
     ('RSA', 'SHA384'): sha384WithRSAEncryption,
     ('RSA', 'SHA512'): sha512WithRSAEncryption,
-    ('DSA', 'SHA1'): rfc2459.id_dsa_with_sha1,
     ('DSA', 'SHA224'): id_dsa_with_sha224,
     ('DSA', 'SHA256'): id_dsa_with_sha256,
 }
@@ -54,10 +51,6 @@ SIGNING_ALGORITHMS_INV = dict((v, k) for k, v in SIGNING_ALGORITHMS.items())
 
 
 SIGNER_CONSTRUCTION = {
-    rfc2459.md5WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                          hashes.MD5())),
-    rfc2459.sha1WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                           hashes.SHA1())),
     sha224WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
                                                      hashes.SHA224())),
     sha256WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
@@ -66,17 +59,12 @@ SIGNER_CONSTRUCTION = {
                                                      hashes.SHA384())),
     sha512WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
                                                      hashes.SHA512())),
-    rfc2459.id_dsa_with_sha1: (lambda key: key.signer(hashes.SHA1())),
     id_dsa_with_sha224: (lambda key: key.signer(hashes.SHA224())),
     id_dsa_with_sha256: (lambda key: key.signer(hashes.SHA256())),
 }
 
 
 VERIFIER_CONSTRUCTION = {
-    rfc2459.md5WithRSAEncryption: (lambda key, signature: key.verifier(
-        signature, padding.PKCS1v15(), hashes.MD5())),
-    rfc2459.sha1WithRSAEncryption: (lambda key, signature: key.verifier(
-        signature, padding.PKCS1v15(), hashes.SHA1())),
     sha224WithRSAEncryption: (lambda key, signature: key.verifier(
         signature, padding.PKCS1v15(), hashes.SHA224())),
     sha256WithRSAEncryption: (lambda key, signature: key.verifier(
@@ -85,8 +73,6 @@ VERIFIER_CONSTRUCTION = {
         signature, padding.PKCS1v15(), hashes.SHA384())),
     sha512WithRSAEncryption: (lambda key, signature: key.verifier(
         signature, padding.PKCS1v15(), hashes.SHA512())),
-    rfc2459.id_dsa_with_sha1: (lambda key, signature: key.verifier(
-        signature, hashes.SHA1())),
     id_dsa_with_sha224: (lambda key, signature: key.verifier(
         signature, hashes.SHA224())),
     id_dsa_with_sha256: (lambda key, signature: key.verifier(
@@ -95,13 +81,10 @@ VERIFIER_CONSTRUCTION = {
 
 
 ALGORITHM_PARAMETERS = {
-    rfc2459.md5WithRSAEncryption: encoder.encode(asn1_univ.Null()),
-    rfc2459.sha1WithRSAEncryption: encoder.encode(asn1_univ.Null()),
     sha224WithRSAEncryption: encoder.encode(asn1_univ.Null()),
     sha256WithRSAEncryption: encoder.encode(asn1_univ.Null()),
     sha384WithRSAEncryption: encoder.encode(asn1_univ.Null()),
     sha512WithRSAEncryption: encoder.encode(asn1_univ.Null()),
-    rfc2459.id_dsa_with_sha1: None,
     id_dsa_with_sha224: None,
     id_dsa_with_sha256: None,
 }
@@ -113,7 +96,7 @@ class SignatureMixin(object):
     Both operations rely on the functions provided by the certificate and
     csr classes.
     """
-    def sign(self, key, md="sha1"):
+    def sign(self, key, md="sha256"):
         """Sign the current object."""
         md = md.upper()
         if key is None:

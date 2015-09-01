@@ -146,7 +146,8 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
                          str(cert.get_subject()))
 
         # make sure the cert was issued by anchor
-        self.assertEqual("/C=UK/ST=Some-State/O=OSSG/CN=anchor.example.com",
+        self.assertEqual("/C=AU/ST=Some-State/O=Herp Derp plc/OU"
+                         "=herp.derp.plc/CN=herp.derp.plc",
                          str(cert.get_issuer()))
 
     def test_check_broken_validator(self):
