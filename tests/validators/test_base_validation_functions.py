@@ -85,14 +85,14 @@ class TestBaseValidators(unittest.TestCase):
     def tearDown(self):
         super(TestBaseValidators, self).tearDown()
 
-    def test_csr_get_cn(self):
-        name = validators.csr_get_cn(self.csr)
+    def test_csr_require_cn(self):
+        name = validators.csr_require_cn(self.csr)
         self.assertEqual(name, "ossg.test.com")
 
         self.csr = signing_request.X509Csr.from_buffer(
             TestBaseValidators.csr_data_without_cn)
         with self.assertRaises(validators.ValidationError):
-            validators.csr_get_cn(self.csr)
+            validators.csr_require_cn(self.csr)
 
     def test_check_domains(self):
         test_domain = 'ossg.test.com'

@@ -107,6 +107,15 @@ class X509Csr(signature.SignatureMixin):
             ri['attributes'] = None
         return ri['attributes']
 
+    def get_subject_cn(self):
+        """Get the CN part of subject.
+
+        :return subject's CN
+        """
+        subject = self.get_subject()
+        cns = subject.get_entries_by_oid(name.OID_commonName)
+        return [cn.get_value() for cn in cns]
+
     def get_extensions(self, ext_type=None):
         """Get the list of all X509 V3 Extensions on this CSR
 
