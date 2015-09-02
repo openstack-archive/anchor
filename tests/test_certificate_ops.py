@@ -60,6 +60,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
             Zz6BD8nuXQMGPy60ql12MQvLmdX7mFFHthucExhA/9R7wSPtdS8OBPljumgUuhRR
             BcW7kw==
             -----END CERTIFICATE REQUEST-----""")
+        jsonloader.conf.load_extensions()
         super(CertificateOpsTests, self).setUp()
 
     def tearDown(self):
@@ -142,7 +143,6 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
     def test_ca_cert_read_failure(self):
         """Test CA certificate read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
-        jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
         ca_conf = self.sample_conf_ca['default_ca']
         ca_conf['cert_path'] = '/xxx/not/a/valid/path'
@@ -157,7 +157,6 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
     def test_ca_key_read_failure(self):
         """Test CA key read failure."""
         csr_obj = certificate_ops.parse_csr(self.csr, 'pem')
-        jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
         self.sample_conf_ca['default_ca']['cert_path'] = 'tests/CA/root-ca.crt'
         self.sample_conf_ca['default_ca']['key_path'] = '/xxx/not/a/valid/path'
