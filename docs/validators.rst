@@ -64,6 +64,9 @@ The following validators are implemented at the moment:
     privateKeyUsagePeriod, keyUsage, authorityKeyIdentifier,
     subjectKeyIdentifier, certificateIssuer, subjectAltName, issuerAltName
 
+    Alternatively, the extension can be specified by the dotted decimal version
+    of OID.
+
 ``key_usage``
     Verifies: CSR. Parameters: ``allowed_usage``.
 
