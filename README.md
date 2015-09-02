@@ -42,12 +42,14 @@ development, run:
 
     virtualenv .venv
     . .venv/bin/activate
+    pip install -r requirements.txt
     python setup.py develop
 
 For installing into virtualenv, run:
 
     virtualenv path/to/environment
     . path/to/environment/bin/activate
+    pip install -r requirements.txt
     python setup.py install
 
 For installing in production, either install a perpared system package, or
