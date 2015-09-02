@@ -92,7 +92,7 @@ Next, a new certificate request may be generated:
 That reqest can be submitted using curl (while `pecan serve config.py` is
 running):
 
-    curl http://0.0.0.0:5000/sign -F user='myusername' \
+    curl http://0.0.0.0:5000/v1/sign/default -F user='myusername' \
         -F secret='simplepassword' -F encoding=pem \
         -F 'csr=<anchor-test.example.com.csr'
 
