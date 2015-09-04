@@ -21,6 +21,7 @@
       "authentication": "method_1",
       "signing_ca": "local",
       "validators": {
+	"standards_compliance": {},
         "ca_status": {
           "ca_requested": false
         },
