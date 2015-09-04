@@ -86,9 +86,12 @@ class TestX509Csr(unittest.TestCase):
     def test_add_extension(self):
         csr = signing_request.X509Csr()
         bc = extension.X509ExtensionBasicConstraints()
+        san = extension.X509ExtensionSubjectAltName()
         csr.add_extension(bc)
         self.assertEqual(1, len(csr.get_extensions()))
         csr.add_extension(bc)
+        self.assertEqual(1, len(csr.get_extensions()))
+        csr.add_extension(san)
         self.assertEqual(2, len(csr.get_extensions()))
 
     def test_add_extension_invalid_type(self):
