@@ -11,6 +11,16 @@ Included validators
 
 The following validators are implemented at the moment:
 
+``standards_compliance``
+    Verifies: CSR.
+
+    Ensures that the CSR does not break any rules defined in the standards
+    documents (mostly RFC5280). Specific checks may be added over time in new
+    versions of Anchor. This validator should be only skipped if there's a
+    known compatibility issue. Otherwise it should be used in all environments.
+    Any requests produced using standard tooling that fail this check should be
+    reported as Anchor issues.
+
 ``common_name``
     Verifies: CSR. Parameters: ``allowed_domains``, ``allowed_networks``.
 
