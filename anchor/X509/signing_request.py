@@ -101,6 +101,15 @@ class X509Csr(signature.SignatureMixin):
         subject = ri['subject'][0]
         return name.X509Name(subject)
 
+    def set_subject(self, subject):
+        if not isinstance(subject, name.X509Name):
+            raise TypeError("subject must be an X509Name")
+        ri = self.get_request_info()
+        if ri['subject'] is None:
+            ri['subject'] = None
+
+        ri['subject'][0] = subject._name_obj
+
     def get_attributes(self):
         ri = self.get_request_info()
         if ri['attributes'] is None:
