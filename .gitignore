@@ -18,4 +18,4 @@ build/*
 cover/*
 .cover
 .coverage
-docs/_build
+doc/build
