@@ -19,3 +19,4 @@ cover/*
 .cover
 .coverage
 docs/_build
+.eggs/
