@@ -90,6 +90,27 @@ running):
 
 This will result in the signed request being created in the `certs` directory.
 
+Docker test environment
+=======================
+We have prepared a base docker container for Anchor and a Dockerfile that will
+install the latest upstream version of Anchor and start the service. These
+instructions expect the reader to have a working Docker install already.
+
+Fetch the most recent version of the Dockerfile:
+
+    git clone -n git://git.openstack.org/openstack/anchor --depth 1
+    cd anchor
+    git checkout HEAD Dockerfile
+
+Build a new Anchor container image using the Dockerfile:
+
+    docker build -t anchor-dev .
+
+Start the service in the container and serve Anchor on port 5000:
+
+    docker run -p 5000:8080 anchor-dev \
+        /usr/local/bin/pecan serve /home/anchor/config.py    
+
 Running Anchor in production
 ============================
 
