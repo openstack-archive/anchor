@@ -16,6 +16,7 @@
 
 
 import json
+import os
 import stat
 import unittest
 
@@ -244,8 +245,20 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
                 conf.assert_called_with('/fake/.config/anchor/config.json')
 
     @mock.patch('anchor.jsonloader.conf.load_file_data')
-    def test_config_paths_system(self, conf):
-        ret = lambda x: True if x == '/etc/anchor/config.json' else False
+    def test_config_paths_system_venv(self, conf):
+        path = os.path.join(os.sep, os.environ['VIRTUAL_ENV'],
+                            'etc', 'anchor', 'config.json')
+        ret = lambda x: True if x == path else False
         with mock.patch('os.path.isfile', ret):
             app.load_config()
-            conf.assert_called_with('/etc/anchor/config.json')
+            conf.assert_called_with(path)
+
+    @mock.patch('anchor.jsonloader.conf.load_file_data')
+    def test_config_paths_system(self, conf):
+        with mock.patch.dict('os.environ'):
+            del os.environ['VIRTUAL_ENV']
+            path = '/etc/anchor/config.json'
+            ret = lambda x: True if x == path else False
+            with mock.patch('os.path.isfile', ret):
+                app.load_config()
+                conf.assert_called_with(path)
