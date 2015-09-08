@@ -90,6 +90,56 @@ running):
 
 This will result in the signed request being created in the `certs` directory.
 
+Docker test environment
+=======================
+We have prepared a base docker container for Anchor and a Dockerfile that will
+install the latest upstream version of Anchor and start the service. These
+instructions expect the reader to have a working Docker install already.
+
+Docker should *not* be used to serve Anchor in any production environments.
+
+We use two Dockerfiles for Anchor. "Dockerfile.anchorbase" is a custom image,
+built on ubuntu that has lots of libraries and requirements installed in order
+to quickly test anchor changes and build into CI processes. "Dockerfile.ubuntu"
+is used to build a complete Anchor stack, based on the latest available ubuntu
+docker image.
+
+Fetch the most recent version of the Dockerfile.ubuntu:
+
+    git clone -n git://git.openstack.org/openstack/anchor --depth 1
+    cd anchor
+    git checkout HEAD Dockerfile.ubuntu
+
+Build a new Anchor container image using the Dockerfile:
+
+    docker build -t anchor-dev -f Dockerfile.ubuntu .
+
+[Optional] If you have previously built a container using the Dockerfile it will contain
+a cached version of the Anchor source code. If you require the latest version
+of anchor, build using the --no-cache option:
+
+    docker build --no-cache -t anchor-dev -f Dockerfile.ubuntu .
+
+Start the service in the container and serve Anchor on port 8080:
+
+    docker run -p 8080:5000 anchor-dev
+
+The anchor application should be accessible on port 8080. If you are running
+docker natively on Linux, that will be 8080 on localhost (127.0.0.1). If you
+are running docker under Microsoft Windows or Apple OSX it will be running in
+a docker machine. To find the docker machine IP address run:
+
+    docker-machine ip default
+
+Docker development environment
+==============================
+Users who want to quickly test out changes to Anchor or who want to experiment
+in other ways may find it more convenient to use Dockerfile.anchorbase file.
+The instructions are very similar to using the ubuntu base as described above.
+
+Simply replace "Dockerfile.ubuntu" with "Dockerfile.anchorbase" in the above
+instructions.
+
 Running Anchor in production
 ============================
 
