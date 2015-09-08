@@ -1,0 +1,38 @@
+FROM ubuntu:latest
+MAINTAINER Robert Clark <hyakuhei@gmail.com>
+
+# root user operations
+# Upgrade the base and install required packages
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y \
+  python-dev \
+  libssl-dev \
+  libffi-dev \
+  python-pip \
+  git
+
+# Clone Anchor, install required python packages
+# Setup a user to run anchor
+WORKDIR /root
+RUN git clone git://git.openstack.org/openstack/anchor
+WORKDIR /root/anchor
+RUN pip install .
+RUN adduser --disabled-password --gecos '' anchor-dev
+
+# anchor-dev user operations
+RUN cp config.py /home/anchor-dev/
+RUN cp config.json /home/anchor-dev/
+RUN chown anchor-dev:anchor-dev /home/anchor-dev/config.py
+RUN chown anchor-dev:anchor-dev /home/anchor-dev/config.json
+RUN su - anchor-dev
+WORKDIR /home/anchor-dev
+RUN mkdir CA
+RUN openssl req -out CA/root-ca.crt \
+  -keyout CA/root-ca-unwrapped.key \
+  -newkey rsa:4096 \
+  -subj "/CN=Anchor Test CA" \
+  -nodes \
+  -x509 \
+  -days 365
+RUN chmod 0400 CA/root-ca-unwrapped.key
+ENTRYPOINT ["/usr/local/bin/pecan", "serve", "/home/anchor-dev/config.py"]
