@@ -15,7 +15,6 @@ from __future__ import absolute_import
 
 import logging
 import os
-import sys
 import time
 import uuid
 
@@ -206,8 +205,7 @@ def sign(csr, ca_conf):
     new_cert.set_subject(csr.get_subject())
     new_cert.set_issuer(ca.get_subject())
 
-    # NOTE(tkelsey): this needs to be in the range of an int
-    serial = int(int(uuid.uuid4().hex, 16) % sys.maxsize)
+    serial = int(uuid.uuid4().hex, 16)
     new_cert.set_serial_number(serial)
 
     exts = csr.get_extensions()
