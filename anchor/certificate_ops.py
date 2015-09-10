@@ -25,6 +25,7 @@ from webob import exc as http_status
 from anchor import jsonloader
 from anchor import validators
 from anchor.X509 import certificate
+from anchor.X509 import extension
 from anchor.X509 import signing_request
 from anchor.X509 import utils
 
@@ -212,8 +213,20 @@ def sign(csr, ca_conf):
 
     exts = csr.get_extensions()
     for i, ext in enumerate(exts):
-        logger.info("Adding certificate extension: %i %s", i, str(ext))
-        new_cert.add_extension(ext, i)
+        # this check is separate from standards validator - the signing backend
+        # may know about more/fewer extensions than we do
+        if ext.get_oid() not in extension.EXTENSION_CLASSES.keys():
+            if ext.get_critical():
+                logger.warning("CSR submitted with unknown extension oid %s, "
+                               "refusing to sign", ext.get_oid())
+                raise SigningError("Unknown critical extension %s" % (
+                    ext.get_oid(),))
+            else:
+                logger.info("CSR submitted with non-critical unknown oid %s, "
+                            "ignoring extension", (ext.get_oid(),))
+        else:
+            logger.info("Adding certificate extension: %i %s", i, str(ext))
+            new_cert.add_extension(ext, i)
 
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)
