@@ -204,9 +204,10 @@ class X509Certificate(signature.SignatureMixin):
             self._cert['tbsCertificate']['extensions'] = None
         return self._cert['tbsCertificate']['extensions']
 
-    def get_extensions(self):
+    def get_extensions(self, ext_type=None):
         extensions = self._get_extensions()
-        return [extension.construct_extension(e) for e in extensions]
+        return [extension.construct_extension(e) for e in extensions
+                if ext_type is None or e['extnID'] == ext_type._oid]
 
     def add_extension(self, ext, index):
         """Add an X509 V3 Certificate extension.
