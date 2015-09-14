@@ -297,9 +297,49 @@ class X509ExtensionSubjectAltName(X509Extension):
         return "subjectAltName: " + ", ".join(entries)
 
 
+class X509ExtensionExtendedKeyUsage(X509Extension):
+    spec = rfc2459.ExtKeyUsageSyntax
+    _oid = rfc2459.id_ce_extKeyUsage
+
+    _valid = [
+        rfc2459.id_kp_serverAuth, rfc2459.id_kp_clientAuth,
+        rfc2459.id_kp_codeSigning, rfc2459.id_kp_emailProtection,
+        rfc2459.id_kp_ipsecEndSystem, rfc2459.id_kp_ipsecTunnel,
+        rfc2459.id_kp_ipsecUser, rfc2459.id_kp_timeStamping,
+        rfc2459.id_pe_authorityInfoAccess, rfc2459.id_ce_extKeyUsage,
+    ]
+
+    @uses_ext_value
+    def get_all_usages(self, ext_value=None):
+        return [usage for usage in ext_value]
+
+    @uses_ext_value
+    def get_usage(self, usage, ext_value=None):
+        if usage not in self._valid:
+            raise TypeError("usage not valid")
+        return (usage in ext_value)
+
+    @modifies_ext_value
+    def set_usage(self, usage, state, ext_value=None):
+        if usage not in self._valid:
+            raise TypeError("usage not valid")
+
+        if state:
+            if usage not in ext_value:
+                ext_value[len(ext_value)] = usage
+        else:
+            if usage in ext_value:
+                old = [x for x in ext_value if x != usage]
+                ext_value.clear()
+                for i, x in enumerate(old):
+                    ext_value[i] = x
+        return ext_value
+
+
 EXTENSION_CLASSES = {
     rfc2459.id_ce_basicConstraints: X509ExtensionBasicConstraints,
     rfc2459.id_ce_keyUsage: X509ExtensionKeyUsage,
+    rfc2459.id_ce_extKeyUsage: X509ExtensionExtendedKeyUsage,
     rfc2459.id_ce_subjectAltName: X509ExtensionSubjectAltName,
 }
 
