@@ -28,6 +28,24 @@ from anchor.X509 import errors
 from anchor.X509 import utils
 
 
+# missing extended use ids from rfc5280
+id_kp_OCSPSigning = asn1_univ.ObjectIdentifier(rfc2459.id_kp.asTuple() + (9,))
+anyExtendedKeyUsage = asn1_univ.ObjectIdentifier(
+    rfc2459.id_ce_extKeyUsage.asTuple() + (0,))
+
+
+# names matching openssl
+EXT_KEY_USAGE_NAMES = {
+    rfc2459.id_kp_serverAuth: "TLS Web Server Authentication",
+    rfc2459.id_kp_clientAuth: "TLS Web Client Authentication",
+    rfc2459.id_kp_codeSigning: "Code Signing",
+    rfc2459.id_kp_emailProtection: "E-mail Protection",
+    rfc2459.id_kp_timeStamping: "Time Stamping",
+    id_kp_OCSPSigning: "OCSP Signing",
+    anyExtendedKeyUsage: "Any Extended Key Usage",
+}
+
+
 EXTENSION_NAMES = {
     rfc2459.id_ce_policyConstraints: 'policyConstraints',
     rfc2459.id_ce_basicConstraints: 'basicConstraints',
@@ -375,9 +393,48 @@ class X509ExtensionNameConstraints(X509Extension):
         return ext_value
 
 
+class X509ExtensionExtendedKeyUsage(X509Extension):
+    spec = rfc2459.ExtKeyUsageSyntax
+    _oid = rfc2459.id_ce_extKeyUsage
+
+    _valid = list(EXT_KEY_USAGE_NAMES.keys())
+
+    @uses_ext_value
+    def get_all_usages(self, ext_value=None):
+        return [usage for usage in ext_value]
+
+    @uses_ext_value
+    def get_usage(self, usage, ext_value=None):
+        if usage not in self._valid:
+            raise TypeError("usage not valid")
+        return (usage in ext_value)
+
+    @modifies_ext_value
+    def set_usage(self, usage, state, ext_value=None):
+        if usage not in self._valid:
+            raise TypeError("usage not valid")
+
+        if state:
+            if usage not in ext_value:
+                ext_value[len(ext_value)] = usage
+        else:
+            if usage in ext_value:
+                old = [x for x in ext_value if x != usage]
+                ext_value.clear()
+                for i, x in enumerate(old):
+                    ext_value[i] = x
+        return ext_value
+
+    @uses_ext_value
+    def __str__(self, ext_value=None):
+        usages = [EXT_KEY_USAGE_NAMES.get(u) for u in ext_value]
+        return "extKeyUsage: " + ", ".join(usages)
+
+
 EXTENSION_CLASSES = {
     rfc2459.id_ce_basicConstraints: X509ExtensionBasicConstraints,
     rfc2459.id_ce_keyUsage: X509ExtensionKeyUsage,
+    rfc2459.id_ce_extKeyUsage: X509ExtensionExtendedKeyUsage,
     rfc2459.id_ce_subjectAltName: X509ExtensionSubjectAltName,
     rfc2459.id_ce_nameConstraints: X509ExtensionNameConstraints,
 }
