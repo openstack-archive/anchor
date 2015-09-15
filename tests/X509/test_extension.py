@@ -115,7 +115,7 @@ class TestKeyUsage(unittest.TestCase):
 class TestSubjectAltName(unittest.TestCase):
     def setUp(self):
         self.ext = extension.X509ExtensionSubjectAltName()
-        self.domain = 'some.domain'
+        self.domain = 'example.com'
         self.ip = netaddr.IPAddress('1.2.3.4')
         self.ip6 = netaddr.IPAddress('::1')
 
@@ -140,5 +140,5 @@ class TestSubjectAltName(unittest.TestCase):
     def test_str(self):
         self.ext.add_dns_id(self.domain)
         self.ext.add_ip(self.ip)
-        self.assertEqual("subjectAltName: DNS:some.domain, IP:1.2.3.4",
+        self.assertEqual("subjectAltName: DNS:example.com, IP:1.2.3.4",
                          str(self.ext))

@@ -89,26 +89,26 @@ class TestValidators(unittest.TestCase):
     def test_common_name_good_CN(self):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "master.test.com")
+        name.add_name_entry(x509_name.OID_commonName, "good.example.com")
 
         self.assertEqual(
             None,
             validators.common_name(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
             )
         )
 
     def test_common_name_bad_CN(self):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, 'test.baddomain.com')
+        name.add_name_entry(x509_name.OID_commonName, 'bad.example.org')
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
                 csr=csr,
-                allowed_domains=['.test.com'])
-        self.assertEqual("Domain 'test.baddomain.com' not allowed (does not "
+                allowed_domains=['.example.com'])
+        self.assertEqual("Domain 'bad.example.org' not allowed (does not "
                          "match known domains)", str(e.exception))
 
     def test_common_name_ip_good(self):
@@ -120,7 +120,7 @@ class TestValidators(unittest.TestCase):
             None,
             validators.common_name(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
                 allowed_networks=['10/8']
             )
         )
@@ -133,7 +133,7 @@ class TestValidators(unittest.TestCase):
         with self.assertRaises(validators.ValidationError) as e:
             validators.common_name(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
                 allowed_networks=['10/8'])
         self.assertEqual("Address '15.1.1.1' not allowed (does not "
                          "match known networks)", str(e.exception))
@@ -141,28 +141,28 @@ class TestValidators(unittest.TestCase):
     def test_alternative_names_good_domain(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('master.test.com')
+        ext.add_dns_id('good.example.com')
         csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.alternative_names(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
             )
         )
 
     def test_alternative_names_bad_domain(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('test.baddomain.com')
+        ext.add_dns_id('bad.example.org')
         csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names(
                 csr=csr,
-                allowed_domains=['.test.com'])
-        self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
+                allowed_domains=['.example.com'])
+        self.assertEqual("Domain 'bad.example.org' not allowed (doesn't "
                          "match known domains)", str(e.exception))
 
     def test_alternative_names_ip_good(self):
@@ -175,7 +175,7 @@ class TestValidators(unittest.TestCase):
             None,
             validators.alternative_names_ip(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
                 allowed_networks=['10/8']
             )
         )
@@ -189,7 +189,7 @@ class TestValidators(unittest.TestCase):
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names_ip(
                 csr=csr,
-                allowed_domains=['.test.com'],
+                allowed_domains=['.example.com'],
                 allowed_networks=['99/8'])
         self.assertEqual("IP '10.1.1.1' not allowed (doesn't match known "
                          "networks)", str(e.exception))
@@ -197,20 +197,20 @@ class TestValidators(unittest.TestCase):
     def test_alternative_names_ip_bad_domain(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('test.baddomain.com')
+        ext.add_dns_id('bad.example.org')
         csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.alternative_names_ip(
                 csr=csr,
-                allowed_domains=['.test.com'])
-        self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
+                allowed_domains=['.example.com'])
+        self.assertEqual("Domain 'bad.example.org' not allowed (doesn't "
                          "match known domains)", str(e.exception))
 
     def test_server_group_no_prefix1(self):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "master.test.com")
+        name.add_name_entry(x509_name.OID_commonName, "master.example.com")
 
         self.assertEqual(
             None,
@@ -224,7 +224,7 @@ class TestValidators(unittest.TestCase):
     def test_server_group_no_prefix2(self):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "nv_master.test.com")
+        name.add_name_entry(x509_name.OID_commonName, "nv_master.example.com")
 
         self.assertEqual(
             None,
@@ -242,7 +242,7 @@ class TestValidators(unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "nv_master.test.com")
+        name.add_name_entry(x509_name.OID_commonName, "nv_master.example.com")
 
         self.assertEqual(
             None,
@@ -259,7 +259,7 @@ class TestValidators(unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "nv-master.test.com")
+        name.add_name_entry(x509_name.OID_commonName, "nv-master.example.com")
 
         with self.assertRaises(validators.ValidationError) as e:
             validators.server_group(
@@ -498,58 +498,58 @@ class TestValidators(unittest.TestCase):
     def test_blacklist_names_good(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('blah.good')
+        ext.add_dns_id('good.example.com')
         csr.add_extension(ext)
 
         self.assertEqual(
             None,
             validators.blacklist_names(
                 csr=csr,
-                domains=['.bad'],
+                domains=['.example.org'],
             )
         )
 
     def test_blacklist_names_bad(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('blah.bad')
+        ext.add_dns_id('bad.example.com')
         csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
                 csr=csr,
-                domains=['.bad'],
+                domains=['.example.com'],
             )
 
     def test_blacklist_names_bad_cn(self):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
-        name.add_name_entry(x509_name.OID_commonName, "blah.bad")
+        name.add_name_entry(x509_name.OID_commonName, "bad.example.com")
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
                 csr=csr,
-                domains=['.bad'],
+                domains=['.example.com'],
             )
 
     def test_blacklist_names_mix(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('blah.bad')
-        ext.add_dns_id('blah.good')
+        ext.add_dns_id('bad.example.org')
+        ext.add_dns_id('good.example.com')
         csr.add_extension(ext)
 
         with self.assertRaises(validators.ValidationError):
             validators.blacklist_names(
                 csr=csr,
-                domains=['.bad'],
+                domains=['.example.org'],
             )
 
     def test_blacklist_names_empty_list(self):
         # empty blacklist should pass everything through
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionSubjectAltName()
-        ext.add_dns_id('blah.good')
+        ext.add_dns_id('good.example.com')
         csr.add_extension(ext)
 
         self.assertEqual(
