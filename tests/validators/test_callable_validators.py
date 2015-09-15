@@ -345,6 +345,69 @@ class TestValidators(unittest.TestCase):
             )
         )
 
+    def test_ext_key_usage_good_short(self):
+        allowed_usage = ['serverAuth']
+
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionExtendedKeyUsage()
+        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        csr.add_extension(ext)
+
+        self.assertEqual(
+            None,
+            validators.ext_key_usage(
+                csr=csr,
+                allowed_usage=allowed_usage
+            )
+        )
+
+    def test_ext_key_usage_good_long(self):
+        allowed_usage = ['TLS Web Server Authentication']
+
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionExtendedKeyUsage()
+        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        csr.add_extension(ext)
+
+        self.assertEqual(
+            None,
+            validators.ext_key_usage(
+                csr=csr,
+                allowed_usage=allowed_usage
+            )
+        )
+
+    def test_ext_key_usage_good_oid(self):
+        allowed_usage = ["1.3.6.1.5.5.7.3.1"]
+
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionExtendedKeyUsage()
+        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        csr.add_extension(ext)
+
+        self.assertEqual(
+            None,
+            validators.ext_key_usage(
+                csr=csr,
+                allowed_usage=allowed_usage
+            )
+        )
+
+    def test_ext_key_usage_bad(self):
+        allowed_usage = ['serverAuth']
+
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionExtendedKeyUsage()
+        ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        csr.add_extension(ext)
+
+        with self.assertRaises(validators.ValidationError) as e:
+            validators.ext_key_usage(
+                csr=csr,
+                allowed_usage=allowed_usage)
+        self.assertEqual("Found some not allowed key usages: "
+                         "clientAuth", str(e.exception))
+
     def test_ca_status_good1(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionBasicConstraints()

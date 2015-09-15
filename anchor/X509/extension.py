@@ -43,6 +43,20 @@ EXT_KEY_USAGE_NAMES = {
     id_kp_OCSPSigning: "OCSP Signing",
     anyExtendedKeyUsage: "Any Extended Key Usage",
 }
+EXT_KEY_USAGE_NAMES_INV = dict((v, k) for k, v in EXT_KEY_USAGE_NAMES.items())
+
+
+EXT_KEY_USAGE_SHORT_NAMES = {
+    rfc2459.id_kp_serverAuth: "serverAuth",
+    rfc2459.id_kp_clientAuth: "clientAuth",
+    rfc2459.id_kp_codeSigning: "codeSigning",
+    rfc2459.id_kp_emailProtection: "emailProtection",
+    rfc2459.id_kp_timeStamping: "timeStamping",
+    id_kp_OCSPSigning: "ocspSigning",
+    anyExtendedKeyUsage: "anyExtendedKeyUsage",
+}
+EXT_KEY_USAGE_SHORT_NAMES_INV = dict((v, k) for k, v in
+                                     EXT_KEY_USAGE_SHORT_NAMES.items())
 
 
 EXTENSION_NAMES = {
