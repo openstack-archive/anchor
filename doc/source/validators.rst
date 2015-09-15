@@ -81,6 +81,22 @@ The following validators are implemented at the moment:
     digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment,
     keyAgreement, keyCertSign, cRLSign, encipherOnly, decipherOnly
 
+``ext_key_usage``
+    Verifies: CSR. Parameters: ``allowed_usage``.
+
+    Ensures only ``allowed_usage`` is requested for the certificate. The names
+    recognised by Anchor are:
+
+    TLS Web Server Authentication, TLS Web Client Authentication, Code Signing,
+    E-mail Protection, Time Stamping, OCSP Signing, Any Extended Key Usage
+
+    as well as short versions:
+
+    serverAuth, clientAuth, codeSigning, emailProtection, timeStamping,
+    ocspSigning, anyExtendedKeyUsage
+
+    or text representation of custom OIDs.
+
 ``ca_status``
     Verifies: CSR. Parameters: ``ca_requested``.
 

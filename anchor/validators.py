@@ -16,6 +16,7 @@ from __future__ import absolute_import
 import logging
 
 import netaddr
+from pyasn1.type import univ as pyasn1_univ
 
 from anchor.X509 import errors
 from anchor.X509 import extension
@@ -206,6 +207,35 @@ def key_usage(csr=None, allowed_usage=None, **kwargs):
     if denied:
         raise ValidationError("Found some not allowed key usages: %s"
                               % ', '.join(denied))
+
+
+def ext_key_usage(csr=None, allowed_usage=None, **kwargs):
+    """Ensure only accepted extended key usages are specified."""
+
+    # transform all possible names into oids we actually check
+    for i, usage in enumerate(allowed_usage):
+        if usage in extension.EXT_KEY_USAGE_NAMES_INV:
+            allowed_usage[i] = extension.EXT_KEY_USAGE_NAMES_INV[usage]
+        elif usage in extension.EXT_KEY_USAGE_SHORT_NAMES_INV:
+            allowed_usage[i] = extension.EXT_KEY_USAGE_SHORT_NAMES_INV[usage]
+        else:
+            try:
+                oid = pyasn1_univ.ObjectIdentifier(usage)
+                allowed_usage[i] = oid
+            except Exception:
+                raise ValidationError("Unknown usage: %s" % (usage,))
+
+    allowed = set(allowed_usage)
+    denied = set()
+
+    for ext in csr.get_extensions(extension.X509ExtensionExtendedKeyUsage):
+        usages = set(ext.get_all_usages())
+        denied = denied | (usages - allowed)
+    if denied:
+        text_denied = [extension.EXT_KEY_USAGE_SHORT_NAMES.get(x)
+                       for x in denied]
+        raise ValidationError("Found some not allowed key usages: %s"
+                              % ', '.join(text_denied))
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
