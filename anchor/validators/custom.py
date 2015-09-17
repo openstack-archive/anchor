@@ -18,66 +18,14 @@ import logging
 import netaddr
 from pyasn1.type import univ as pyasn1_univ
 
+from anchor.validators import errors as v_errors
+from anchor.validators import utils
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 
 
 logger = logging.getLogger(__name__)
-
-
-class ValidationError(Exception):
-    pass
-
-
-def csr_require_cn(csr):
-    cns = csr.get_subject_cn()
-    if not cns:
-        raise ValidationError("CSR is lacking a CN in the Subject")
-    if len(cns) > 1:
-        raise ValidationError("CSR has too many CN entries")
-    return cns[0]
-
-
-def check_domains(domain, allowed_domains):
-    if allowed_domains:
-        if not any(domain.endswith(suffix) for suffix in allowed_domains):
-            # no domain matched
-            return False
-    else:
-        # no valid domains were provided, so we can't make any assertions
-        logger.warning("No domains were configured for validation. Anchor "
-                       "will issue certificates for any domain, this is not a "
-                       "recommended configuration for production environments")
-    return True
-
-
-def iter_alternative_names(csr, types, fail_other_types=True):
-    for ext in csr.get_extensions():
-        if isinstance(ext, extension.X509ExtensionSubjectAltName):
-            # TODO(stan): fail on other types
-            if 'DNS' in types:
-                for dns_id in ext.get_dns_ids():
-                    yield ('DNS', dns_id)
-            if 'IP Address' in types:
-                for ip in ext.get_ips():
-                    yield ('IP Address', ip)
-
-
-def check_networks(ip, allowed_networks):
-    """Check the IP is within an allowed network."""
-    if not isinstance(ip, netaddr.IPAddress):
-        raise TypeError("ip must be a netaddr ip address")
-
-    if not allowed_networks:
-        # no valid networks were provided, so we can't make any assertions
-        logger.warning("No valid network IP ranges were given, skipping")
-        return True
-
-    if any(ip in netaddr.IPNetwork(net) for net in allowed_networks):
-        return True
-
-    return False
 
 
 def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
@@ -92,25 +40,27 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
 
     if len(CNs) > 1:
-        raise ValidationError("Too many CNs in the request")
+        raise v_errors.ValidationError("Too many CNs in the request")
 
     # rfc5280#section-4.2.1.6 says so
     if len(CNs) == 0 and not alt_present:
-        raise ValidationError("Alt subjects have to exist if the main"
-                              " subject doesn't")
+        raise v_errors.ValidationError("Alt subjects have to exist if the main"
+                                       " subject doesn't")
 
     if len(CNs) > 0:
-        cn = csr_require_cn(csr)
+        cn = utils.csr_require_cn(csr)
         try:
             # is it an IP rather than domain?
             ip = netaddr.IPAddress(cn)
-            if not (check_networks(ip, allowed_networks)):
-                raise ValidationError("Address '%s' not allowed (does not "
-                                      "match known networks)" % cn)
+            if not (utils.check_networks(ip, allowed_networks)):
+                raise v_errors.ValidationError(
+                    "Address '%s' not allowed (does not match known networks)"
+                    % cn)
         except netaddr.AddrFormatError:
-            if not (check_domains(cn, allowed_domains)):
-                raise ValidationError("Domain '%s' not allowed (does not "
-                                      "match known domains)" % cn)
+            if not (utils.check_domains(cn, allowed_domains)):
+                raise v_errors.ValidationError(
+                    "Domain '%s' not allowed (does not match known domains)"
+                    % cn)
 
 
 def alternative_names(csr, allowed_domains=[], **kwargs):
@@ -120,11 +70,10 @@ def alternative_names(csr, allowed_domains=[], **kwargs):
     the list of known suffixes, or network ranges.
     """
 
-    for _, name in iter_alternative_names(csr, ['DNS']):
-        if not check_domains(name, allowed_domains):
-            raise ValidationError("Domain '%s' not allowed (doesn't"
-                                  " match known domains)"
-                                  % name)
+    for _, name in utils.iter_alternative_names(csr, ['DNS']):
+        if not utils.check_domains(name, allowed_domains):
+            raise v_errors.ValidationError("Domain '%s' not allowed (doesn't"
+                                           " match known domains)" % name)
 
 
 def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
@@ -135,14 +84,16 @@ def alternative_names_ip(csr, allowed_domains=[], allowed_networks=[],
     the list of known suffixes, or network ranges.
     """
 
-    for name_type, name in iter_alternative_names(csr, ['DNS', 'IP Address']):
-        if name_type == 'DNS' and not check_domains(name, allowed_domains):
-            raise ValidationError("Domain '%s' not allowed (doesn't"
-                                  " match known domains)" % name)
+    for name_type, name in utils.iter_alternative_names(csr,
+                                                        ['DNS', 'IP Address']):
+        if name_type == 'DNS' and not utils.check_domains(name,
+                                                          allowed_domains):
+            raise v_errors.ValidationError("Domain '%s' not allowed (doesn't"
+                                           " match known domains)" % name)
         if name_type == 'IP Address':
-            if not check_networks(name, allowed_networks):
-                raise ValidationError("IP '%s' not allowed (doesn't"
-                                      " match known networks)" % name)
+            if not utils.check_networks(name, allowed_networks):
+                raise v_errors.ValidationError("IP '%s' not allowed (doesn't"
+                                               " match known networks)" % name)
 
 
 def blacklist_names(csr, domains=[], **kwargs):
@@ -155,16 +106,16 @@ def blacklist_names(csr, domains=[], **kwargs):
 
     CNs = csr.get_subject().get_entries_by_oid(x509_name.OID_commonName)
     if len(CNs) > 0:
-        cn = csr_require_cn(csr)
-        if check_domains(cn, domains):
-            raise ValidationError("Domain '%s' not allowed "
-                                  "(CN blacklisted)" % cn)
+        cn = utils.csr_require_cn(csr)
+        if utils.check_domains(cn, domains):
+            raise v_errors.ValidationError("Domain '%s' not allowed "
+                                           "(CN blacklisted)" % cn)
 
-    for _, name in iter_alternative_names(csr, ['DNS'],
-                                          fail_other_types=False):
-        if check_domains(name, domains):
-            raise ValidationError("Domain '%s' not allowed "
-                                  "(alt blacklisted)" % name)
+    for _, name in utils.iter_alternative_names(csr, ['DNS'],
+                                                fail_other_types=False):
+        if utils.check_domains(name, domains):
+            raise v_errors.ValidationError("Domain '%s' not allowed "
+                                           "(alt blacklisted)" % name)
 
 
 def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
@@ -174,14 +125,15 @@ def server_group(auth_result=None, csr=None, group_prefixes={}, **kwargs):
     verified against the groups the user is a member of.
     """
 
-    cn = csr_require_cn(csr)
+    cn = utils.csr_require_cn(csr)
     parts = cn.split('-')
     if len(parts) == 1 or '.' in parts[0]:
         return  # no prefix
 
     if parts[0] in group_prefixes:
         if group_prefixes[parts[0]] not in auth_result.groups:
-            raise ValidationError("Server prefix doesn't match user groups")
+            raise v_errors.ValidationError(
+                "Server prefix doesn't match user groups")
 
 
 def extensions(csr=None, allowed_extensions=[], **kwargs):
@@ -190,8 +142,8 @@ def extensions(csr=None, allowed_extensions=[], **kwargs):
     for ext in exts:
         if (ext.get_name() not in allowed_extensions and
                 str(ext.get_oid()) not in allowed_extensions):
-            raise ValidationError("Extension '%s' not allowed"
-                                  % ext.get_name())
+            raise v_errors.ValidationError("Extension '%s' not allowed"
+                                           % ext.get_name())
 
 
 def key_usage(csr=None, allowed_usage=None, **kwargs):
@@ -205,8 +157,8 @@ def key_usage(csr=None, allowed_usage=None, **kwargs):
             usages = set(ext.get_all_usages())
             denied = denied | (usages - allowed)
     if denied:
-        raise ValidationError("Found some prohibited key usages: %s"
-                              % ', '.join(denied))
+        raise v_errors.ValidationError("Found some prohibited key usages: %s"
+                                       % ', '.join(denied))
 
 
 def ext_key_usage(csr=None, allowed_usage=None, **kwargs):
@@ -223,7 +175,7 @@ def ext_key_usage(csr=None, allowed_usage=None, **kwargs):
                 oid = pyasn1_univ.ObjectIdentifier(usage)
                 allowed_usage[i] = oid
             except Exception:
-                raise ValidationError("Unknown usage: %s" % (usage,))
+                raise v_errors.ValidationError("Unknown usage: %s" % (usage,))
 
     allowed = set(allowed_usage)
     denied = set()
@@ -234,8 +186,8 @@ def ext_key_usage(csr=None, allowed_usage=None, **kwargs):
     if denied:
         text_denied = [extension.EXT_KEY_USAGE_SHORT_NAMES.get(x)
                        for x in denied]
-        raise ValidationError("Found some prohibited key usages: %s"
-                              % ', '.join(text_denied))
+        raise v_errors.ValidationError("Found some prohibited key usages: %s"
+                                       % ', '.join(text_denied))
 
 
 def ca_status(csr=None, ca_requested=False, **kwargs):
@@ -245,7 +197,7 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
         if isinstance(ext, extension.X509ExtensionBasicConstraints):
             if ext.get_ca():
                 if not ca_requested:
-                    raise ValidationError(
+                    raise v_errors.ValidationError(
                         "CA status requested, but not allowed")
                 request_ca_flags = True
         elif isinstance(ext, extension.X509ExtensionKeyUsage):
@@ -253,13 +205,13 @@ def ca_status(csr=None, ca_requested=False, **kwargs):
             has_crl_sign = ext.get_usage('cRLSign')
             if has_crl_sign or has_cert_sign:
                 if not ca_requested:
-                    raise ValidationError(
+                    raise v_errors.ValidationError(
                         "Key usage doesn't match requested CA status "
                         "(keyCertSign/cRLSign: %s/%s)"
                         % (has_cert_sign, has_crl_sign))
                 request_ca_flags = True
     if ca_requested and not request_ca_flags:
-        raise ValidationError("CA flags required")
+        raise v_errors.ValidationError("CA flags required")
 
 
 def source_cidrs(request=None, cidrs=None, **kwargs):
@@ -270,16 +222,17 @@ def source_cidrs(request=None, cidrs=None, **kwargs):
             if request.client_addr in r:
                 return
         except netaddr.AddrFormatError:
-            raise ValidationError("Cidr '%s' does not describe a valid"
-                                  " network" % cidr)
-    raise ValidationError("No network matched the request source '%s'" %
-                          request.client_addr)
+            raise v_errors.ValidationError(
+                "Cidr '%s' does not describe a valid network" % cidr)
+    raise v_errors.ValidationError(
+        "No network matched the request source '%s'" %
+        request.client_addr)
 
 
 def csr_signature(csr=None, **kwargs):
     """Ensure that the CSR has a valid self-signature."""
     try:
         if not csr.verify():
-            raise ValidationError("Signature on the CSR is not valid")
+            raise v_errors.ValidationError("Signature on the CSR is not valid")
     except errors.X509Error:
-        raise ValidationError("Signature on the CSR is not valid")
+        raise v_errors.ValidationError("Signature on the CSR is not valid")

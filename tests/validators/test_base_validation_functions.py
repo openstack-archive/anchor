@@ -19,7 +19,8 @@ import unittest
 
 import netaddr
 
-from anchor import validators
+from anchor.validators import errors
+from anchor.validators import utils
 from anchor.X509 import signing_request
 
 
@@ -86,32 +87,32 @@ class TestBaseValidators(unittest.TestCase):
         super(TestBaseValidators, self).tearDown()
 
     def test_csr_require_cn(self):
-        name = validators.csr_require_cn(self.csr)
+        name = utils.csr_require_cn(self.csr)
         self.assertEqual(name, "ossg.test.com")
 
         self.csr = signing_request.X509Csr.from_buffer(
             TestBaseValidators.csr_data_without_cn)
-        with self.assertRaises(validators.ValidationError):
-            validators.csr_require_cn(self.csr)
+        with self.assertRaises(errors.ValidationError):
+            utils.csr_require_cn(self.csr)
 
     def test_check_domains(self):
         test_domain = 'good.example.com'
         test_allowed = ['.example.com', '.example.net']
-        self.assertTrue(validators.check_domains(test_domain, test_allowed))
-        self.assertFalse(validators.check_domains('bad.example.org',
-                                                  test_allowed))
+        self.assertTrue(utils.check_domains(test_domain, test_allowed))
+        self.assertFalse(utils.check_domains('bad.example.org',
+                                             test_allowed))
 
     def test_check_networks(self):
         good_ip = netaddr.IPAddress('10.2.3.4')
         bad_ip = netaddr.IPAddress('88.2.3.4')
         test_allowed = ['10/8']
-        self.assertTrue(validators.check_networks(good_ip, test_allowed))
-        self.assertFalse(validators.check_networks(bad_ip, test_allowed))
+        self.assertTrue(utils.check_networks(good_ip, test_allowed))
+        self.assertFalse(utils.check_networks(bad_ip, test_allowed))
 
     def test_check_networks_invalid(self):
         with self.assertRaises(TypeError):
-            validators.check_networks('1.2.3.4', ['10/8'])
+            utils.check_networks('1.2.3.4', ['10/8'])
 
     def test_check_networks_passthrough(self):
         good_ip = netaddr.IPAddress('10.2.3.4')
-        self.assertTrue(validators.check_networks(good_ip, []))
+        self.assertTrue(utils.check_networks(good_ip, []))
