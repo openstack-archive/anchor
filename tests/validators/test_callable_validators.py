@@ -21,7 +21,9 @@ import mock
 import netaddr
 from pyasn1_modules import rfc2459
 
-from anchor import validators
+from anchor.validators import custom
+from anchor.validators import errors
+from anchor.validators import utils
 from anchor.X509 import extension as x509_ext
 from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request as x509_csr
@@ -50,16 +52,16 @@ class TestValidators(unittest.TestCase):
 
     def test_check_networks_good(self):
         allowed_networks = ['15/8', '74.125/16']
-        self.assertTrue(validators.check_networks(
+        self.assertTrue(utils.check_networks(
             netaddr.IPAddress('74.125.224.64'), allowed_networks))
 
     def test_check_networks_bad(self):
         allowed_networks = ['15/8', '74.125/16']
-        self.assertFalse(validators.check_networks(
+        self.assertFalse(utils.check_networks(
             netaddr.IPAddress('12.2.2.2'), allowed_networks))
 
     def test_check_domains_empty(self):
-        self.assertTrue(validators.check_domains(
+        self.assertTrue(utils.check_domains(
             'example.com', []))
 
     def test_common_name_with_two_CN(self):
@@ -68,8 +70,8 @@ class TestValidators(unittest.TestCase):
         name.add_name_entry(x509_name.OID_commonName, "dummy_value")
         name.add_name_entry(x509_name.OID_commonName, "dummy_value")
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.common_name(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.common_name(
                 csr=csr,
                 allowed_domains=[],
                 allowed_networks=[])
@@ -78,8 +80,8 @@ class TestValidators(unittest.TestCase):
     def test_common_name_no_CN(self):
         csr = x509_csr.X509Csr()
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.common_name(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.common_name(
                 csr=csr,
                 allowed_domains=[],
                 allowed_networks=[])
@@ -93,7 +95,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.common_name(
+            custom.common_name(
                 csr=csr,
                 allowed_domains=['.test.com'],
             )
@@ -104,8 +106,8 @@ class TestValidators(unittest.TestCase):
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, 'test.baddomain.com')
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.common_name(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.common_name(
                 csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (does not "
@@ -118,7 +120,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.common_name(
+            custom.common_name(
                 csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8']
@@ -130,8 +132,8 @@ class TestValidators(unittest.TestCase):
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, '15.1.1.1')
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.common_name(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.common_name(
                 csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8'])
@@ -146,7 +148,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.alternative_names(
+            custom.alternative_names(
                 csr=csr,
                 allowed_domains=['.test.com'],
             )
@@ -158,8 +160,8 @@ class TestValidators(unittest.TestCase):
         ext.add_dns_id('test.baddomain.com')
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.alternative_names(
                 csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
@@ -173,7 +175,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.alternative_names_ip(
+            custom.alternative_names_ip(
                 csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['10/8']
@@ -186,8 +188,8 @@ class TestValidators(unittest.TestCase):
         ext.add_ip(netaddr.IPAddress('10.1.1.1'))
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names_ip(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.alternative_names_ip(
                 csr=csr,
                 allowed_domains=['.test.com'],
                 allowed_networks=['99/8'])
@@ -200,8 +202,8 @@ class TestValidators(unittest.TestCase):
         ext.add_dns_id('test.baddomain.com')
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.alternative_names_ip(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.alternative_names_ip(
                 csr=csr,
                 allowed_domains=['.test.com'])
         self.assertEqual("Domain 'test.baddomain.com' not allowed (doesn't "
@@ -214,7 +216,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.server_group(
+            custom.server_group(
                 auth_result=None,
                 csr=csr,
                 group_prefixes={}
@@ -228,7 +230,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.server_group(
+            custom.server_group(
                 auth_result=None,
                 csr=csr,
                 group_prefixes={}
@@ -246,7 +248,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.server_group(
+            custom.server_group(
                 auth_result=auth_result,
                 csr=csr,
                 group_prefixes={'nv': 'nova', 'sw': 'swift'}
@@ -261,8 +263,8 @@ class TestValidators(unittest.TestCase):
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "nv-master.test.com")
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.server_group(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.server_group(
                 auth_result=auth_result,
                 csr=csr,
                 group_prefixes={'nv': 'nova', 'sw': 'swift'})
@@ -275,8 +277,8 @@ class TestValidators(unittest.TestCase):
         ext.set_usage('keyCertSign', True)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.extensions(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.extensions(
                 csr=csr,
                 allowed_extensions=['basicConstraints', 'nameConstraints'])
         self.assertEqual("Extension 'keyUsage' not allowed", str(e.exception))
@@ -289,7 +291,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.extensions(
+            custom.extensions(
                 csr=csr,
                 allowed_extensions=['basicConstraints', 'keyUsage']
             )
@@ -303,7 +305,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.extensions(
+            custom.extensions(
                 csr=csr,
                 allowed_extensions=['basicConstraints', '2.5.29.15']
             )
@@ -319,8 +321,8 @@ class TestValidators(unittest.TestCase):
         ext.set_usage('keyCertSign', True)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.key_usage(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.key_usage(
                 csr=csr,
                 allowed_usage=allowed_usage)
         self.assertEqual("Found some not allowed key usages: "
@@ -339,7 +341,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.key_usage(
+            custom.key_usage(
                 csr=csr,
                 allowed_usage=allowed_usage
             )
@@ -353,7 +355,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.ca_status(
+            custom.ca_status(
                 csr=csr,
                 ca_requested=True
             )
@@ -367,7 +369,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.ca_status(
+            custom.ca_status(
                 csr=csr,
                 ca_requested=False
             )
@@ -379,8 +381,8 @@ class TestValidators(unittest.TestCase):
         ext.set_ca(True)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.ca_status(
                 csr=csr,
                 ca_requested=False)
         self.assertEqual("CA status requested, but not allowed",
@@ -392,8 +394,8 @@ class TestValidators(unittest.TestCase):
         ext.set_ca(False)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.ca_status(
                 csr=csr,
                 ca_requested=True)
         self.assertEqual("CA flags required",
@@ -407,7 +409,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.ca_status(
+            custom.ca_status(
                 csr=csr,
                 ca_requested=False
             )
@@ -419,8 +421,8 @@ class TestValidators(unittest.TestCase):
         ext.set_usage('keyCertSign', True)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.ca_status(
                 csr=csr,
                 ca_requested=False)
         self.assertEqual("Key usage doesn't match requested CA status "
@@ -434,7 +436,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.ca_status(
+            custom.ca_status(
                 csr=csr,
                 ca_requested=True
             )
@@ -446,8 +448,8 @@ class TestValidators(unittest.TestCase):
         ext.set_usage('cRLSign', True)
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.ca_status(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.ca_status(
                 csr=csr,
                 ca_requested=False)
         self.assertEqual("Key usage doesn't match requested CA status "
@@ -461,7 +463,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.ca_status(
+            custom.ca_status(
                 csr=csr,
                 ca_requested=True
             )
@@ -471,7 +473,7 @@ class TestValidators(unittest.TestCase):
         request = mock.Mock(client_addr='127.0.0.1')
         self.assertEqual(
             None,
-            validators.source_cidrs(
+            custom.source_cidrs(
                 request=request,
                 cidrs=['127/8', '10/8']
             )
@@ -479,8 +481,8 @@ class TestValidators(unittest.TestCase):
 
     def test_source_cidrs_out_of_range(self):
         request = mock.Mock(client_addr='99.0.0.1')
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.source_cidrs(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.source_cidrs(
                 request=request,
                 cidrs=['127/8', '10/8'])
         self.assertEqual("No network matched the request source '99.0.0.1'",
@@ -488,8 +490,8 @@ class TestValidators(unittest.TestCase):
 
     def test_source_cidrs_bad_cidr(self):
         request = mock.Mock(client_addr='127.0.0.1')
-        with self.assertRaises(validators.ValidationError) as e:
-            validators.source_cidrs(
+        with self.assertRaises(errors.ValidationError) as e:
+            custom.source_cidrs(
                 request=request,
                 cidrs=['bad'])
         self.assertEqual("Cidr 'bad' does not describe a valid network",
@@ -503,7 +505,7 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.blacklist_names(
+            custom.blacklist_names(
                 csr=csr,
                 domains=['.bad'],
             )
@@ -515,8 +517,8 @@ class TestValidators(unittest.TestCase):
         ext.add_dns_id('blah.bad')
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError):
-            validators.blacklist_names(
+        with self.assertRaises(errors.ValidationError):
+            custom.blacklist_names(
                 csr=csr,
                 domains=['.bad'],
             )
@@ -526,8 +528,8 @@ class TestValidators(unittest.TestCase):
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "blah.bad")
 
-        with self.assertRaises(validators.ValidationError):
-            validators.blacklist_names(
+        with self.assertRaises(errors.ValidationError):
+            custom.blacklist_names(
                 csr=csr,
                 domains=['.bad'],
             )
@@ -539,8 +541,8 @@ class TestValidators(unittest.TestCase):
         ext.add_dns_id('blah.good')
         csr.add_extension(ext)
 
-        with self.assertRaises(validators.ValidationError):
-            validators.blacklist_names(
+        with self.assertRaises(errors.ValidationError):
+            custom.blacklist_names(
                 csr=csr,
                 domains=['.bad'],
             )
@@ -554,27 +556,27 @@ class TestValidators(unittest.TestCase):
 
         self.assertEqual(
             None,
-            validators.blacklist_names(
+            custom.blacklist_names(
                 csr=csr,
             )
         )
 
     def test_csr_signature(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_data)
-        self.assertEqual(None, validators.csr_signature(csr=csr))
+        self.assertEqual(None, custom.csr_signature(csr=csr))
 
     def test_csr_signature_bad_sig(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_data)
         with mock.patch.object(x509_csr.X509Csr, '_get_signature',
                                return_value=(b'A'*49)):
-            with self.assertRaisesRegexp(validators.ValidationError,
+            with self.assertRaisesRegexp(errors.ValidationError,
                                          "Signature on the CSR is not valid"):
-                validators.csr_signature(csr=csr)
+                custom.csr_signature(csr=csr)
 
     def test_csr_signature_bad_algo(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_data)
         with mock.patch.object(x509_csr.X509Csr, '_get_signing_algorithm',
                                return_value=rfc2459.id_dsa_with_sha1):
-            with self.assertRaisesRegexp(validators.ValidationError,
+            with self.assertRaisesRegexp(errors.ValidationError,
                                          "Signature on the CSR is not valid"):
-                validators.csr_signature(csr=csr)
+                custom.csr_signature(csr=csr)

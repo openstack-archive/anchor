@@ -23,7 +23,7 @@ import pecan
 from webob import exc as http_status
 
 from anchor import jsonloader
-from anchor import validators
+from anchor.validators import errors
 from anchor.X509 import certificate
 from anchor.X509 import signing_request
 from anchor.X509 import utils
@@ -85,7 +85,7 @@ def _run_validator(name, body, args):
         validator(**new_kwargs)
         logger.debug("_run_validator: success: <%s> ", name)
         return True  # validator passed b/c no exceptions
-    except validators.ValidationError as e:
+    except errors.ValidationError as e:
         logger.error("_run_validator: FAILED:  <%s> - %s", name, e)
         return False
 
