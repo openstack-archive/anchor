@@ -17,6 +17,7 @@
 import unittest
 
 import mock
+from pyasn1_modules import rfc2459
 
 import io
 import textwrap
@@ -301,5 +302,12 @@ class TestX509Cert(unittest.TestCase):
             self.cert.sign(key, 'no_such_hash')
 
     def test_verify_unknown_key(self):
+        with self.assertRaises(x509_errors.X509Error):
+            self.cert.verify("abc")
+
+    def test_verify_algo_mismatch(self):
+        algo_id = rfc2459.AlgorithmIdentifier()
+        algo_id['algorithm'] = rfc2459.univ.ObjectIdentifier("1.2.3.4")
+        self.cert._embed_signature_algorithm(algo_id)
         with self.assertRaises(x509_errors.X509Error):
             self.cert.verify("abc")
