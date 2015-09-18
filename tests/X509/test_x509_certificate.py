@@ -288,3 +288,10 @@ class TestX509Cert(unittest.TestCase):
         self.cert._cert['signatureAlgorithm']['algorithm'] = alg
         with self.assertRaises(x509_errors.X509Error):
             self.cert.verify()
+
+    def test_verify_algo_mismatch(self):
+        alg = asn1_univ.ObjectIdentifier('1.2.3.4')
+        self.cert._cert['signatureAlgorithm']['algorithm'] = alg
+        with self.assertRaises(x509_errors.X509Error):
+            self.cert.verify("abc")
+
