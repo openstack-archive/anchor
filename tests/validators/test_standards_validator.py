@@ -124,7 +124,9 @@ class TestValidDomains(unittest.TestCase):
     def _create_csr_with_domain_san(self, domain):
         csr = signing_request.X509Csr()
         ext = extension.X509ExtensionSubjectAltName()
-        ext.add_dns_id(domain)
+        # add without validation - we want to test the _valid_domains
+        # here, not adding
+        ext.add_dns_id(domain, validate=False)
         csr.add_extension(ext)
         return csr
 
