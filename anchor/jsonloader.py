@@ -63,6 +63,7 @@ class AnchorConf():
         self._validators = stevedore.ExtensionManager("anchor.validators")
         self._authentication = stevedore.ExtensionManager(
             "anchor.authentication")
+        self._fixups = stevedore.ExtensionManager("anchor.fixups")
 
     def get_signing_backend(self, name):
         return self._signing_backends[name].plugin
@@ -72,6 +73,9 @@ class AnchorConf():
 
     def get_authentication(self, name):
         return self._authentication[name].plugin
+
+    def get_fixup(self, name):
+        return self._fixups[name].plugin
 
     @property
     def config(self):

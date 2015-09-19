@@ -176,6 +176,63 @@ def dispatch_sign(ra_name, csr):
     return cert_pem
 
 
+def _run_fixup(name, body, args):
+    """Parse the fixup tuple, call the fixup, and return the new csr.
+
+       :param name: the fixup name
+       :param body: fixup body, directly from config
+       :param args: additional arguments to pass to the fixup function
+       :return: the fixed csr
+    """
+    # careful to not modify the master copy of args with local params
+    new_kwargs = args.copy()
+    new_kwargs.update(body)
+
+    # perform the actual check
+    logger.debug("_run_fixup: fixup <%s> with arguments: %s", name, body)
+    try:
+        fixup = jsonloader.conf.get_fixup(name)
+        new_csr = fixup(**new_kwargs)
+        logger.debug("_run_fixup: success: <%s> ", name)
+        return new_csr
+    except Exception:
+        logger.exception("_run_fixup: FAILED: <%s>", name)
+        return None
+
+
+def fixup_csr(ra_name, csr, request):
+    """Apply configured changes to the certificate.
+
+    :param ra_name: registration authority name
+    :param csr: X509 certificate signing request
+    :param request: pecan request
+    """
+    ra_conf = jsonloader.config_for_registration_authority(ra_name)
+    args = {'csr': csr,
+            'conf': ra_conf,
+            'request': request}
+
+    fixups = ra_conf.get('fixups', {})
+    try:
+        for fixup_name, fixup in fixups.items():
+            new_csr = _run_fixup(fixup_name, fixup, args)
+            if new_csr is None:
+                pecan.abort(500, "Could not finish all required modifications")
+            if not isinstance(new_csr, signing_request.X509Csr):
+                logger.error("Fixup %s returned incorrect object", fixup_name)
+                pecan.abort(500, "Could not finish all required modifications")
+            args['csr'] = new_csr
+
+    except http_status.HTTPInternalServerError:
+        raise
+
+    except Exception:
+        logger.exception("Failed to execute fixups")
+        pecan.abort(500, "Could not finish all required modifications")
+
+    return args['csr']
+
+
 def sign(csr, ca_conf):
     """Generate an X.509 certificate and sign it.
 

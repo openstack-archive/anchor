@@ -172,6 +172,18 @@ def validate_registration_authority_config(ra_name, conf):
     config_check_domains(ra_validators)
     logger.info("Validators OK for registration authority: %s", ra_name)
 
+    ra_fixups = ra_conf.get('fixups', {})
+
+    for step in ra_fixups.keys():
+        try:
+            jsonloader.conf.get_fixup(step)
+        except KeyError:
+            raise ConfigValidationException(
+                "Unknown fixup <{}> found (for registration "
+                "authority {})".format(step, ra_name))
+
+    logger.info("Fixups OK for registration authority: %s", ra_name)
+
 
 def load_config():
     """Attempt to find and load a JSON configuration file.
