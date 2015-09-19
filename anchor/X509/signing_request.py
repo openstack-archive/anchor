@@ -131,8 +131,9 @@ class X509Csr(signature.SignatureMixin):
             return [extension.construct_extension(e) for e in exts
                     if ext_type is None or e['extnID'] == ext_type._oid]
 
-    def add_extension(self, ext):
-        if not isinstance(ext, extension.X509Extension):
+    def add_extension(self, new_ext):
+        """Add a new extension or replace existing one."""
+        if not isinstance(new_ext, extension.X509Extension):
             raise errors.X509Error("ext is not an anchor X509Extension")
         attributes = self.get_attributes()
         ext_attrs = [a for a in attributes
@@ -149,8 +150,15 @@ class X509Csr(signature.SignatureMixin):
             exts = decoder.decode(ext_attr['vals'][0].asOctets(),
                                   asn1Spec=rfc2459.Extensions())[0]
 
+        # the end is the default position
         new_ext_index = len(exts)
-        exts[new_ext_index] = ext._ext
+        # unless there's an existing extension with the same OID
+        for i, ext_i in enumerate(exts):
+            if ext_i['extnID'] == new_ext.get_oid():
+                new_ext_index = i
+                break
+
+        exts[new_ext_index] = new_ext._ext
 
         ext_attr['vals'][0] = encoder.encode(exts)
 
