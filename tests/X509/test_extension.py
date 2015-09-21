@@ -142,3 +142,24 @@ class TestSubjectAltName(unittest.TestCase):
         self.ext.add_ip(self.ip)
         self.assertEqual("subjectAltName: DNS:some.domain, IP:1.2.3.4",
                          str(self.ext))
+
+
+class TestNameConstraints(unittest.TestCase):
+    def setUp(self):
+        self.ext = extension.X509ExtensionNameConstraints()
+
+    def test_length(self):
+        self.assertEqual(0, self.ext.get_permitted_length())
+        self.assertEqual(0, self.ext.get_excluded_length())
+
+    def test_add(self):
+        test_name = 'example.com'
+        test_type = 'dNSName'
+        self.assertEqual(0, self.ext.get_permitted_length())
+        self.assertEqual(0, self.ext.get_excluded_length())
+        self.ext.add_permitted(test_type, test_name)
+        self.assertEqual(1, self.ext.get_permitted_length())
+        self.assertEqual(0, self.ext.get_excluded_length())
+        self.ext.add_excluded(test_type, test_name)
+        self.assertEqual(1, self.ext.get_permitted_length())
+        self.assertEqual(1, self.ext.get_excluded_length())

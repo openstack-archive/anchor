@@ -20,6 +20,7 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import constraint as asn1_constraint
 from pyasn1.type import namedtype as asn1_namedtype
+from pyasn1.type import tag as asn1_tag
 from pyasn1.type import univ as asn1_univ
 from pyasn1_modules import rfc2459  # X509v3
 
@@ -101,6 +102,22 @@ class BasicConstraints(asn1_univ.Sequence):
             'pathLenConstraint',
             asn1_univ.Integer().subtype(
                 subtypeSpec=asn1_constraint.ValueRangeConstraint(0, 64)))
+    )
+
+
+class NameConstraints(asn1_univ.Sequence):
+    """Custom NameConstraints implementation until pyasn1_modules is fixed."""
+    componentType = asn1_namedtype.NamedTypes(
+        asn1_namedtype.OptionalNamedType(
+            'permittedSubtrees',
+            rfc2459.GeneralSubtrees().subtype(
+                implicitTag=asn1_tag.Tag(asn1_tag.tagClassContext,
+                                         asn1_tag.tagFormatConstructed, 0))),
+        asn1_namedtype.OptionalNamedType(
+            'excludedSubtrees',
+            rfc2459.GeneralSubtrees().subtype(
+                implicitTag=asn1_tag.Tag(asn1_tag.tagClassContext,
+                                         asn1_tag.tagFormatConstructed, 1)))
     )
 
 
@@ -297,10 +314,72 @@ class X509ExtensionSubjectAltName(X509Extension):
         return "subjectAltName: " + ", ".join(entries)
 
 
+class X509ExtensionNameConstraints(X509Extension):
+    spec = NameConstraints
+    _oid = rfc2459.id_ce_nameConstraints
+
+    def _get_permitted(self, ext_value):
+        return ext_value['permittedSubtrees'] or []
+
+    def _get_excluded(self, ext_value):
+        return ext_value['excludedSubtrees'] or []
+
+    @uses_ext_value
+    def get_permitted_length(self, ext_value=None):
+        return len(self._get_permitted(ext_value))
+
+    @uses_ext_value
+    def get_permitted_name(self, n, ext_value=None):
+        return [(x.getName(), x.getComponent()) for x
+                in self._get_permitted(ext_value)[n]['base']]
+
+    @uses_ext_value
+    def get_permitted_range(self, n, ext_value=None):
+        entry = self._get_permitted(ext_value)[n]
+        return (entry['minimum'], entry['maximum'])
+
+    @uses_ext_value
+    def get_excluded_length(self, ext_value=None):
+        return len(self._get_excluded(ext_value))
+
+    @uses_ext_value
+    def get_excluded_name(self, n, ext_value=None):
+        return [(x.getName(), x.getComponent()) for x
+                in self._get_excluded(ext_value)[n]['base']]
+
+    @uses_ext_value
+    def get_excluded_range(self, n, ext_value=None):
+        entry = self._get_excluded(ext_value)[n]
+        return (entry['minimum'], entry['maximum'])
+
+    def _add_to_tree(self, ext_value, tree_name, position, name_type, name):
+        if ext_value[tree_name] is None:
+            ext_value[tree_name] = None
+        ext_value[tree_name][position] = None
+        ext_value[tree_name][position]['base'] = None
+        ext_value[tree_name][position]['base'][name_type] = name
+        ext_value[tree_name][position]['minimum'] = 0
+        # maximum should be missing (RFC5280/4.2.1.10)
+
+    @modifies_ext_value
+    def add_permitted(self, name_type, name, ext_value=None):
+        last = self.get_permitted_length()
+        self._add_to_tree(ext_value, 'permittedSubtrees', last,
+                          name_type, name)
+        return ext_value
+
+    @modifies_ext_value
+    def add_excluded(self, name_type, name, ext_value=None):
+        last = self.get_excluded_length()
+        self._add_to_tree(ext_value, 'excludedSubtrees', last, name_type, name)
+        return ext_value
+
+
 EXTENSION_CLASSES = {
     rfc2459.id_ce_basicConstraints: X509ExtensionBasicConstraints,
     rfc2459.id_ce_keyUsage: X509ExtensionKeyUsage,
     rfc2459.id_ce_subjectAltName: X509ExtensionSubjectAltName,
+    rfc2459.id_ce_nameConstraints: X509ExtensionNameConstraints,
 }
 
 
