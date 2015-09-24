@@ -123,8 +123,8 @@ def dispatch_sign(ra_name, csr):
         logger.exception("Failed to sign the certificate")
         pecan.abort(500, "certificate signing error")
 
+    fingerprint = certificate_fingerprint(cert_pem, 'sha256')
     if ca_conf.get('output_path') is not None:
-        fingerprint = certificate_fingerprint(cert_pem, 'sha256')
         path = os.path.join(
             ca_conf['output_path'],
             '%s.crt' % fingerprint)
@@ -134,7 +134,7 @@ def dispatch_sign(ra_name, csr):
         with open(path, "w") as f:
             f.write(cert_pem)
 
-    return cert_pem
+    return cert_pem, fingerprint
 
 
 def _run_fixup(name, body, args):
