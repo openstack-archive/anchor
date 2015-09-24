@@ -14,6 +14,7 @@
 from __future__ import absolute_import
 
 import pecan
+import pycadf
 
 from anchor.auth import keystone  # noqa
 from anchor.auth import ldap  # noqa

@@ -15,7 +15,9 @@ import logging
 
 import pecan
 from pecan import rest
+from webob import exc as http_status
 
+from anchor import audit
 from anchor import auth
 from anchor import certificate_ops
 from anchor import jsonloader
@@ -46,15 +48,27 @@ class SignInstanceController(GenericInstanceController):
 
         logger.debug("processing signing request in registration authority %s",
                      ra_name)
-        auth_result = auth.validate(ra_name,
-                                    pecan.request.POST.get('user'),
-                                    pecan.request.POST.get('secret'))
-        csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
-                                        pecan.request.POST.get('encoding'))
-        certificate_ops.validate_csr(ra_name, auth_result, csr, pecan.request)
-        csr = certificate_ops.fixup_csr(ra_name, csr, pecan.request)
+        try:
+            auth_result = auth.validate(ra_name,
+                                        pecan.request.POST.get('user'),
+                                        pecan.request.POST.get('secret'))
+            audit.emit_auth_event(ra_name, pecan.request.POST.get('user'), True)
+        except http_status.HTTPUnauthorized:
+            audit.emit_auth_event(ra_name, pecan.request.POST.get('user'), False)
+            raise
 
-        return certificate_ops.dispatch_sign(ra_name, csr)
+        try:
+            csr = certificate_ops.parse_csr(pecan.request.POST.get('csr'),
+                                            pecan.request.POST.get('encoding'))
+            certificate_ops.validate_csr(ra_name, auth_result, csr, pecan.request)
+            csr = certificate_ops.fixup_csr(ra_name, csr, pecan.request)
+
+            cert = certificate_ops.dispatch_sign(ra_name, csr)
+            audit.emit_signing_event(ra_name, pecan.request.POST.get('user'), True)
+        except Exception:
+            audit.emit_signing_event(ra_name, pecan.request.POST.get('user'), False)
+            raise
+        return cert
 
 
 class CAInstanceController(GenericInstanceController):
