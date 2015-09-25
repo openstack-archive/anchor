@@ -1,0 +1,8 @@
+Verified+2: Jenkins
+Workflow+1: Stanislaw Pitucha <stanislaw.pitucha@hp.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hpe.com>
+Submitted-by: Jenkins
+Submitted-at: Fri, 25 Sep 2015 07:04:49 +0000
+Reviewed-on: https://review.openstack.org/221285
+Project: openstack/anchor
+Branch: refs/heads/master
