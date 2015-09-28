@@ -169,9 +169,7 @@ class TestFunctional(tests.DefaultConfigMixin, unittest.TestCase):
 
         resp = self.app.post('/v1/sign/default_ra', data, expect_errors=True)
         self.assertEqual(500, resp.status_int)
-        self.assertTrue(("Internal Validation Error running validator "
-                         "'broken_validator' for registration authority "
-                         "'default_ra'") in str(resp))
+        self.assertTrue(("Internal Validation Error") in str(resp))
         self.assertTrue(derp.called)
 
     def test_get_ca(self):
