@@ -163,3 +163,41 @@ class TestNameConstraints(unittest.TestCase):
         self.ext.add_excluded(test_type, test_name)
         self.assertEqual(1, self.ext.get_permitted_length())
         self.assertEqual(1, self.ext.get_excluded_length())
+
+
+class TestExtendedKeyUsage(unittest.TestCase):
+    def setUp(self):
+        self.ext = extension.X509ExtensionExtendedKeyUsage()
+
+    def test_get_all(self):
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc2459.id_kp_codeSigning, True)
+        usages = self.ext.get_all_usages()
+        self.assertEqual(2, len(usages))
+        self.assertIn(rfc2459.id_kp_clientAuth, usages)
+
+    def test_get_one(self):
+        self.assertFalse(self.ext.get_usage(rfc2459.id_kp_clientAuth))
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.assertTrue(self.ext.get_usage(rfc2459.id_kp_clientAuth))
+
+    def test_set(self):
+        self.assertEqual(0, len(self.ext.get_all_usages()))
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.assertEqual(1, len(self.ext.get_all_usages()))
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.assertEqual(1, len(self.ext.get_all_usages()))
+
+    def test_unset(self):
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, False)
+        self.assertEqual(0, len(self.ext.get_all_usages()))
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, False)
+        self.assertEqual(0, len(self.ext.get_all_usages()))
+
+    def test_str(self):
+        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc2459.id_kp_codeSigning, True)
+        self.assertEqual(
+            "extKeyUsage: TLS Web Client Authentication, Code Signing",
+            str(self.ext))
