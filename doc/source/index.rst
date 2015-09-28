@@ -14,6 +14,7 @@ Contents:
 
    configuration
    api
+   extensions
    signing_backends
    ephemeralPKI
    validators
