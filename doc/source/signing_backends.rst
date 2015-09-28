@@ -19,6 +19,9 @@ anchor
 The default signing backend. It doesn't have any external service dependencies
 and all signing happens inside of the Anchor process.
 
+This backend will ignore all non-critical extensions which are not understood
+by Anchor and will reject CSRs with unknown critical extensions.
+
 A sample configuration for the ``signing_ca`` block looks like this:
 
 .. code:: json
