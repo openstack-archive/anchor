@@ -130,7 +130,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, unittest.TestCase):
         config = "anchor.jsonloader.conf._config"
         self.sample_conf_ra['default_ra']['validators'] = {
             'common_name': {
-                'allowed_domains': ['.testing.com']
+                'allowed_domains': ['.testing.example.com']
             }
         }
         data = self.sample_conf

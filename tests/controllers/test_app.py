@@ -44,7 +44,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def test_config_check_domains_good(self, a, b):
         self.sample_conf_ra['default_ra']['validators'] = {
             "common_name": {
-                "allowed_domains": [".test.com"]
+                "allowed_domains": [".example.com"]
             }
         }
         config = json.dumps(self.sample_conf)
@@ -59,7 +59,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def test_config_check_domains_bad(self, a, b):
         self.sample_conf_ra['default_ra']['validators'] = {
             "common_name": {
-                "allowed_domains": ["error.test.com"]
+                "allowed_domains": ["error.example.com"]
             }
         }
         config = json.dumps(self.sample_conf)

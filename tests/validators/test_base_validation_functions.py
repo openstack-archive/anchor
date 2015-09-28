@@ -95,10 +95,11 @@ class TestBaseValidators(unittest.TestCase):
             validators.csr_require_cn(self.csr)
 
     def test_check_domains(self):
-        test_domain = 'ossg.test.com'
-        test_allowed = ['.example.com', '.test.com']
+        test_domain = 'good.example.com'
+        test_allowed = ['.example.com', '.example.net']
         self.assertTrue(validators.check_domains(test_domain, test_allowed))
-        self.assertFalse(validators.check_domains('gmail.com', test_allowed))
+        self.assertFalse(validators.check_domains('bad.example.org',
+                                                  test_allowed))
 
     def test_check_networks(self):
         good_ip = netaddr.IPAddress('10.2.3.4')
