@@ -23,7 +23,6 @@ from webob import exc as http_status
 
 from anchor import jsonloader
 from anchor import validation
-from anchor.validators import errors
 from anchor.X509 import certificate
 from anchor.X509 import extension
 from anchor.X509 import signing_request
@@ -65,30 +64,6 @@ def parse_csr(csr, encoding):
     except Exception as e:
         logger.exception("Exception while parsing the CSR: %s", e)
         pecan.abort(400, "CSR cannot be parsed")
-
-
-def _run_validator(name, body, args):
-    """Parse the validator tuple, call the validator, and return result.
-
-       :param name: the validator name
-       :param body: validator body, directly from config
-       :param args: additional arguments to pass to the validator function
-       :return: True on success, else False
-    """
-    # careful to not modify the master copy of args with local params
-    new_kwargs = args.copy()
-    new_kwargs.update(body)
-
-    # perform the actual check
-    logger.debug("_run_validator: checking <%s> with rules: %s", name, body)
-    try:
-        validator = jsonloader.conf.get_validator(name)
-        validator(**new_kwargs)
-        logger.debug("_run_validator: success: <%s> ", name)
-        return True  # validator passed b/c no exceptions
-    except errors.ValidationError as e:
-        logger.error("_run_validator: FAILED:  <%s> - %s", name, e)
-        return False
 
 
 def validate_csr(ra_name, auth_result, csr, request):
