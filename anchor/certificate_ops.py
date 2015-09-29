@@ -22,6 +22,7 @@ import pecan
 from webob import exc as http_status
 
 from anchor import jsonloader
+from anchor import validation
 from anchor.validators import errors
 from anchor.X509 import certificate
 from anchor.X509 import extension
@@ -102,28 +103,13 @@ def validate_csr(ra_name, auth_result, csr, request):
        :param csr: CSR value from certificate_ops.parse_csr
        :param request: pecan request object associated with this action
     """
-
-    ra_conf = jsonloader.config_for_registration_authority(ra_name)
-    args = {'auth_result': auth_result,
-            'csr': csr,
-            'conf': ra_conf,
-            'request': request}
-
-    # It is ok if the config doesn't have any validators listed
-    valid = True
     try:
-        for vname, validator in ra_conf['validators'].items():
-            valid = _run_validator(vname, validator, args)
-            if not valid:
-                break
-
+        valid = validation.validate_csr(ra_name, auth_result, csr, request)
     except Exception as e:
-        logger.exception("Error running validator <%s> - %s", vname, e)
-        pecan.abort(500, "Internal Validation Error running validator "
-                         "'{}' for registration authority "
-                         "'{}'".format(vname, ra_name))
+        logger.exception("Error running validators: %s", e)
+        pecan.abort(500, "Internal Validation Error")
 
-    if not valid:
+    if not all(list(valid.values())):
         pecan.abort(400, "CSR failed validation")
 
 
