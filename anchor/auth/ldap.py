@@ -31,7 +31,6 @@ def user_get_groups(attributes):
     :returns: List -- A list of groups that the user is a member of
     """
     groups = attributes.get('memberOf', [])
-    logger.error("!!! groups: '%s'", groups)
     group_dns = [dn.parse_dn(g) for g in groups]
     return [x[0][1] for x in group_dns if x[1] == ('OU', 'Groups', ',')]
 
@@ -39,6 +38,7 @@ def user_get_groups(attributes):
 def login(ra_name, user, secret):
     """Attempt to Authenitcate user using LDAP
 
+    :param ra_name: name of registration authority
     :param user: Username
     :param secret: Secret/Passphrase
     :returns: AuthDetails -- Class used for authentication information
