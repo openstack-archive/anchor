@@ -20,6 +20,7 @@ from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
 from pyasn1_modules import pem
 from pyasn1_modules import rfc2314  # PKCS#10 / CSR
+from pyasn1_modules import rfc2437  # PKCS#1
 from pyasn1_modules import rfc2459  # X509
 
 from anchor.X509 import errors
@@ -171,6 +172,20 @@ class X509Csr(signature.SignatureMixin):
 
         ext_attr['vals'][0] = encoder.encode(exts)
 
+    def get_public_key_algo(self):
+        csr_info = self._csr['certificationRequestInfo']
+        key_info = csr_info['subjectPublicKeyInfo']
+        return key_info['algorithm']['algorithm']
+
+    def get_public_key_size(self):
+        return self._get_public_key().key_size
+
+    def get_public_key(self):
+        return self._get_public_key()
+
+    def get_signing_algorithm(self):
+        return self._get_signing_algorithm()
+
     def _get_signature(self):
         return utils.bin_to_bytes(self._csr['signature'])
 
@@ -180,9 +195,7 @@ class X509Csr(signature.SignatureMixin):
     def _get_public_key(self):
         csr_info = self._csr['certificationRequestInfo']
         key_info = csr_info['subjectPublicKeyInfo']
-        csr_public_key = key_info['subjectPublicKey']
-        return utils.get_public_key_from_der(
-            utils.bin_to_bytes(csr_public_key))
+        return utils.get_public_key_from_der(encoder.encode(key_info))
 
     def _get_bytes_to_sign(self):
         return encoder.encode(self._csr['certificationRequestInfo'])

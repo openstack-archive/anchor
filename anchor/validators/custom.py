@@ -17,12 +17,15 @@ import logging
 
 import netaddr
 from pyasn1.type import univ as pyasn1_univ
+from pyasn1_modules import rfc2437  # PKCS#1
+from pyasn1_modules import rfc2459  # X509
 
 from anchor.validators import errors as v_errors
 from anchor.validators import utils
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
+from anchor.X509 import signature
 
 
 logger = logging.getLogger(__name__)
@@ -236,3 +239,31 @@ def csr_signature(csr=None, **kwargs):
             raise v_errors.ValidationError("Signature on the CSR is not valid")
     except errors.X509Error:
         raise v_errors.ValidationError("Signature on the CSR is not valid")
+
+
+def public_key(csr=None, allowed_keys=None, **kwargs):
+    """Ensure the public key has the known type and size.
+
+    Configuration provides a dictionary of key types and minimum sizes.
+    """
+    if allowed_keys is None or not isinstance(allowed_keys, dict):
+        raise v_errors.ValidationError("Allowed keys configuration missing")
+
+    algo = csr.get_public_key_algo()
+    algo_names = {
+            rfc2437.rsaEncryption: 'RSA',
+            rfc2459.id_dsa: 'DSA',
+            }
+    algo_name = algo_names.get(algo)
+    if algo_name is None:
+        raise v_errors.ValidationError("Unknown public key type")
+
+    min_size = allowed_keys.get(algo_name)
+    if min_size is None:
+        raise v_errors.ValidationError("Key type not allowed (%s)" % (algo_name,))
+    if min_size == 0:
+        # key size is not enforced
+        return
+
+    if csr.get_public_key_size() < min_size:
+        raise v_errors.ValidationError("Key size too small")
