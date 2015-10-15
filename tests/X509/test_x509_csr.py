@@ -26,24 +26,10 @@ from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request
 from anchor.X509 import utils
+import tests
 
 
-class TestX509Csr(unittest.TestCase):
-    csr_data = textwrap.dedent(u"""
-        -----BEGIN CERTIFICATE REQUEST-----
-        MIIB/jCCAWcCAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIDAZOYXJuaWExEjAQ
-        BgNVBAcMCUZ1bmt5dG93bjEXMBUGA1UECgwOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
-        BAsMB3Rlc3RpbmcxFDASBgNVBAMMC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
-        FhB0ZXN0QGFuY2hvci50ZXN0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCe
-        eqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd6kFLcOP8xzwwvx/e
-        FY6Sux52enQ197o8aMwyP77hMhZqtd8NCgLJMVlUbRhwLti0SkHFPic0wAg+esfX
-        a6yhd5TxC+bti7MgV/ljA80XQxHH8xOjdOoGN0DHfQIDAQABoCkwJwYJKoZIhvcN
-        AQkOMRowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIF4DANBgkqhkiG9w0BAQsFAAOB
-        gQA+6qIFRsgkGFgeLvl+Jt3/mfAkkUTes0r4Kh+vPpuzzthEEafaVFRqA0UI+opN
-        QwNMvjwkS4hTZZFlvQJLCUOzKIOkTcvCu1WIUvkA9vfnvz6orw2dU9A6Rj6hU/Bd
-        vXaHXDbliCzG9yPHrLk5VQpy3HODjyfQMdhday2n1Q4P3Q==
-        -----END CERTIFICATE REQUEST-----""")
-
+class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
     key_rsa_data = textwrap.dedent("""
         -----BEGIN RSA PRIVATE KEY-----
         MIICXAIBAAKBgQCeeqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd
@@ -63,7 +49,7 @@ class TestX509Csr(unittest.TestCase):
 
     def setUp(self):
         super(TestX509Csr, self).setUp()
-        self.csr = signing_request.X509Csr.from_buffer(TestX509Csr.csr_data)
+        self.csr = signing_request.X509Csr.from_buffer(TestX509Csr.csr_sample)
 
     def tearDown(self):
         pass
@@ -76,12 +62,12 @@ class TestX509Csr(unittest.TestCase):
     def test_get_extensions(self):
         exts = self.csr.get_extensions()
         self.assertEqual(len(exts), 2)
-        self.assertFalse(exts[0].get_ca())
-        self.assertIsNone(exts[0].get_path_len_constraint())
-        self.assertTrue(exts[1].get_usage('digitalSignature'))
-        self.assertTrue(exts[1].get_usage('nonRepudiation'))
-        self.assertTrue(exts[1].get_usage('keyEncipherment'))
-        self.assertFalse(exts[1].get_usage('cRLSign'))
+        self.assertFalse(exts[1].get_ca())
+        self.assertIsNone(exts[1].get_path_len_constraint())
+        self.assertTrue(exts[0].get_usage('digitalSignature'))
+        self.assertTrue(exts[0].get_usage('nonRepudiation'))
+        self.assertTrue(exts[0].get_usage('keyEncipherment'))
+        self.assertFalse(exts[0].get_usage('cRLSign'))
 
     def test_add_extension(self):
         csr = signing_request.X509Csr()
@@ -101,7 +87,7 @@ class TestX509Csr(unittest.TestCase):
 
     def test_read_from_file(self):
         open_name = 'anchor.X509.signing_request.open'
-        f = io.StringIO(TestX509Csr.csr_data)
+        f = io.StringIO(self.csr_sample)
         with mock.patch(open_name, create=True) as mock_open:
             mock_open.return_value = f
             csr = signing_request.X509Csr.from_file("some_path")
@@ -160,20 +146,20 @@ class TestX509Csr(unittest.TestCase):
         entries = name.get_entries_by_oid(x509_name.OID_commonName)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "commonName")
-        self.assertEqual(entries[0].get_value(), "anchor.test")
+        self.assertEqual(entries[0].get_value(), self.csr_sample_cn)
 
     def test_get_subject_emailAddress(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_pkcs9_emailAddress)
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].get_name(), "emailAddress")
-        self.assertEqual(entries[0].get_value(), "test@anchor.test")
+        self.assertEqual(entries[0].get_value(), "test@example.com")
 
     def test_sign(self):
         key = utils.get_private_key_from_pem(self.key_rsa_data)
         self.csr.sign(key)
         # 10 bytes is definitely enough for non malicious case, right?
-        self.assertEqual(b'>\xea\xa2\x05F\xc8$\x18X\x1e',
+        self.assertEqual(b'\x16\xbd!\x9b\xfb\xfd\x10\xa1\xaf\x92',
                          self.csr._get_signature()[:10])
 
     def test_verify(self):
