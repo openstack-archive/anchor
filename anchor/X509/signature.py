@@ -99,8 +99,6 @@ class SignatureMixin(object):
     def sign(self, key, md="sha256"):
         """Sign the current object."""
         md = md.upper()
-        if key is None:
-            raise errors.X509Error("Key required")
 
         if isinstance(key, rsa.RSAPrivateKey):
             encryption = 'RSA'
