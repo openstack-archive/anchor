@@ -78,7 +78,7 @@ class X509Csr(signature.SignatureMixin):
     def get_pubkey(self):
         """Get the public key from the CSR
 
-        :return: an OpenSSL EVP_PKEY object
+        :return: ASN.1 description of public key
         """
         return self._csr['certificationRequestInfo']['subjectPublicKeyInfo']
 
