@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 
+import binascii
 import io
 
 from pyasn1.codec.der import decoder
@@ -192,4 +193,5 @@ class X509Csr(signature.SignatureMixin):
 
     def _embed_signature(self, algo_id, signature):
         self._csr['signatureAlgorithm'] = algo_id
-        self._csr['signature'] = "'%s'B" % (utils.bytes_to_bin(signature),)
+        self._csr['signature'] = "'%s'H" % (
+            str(binascii.hexlify(signature).decode('ascii')),)
