@@ -23,6 +23,7 @@ from pyasn1_modules import rfc2459
 
 from anchor.validators import custom
 from anchor.validators import errors
+from anchor.validators import internal
 from anchor.validators import utils
 from anchor.X509 import extension as x509_ext
 from anchor.X509 import name as x509_name
@@ -410,33 +411,13 @@ class TestValidators(unittest.TestCase):
         self.assertEqual("Found some prohibited key usages: "
                          "clientAuth", str(e.exception))
 
-    def test_ca_status_good1(self):
-        csr = x509_csr.X509Csr()
-        ext = x509_ext.X509ExtensionBasicConstraints()
-        ext.set_ca(True)
-        csr.add_extension(ext)
-
-        self.assertEqual(
-            None,
-            custom.ca_status(
-                csr=csr,
-                ca_requested=True
-            )
-        )
-
-    def test_ca_status_good2(self):
+    def test_ca_status_good(self):
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionBasicConstraints()
         ext.set_ca(False)
         csr.add_extension(ext)
 
-        self.assertEqual(
-            None,
-            custom.ca_status(
-                csr=csr,
-                ca_requested=False
-            )
-        )
+        self.assertEqual(None, internal.ca_status(csr=csr))
 
     def test_ca_status_forbidden(self):
         csr = x509_csr.X509Csr()
@@ -445,23 +426,8 @@ class TestValidators(unittest.TestCase):
         csr.add_extension(ext)
 
         with self.assertRaises(errors.ValidationError) as e:
-            custom.ca_status(
-                csr=csr,
-                ca_requested=False)
-        self.assertEqual("CA status requested, but not allowed",
-                         str(e.exception))
-
-    def test_ca_status_bad(self):
-        csr = x509_csr.X509Csr()
-        ext = x509_ext.X509ExtensionBasicConstraints()
-        ext.set_ca(False)
-        csr.add_extension(ext)
-
-        with self.assertRaises(errors.ValidationError) as e:
-            custom.ca_status(
-                csr=csr,
-                ca_requested=True)
-        self.assertEqual("CA flags required",
+            internal.ca_status(csr=csr)
+        self.assertEqual("Request is for a CA certificate",
                          str(e.exception))
 
     def test_ca_status_pathlen(self):
@@ -470,13 +436,7 @@ class TestValidators(unittest.TestCase):
         ext.set_path_len_constraint(1)
         csr.add_extension(ext)
 
-        self.assertEqual(
-            None,
-            custom.ca_status(
-                csr=csr,
-                ca_requested=False
-            )
-        )
+        self.assertEqual(None, internal.ca_status(csr=csr))
 
     def test_ca_status_key_usage_bad1(self):
         csr = x509_csr.X509Csr()
@@ -485,25 +445,9 @@ class TestValidators(unittest.TestCase):
         csr.add_extension(ext)
 
         with self.assertRaises(errors.ValidationError) as e:
-            custom.ca_status(
-                csr=csr,
-                ca_requested=False)
-        self.assertEqual("Key usage doesn't match requested CA status "
-                         "(keyCertSign/cRLSign: True/False)", str(e.exception))
-
-    def test_ca_status_key_usage_good1(self):
-        csr = x509_csr.X509Csr()
-        ext = x509_ext.X509ExtensionKeyUsage()
-        ext.set_usage('keyCertSign', True)
-        csr.add_extension(ext)
-
-        self.assertEqual(
-            None,
-            custom.ca_status(
-                csr=csr,
-                ca_requested=True
-            )
-        )
+            internal.ca_status(csr=csr)
+        self.assertEqual("Request contains certificates signing usage flag",
+                         str(e.exception))
 
     def test_ca_status_key_usage_bad2(self):
         csr = x509_csr.X509Csr()
@@ -512,25 +456,9 @@ class TestValidators(unittest.TestCase):
         csr.add_extension(ext)
 
         with self.assertRaises(errors.ValidationError) as e:
-            custom.ca_status(
-                csr=csr,
-                ca_requested=False)
-        self.assertEqual("Key usage doesn't match requested CA status "
-                         "(keyCertSign/cRLSign: False/True)", str(e.exception))
-
-    def test_ca_status_key_usage_good2(self):
-        csr = x509_csr.X509Csr()
-        ext = x509_ext.X509ExtensionKeyUsage()
-        ext.set_usage('cRLSign', True)
-        csr.add_extension(ext)
-
-        self.assertEqual(
-            None,
-            custom.ca_status(
-                csr=csr,
-                ca_requested=True
-            )
-        )
+            internal.ca_status(csr=csr)
+        self.assertEqual("Request contains CRL signing usage flag",
+                         str(e.exception))
 
     def test_source_cidrs_good(self):
         request = mock.Mock(client_addr='127.0.0.1')
