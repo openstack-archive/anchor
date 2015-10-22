@@ -30,3 +30,11 @@ they're not critical), or will prevent signing (if they are):
 
 Other extensions will be added to the implementation when they're needed for
 validation / fixups.
+
+Extension limitations
+=====================
+Due to how Anchor relies on short-term certificates, issuing a CA certificate
+from Anchor doesn't really make sense. Certificates which do have a CA flag set
+will be rejected unconditionally.
+
+Key usage related to CA status will be treated in a similar way.

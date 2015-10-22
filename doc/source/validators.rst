@@ -107,14 +107,6 @@ The following validators are implemented at the moment:
 
     or text representation of custom OIDs.
 
-``ca_status``
-    Verifies: CSR. Parameters: ``ca_requested``.
-
-    Ensures the request does/doesn't require the CA flag.
-
-    This is not a well designed validator and may not be safe to use! A better
-    version is on the TODO list.
-
 ``source_cidrs``
     Verifies: CSR. Parameters: ``cidrs``.
 

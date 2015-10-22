@@ -17,14 +17,22 @@ import logging
 
 from anchor import jsonloader
 from anchor.validators import errors
+from anchor.validators import internal
 
 logger = logging.getLogger(__name__)
 
+# some validators will be always active because they enforce Anchor design
+# ideas rather than user configuration
+ENFORCED_VALIDATORS = [
+    internal.ca_status
+    ]
 
-def _run_validator(name, body, args):
+
+def _run_validator(name, validator, body, args):
     """Parse the validator tuple, call the validator, and return result.
 
        :param name: the validator name
+       :param validator: the validator callable
        :param body: validator body, directly from config
        :param args: additional arguments to pass to the validator function
        :return: True on success, else False
@@ -36,7 +44,6 @@ def _run_validator(name, body, args):
     # perform the actual check
     logger.debug("_run_validator: checking <%s> with rules: %s", name, body)
     try:
-        validator = jsonloader.conf.get_validator(name)
         validator(**new_kwargs)
         logger.debug("_run_validator: success: <%s> ", name)
         return True  # validator passed b/c no exceptions
@@ -66,7 +73,12 @@ def validate_csr(ra_name, auth_result, csr, request):
 
     # It is ok if the config doesn't have any validators listed
     valid = {}
-    for vname, validator in ra_conf['validators'].items():
-        valid[vname] = _run_validator(vname, validator, args)
+    for validator in [internal.ca_status]:
+        vname = validator.__name__
+        valid[vname] = _run_validator(vname, validator, {}, args)
+
+    for vname, options in ra_conf['validators'].items():
+        validator = jsonloader.conf.get_validator(vname)
+        valid[vname] = _run_validator(vname, validator, options, args)
 
     return valid

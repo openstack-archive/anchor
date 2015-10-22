@@ -190,30 +190,6 @@ def ext_key_usage(csr=None, allowed_usage=None, **kwargs):
                                        % ', '.join(text_denied))
 
 
-def ca_status(csr=None, ca_requested=False, **kwargs):
-    """Ensure the request has/hasn't got the CA flag."""
-    request_ca_flags = False
-    for ext in (csr.get_extensions() or []):
-        if isinstance(ext, extension.X509ExtensionBasicConstraints):
-            if ext.get_ca():
-                if not ca_requested:
-                    raise v_errors.ValidationError(
-                        "CA status requested, but not allowed")
-                request_ca_flags = True
-        elif isinstance(ext, extension.X509ExtensionKeyUsage):
-            has_cert_sign = ext.get_usage('keyCertSign')
-            has_crl_sign = ext.get_usage('cRLSign')
-            if has_crl_sign or has_cert_sign:
-                if not ca_requested:
-                    raise v_errors.ValidationError(
-                        "Key usage doesn't match requested CA status "
-                        "(keyCertSign/cRLSign: %s/%s)"
-                        % (has_cert_sign, has_crl_sign))
-                request_ca_flags = True
-    if ca_requested and not request_ca_flags:
-        raise v_errors.ValidationError("CA flags required")
-
-
 def source_cidrs(request=None, cidrs=None, **kwargs):
     """Ensure that the request comes from a known source."""
     for cidr in cidrs:
