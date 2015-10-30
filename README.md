@@ -297,3 +297,5 @@ Reporting bugs and contributing
 ===============================
 
 For bug reporting and contributing, please check the CONTRIBUTING.md file.
+
+DO YOU SEE THIS TIM?
