@@ -112,6 +112,14 @@ The following validators are implemented at the moment:
 
     Ensures the request comes from one of the ranges in `cidrs`.
 
+``public_key``
+    Verifies: CSR. Parameters: ``allowed_keys``.
+
+    Ensures that only selected keys of a minimum specified length can be used
+    in the CSR. The ``allowed_keys`` parameter is a dictionary where keys are
+    the uppercase key names and values are minimum key lengths. Valid keys
+    at the moment are: ``RSA`` and ``DSA``.
+
 Extension interface
 -------------------
 

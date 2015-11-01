@@ -14,10 +14,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import base64
 import unittest
 
 import mock
 import netaddr
+from pyasn1.codec.der import decoder
 from pyasn1_modules import rfc2459
 
 from anchor.validators import custom
@@ -557,3 +559,39 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
             with self.assertRaisesRegexp(errors.ValidationError,
                                          "Signature on the CSR is not valid"):
                 custom.csr_signature(csr=csr)
+
+    def test_public_key_good_rsa(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        self.assertEqual(None, custom.public_key(csr=csr,
+                                                 allowed_keys={'RSA': 1024}))
+
+    def test_public_key_good_dsa(self):
+        dsa_key_pem = """
+        MIIBtjCCASsGByqGSM44BAEwggEeAoGBAJv/ZwltxEMrACE71R+AvxOuvWgTIKAd
+        iVq9ATbcuiaMq5P+iyhsI0k5A29bLNxkU/kkUCBYEEOoM2R1+8eO6UVr40+dtVw8
+        OzqHI6nFVmWMNUDGdPFoIIWsh5KRavhgy3Z8CKDqvGf4hxR1QWEN4Jz51xtHS3fI
+        1SKJybWdu2ifAhUAgoQ1AiWH9zLU6AOafUdv6iNdxKsCgYA66IS+XsIZwQvkHJkA
+        rf9hbOGC8aZeuafm7PlU6C+7TRB+7hoPzrwkn0ROYhv3yGsFYKWBEjAorW/skNJQ
+        cmdPsZV9tGdkfyvj5lxmAAbu+4ofozUvwKlSvpa/e/PLY7aZCq8u+fSHsF+xpUNl
+        GlCRV1DL13tDWZb+XS8w7RD3EQOBhAACgYBu77erOhm/hF6l6u6wuyaM0GfgdMxg
+        eU5WnfcTJOzXXZBcv3cetn/OF0OG3e81R+/78xIjpx+b1q5bjXvqNRfZWr8Vov+Y
+        ox6WOB2kdxa+tRgpK1Bs6FqJgI7AWMYVSxgjpx+9Q/j6aZe6+r8m6k9HOU0cw+0L
+        7PFU2eVGvF/DYA==
+        """
+        dsa_key_der = base64.b64decode(dsa_key_pem)
+        spki = decoder.decode(dsa_key_der,
+                              asn1Spec=rfc2459.SubjectPublicKeyInfo())[0]
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr._csr['certificationRequestInfo']['subjectPublicKeyInfo'] = spki
+        self.assertEqual(None, custom.public_key(csr=csr,
+                                                 allowed_keys={'DSA': 1024}))
+
+    def test_public_key_too_short(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        with self.assertRaises(errors.ValidationError):
+            custom.public_key(csr=csr, allowed_keys={'RSA': 99999999})
+
+    def test_public_key_wrong_algo(self):
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        with self.assertRaises(errors.ValidationError):
+            custom.public_key(csr=csr, allowed_keys={'XXX': 0})
