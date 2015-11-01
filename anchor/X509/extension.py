@@ -367,8 +367,8 @@ class X509ExtensionNameConstraints(X509Extension):
 
     @uses_ext_value
     def get_permitted_name(self, n, ext_value=None):
-        return [(x.getName(), x.getComponent()) for x
-                in self._get_permitted(ext_value)[n]['base']]
+        name = self._get_permitted(ext_value)[n]['base']
+        return (name.getName(), name.getComponent())
 
     @uses_ext_value
     def get_permitted_range(self, n, ext_value=None):
@@ -381,8 +381,8 @@ class X509ExtensionNameConstraints(X509Extension):
 
     @uses_ext_value
     def get_excluded_name(self, n, ext_value=None):
-        return [(x.getName(), x.getComponent()) for x
-                in self._get_excluded(ext_value)[n]['base']]
+        name = self._get_excluded(ext_value)[n]['base']
+        return (name.getName(), name.getComponent())
 
     @uses_ext_value
     def get_excluded_range(self, n, ext_value=None):
@@ -425,13 +425,13 @@ class X509ExtensionExtendedKeyUsage(X509Extension):
     @uses_ext_value
     def get_usage(self, usage, ext_value=None):
         if usage not in self._valid:
-            raise TypeError("usage not valid")
+            raise ValueError("usage not valid")
         return (usage in ext_value)
 
     @modifies_ext_value
     def set_usage(self, usage, state, ext_value=None):
         if usage not in self._valid:
-            raise TypeError("usage not valid")
+            raise ValueError("usage not valid")
 
         if state:
             if usage not in ext_value:
