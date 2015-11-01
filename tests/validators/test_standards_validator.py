@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import textwrap
 import unittest
 
 from pyasn1.codec.der import encoder
@@ -25,25 +24,12 @@ from anchor.validators import standards
 from anchor.X509 import extension
 from anchor.X509 import name
 from anchor.X509 import signing_request
+import tests
 
 
-class TestStandardsValidator(unittest.TestCase):
-    csr_data = textwrap.dedent(u"""
-        -----BEGIN CERTIFICATE REQUEST-----
-        MIIB1TCCAT4CAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIDAZOYXJuaWExEjAQ
-        BgNVBAcMCUZ1bmt5dG93bjEXMBUGA1UECgwOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
-        BAsMB3Rlc3RpbmcxFDASBgNVBAMMC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
-        FhB0ZXN0QGFuY2hvci50ZXN0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCe
-        eqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd6kFLcOP8xzwwvx/e
-        FY6Sux52enQ197o8aMwyP77hMhZqtd8NCgLJMVlUbRhwLti0SkHFPic0wAg+esfX
-        a6yhd5TxC+bti7MgV/ljA80XQxHH8xOjdOoGN0DHfQIDAQABoAAwDQYJKoZIhvcN
-        AQELBQADgYEAI4eMihRKSeNLt1DLg6l+WYU4ssRTEHpxwBRo0lh5IGEBjtL+NrPY
-        /A9AKfbkyW7BnKd9IT5wvenZajl5UzCveTCkqVDbSEOwLpUY3GeHf0jujml8gKFb
-        AFrlaOkOuDai+an0EdbeLef1kYh8CWd573MPvKTwOsiaGP/EACrlIEM=
-        -----END CERTIFICATE REQUEST-----""")
-
+class TestStandardsValidator(tests.DefaultRequestMixin, unittest.TestCase):
     def test_passing(self):
-        csr = signing_request.X509Csr.from_buffer(self.csr_data)
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample)
         standards.standards_compliance(csr=csr)
 
 

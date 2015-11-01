@@ -14,7 +14,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import textwrap
 import unittest
 
 import mock
@@ -28,23 +27,10 @@ from anchor.validators import utils
 from anchor.X509 import extension as x509_ext
 from anchor.X509 import name as x509_name
 from anchor.X509 import signing_request as x509_csr
+import tests
 
 
-class TestValidators(unittest.TestCase):
-    csr_data = textwrap.dedent(u"""
-        -----BEGIN CERTIFICATE REQUEST-----
-        MIIB1TCCAT4CAQAwgZQxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIDAZOYXJuaWExEjAQ
-        BgNVBAcMCUZ1bmt5dG93bjEXMBUGA1UECgwOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
-        BAsMB3Rlc3RpbmcxFDASBgNVBAMMC2FuY2hvci50ZXN0MR8wHQYJKoZIhvcNAQkB
-        FhB0ZXN0QGFuY2hvci50ZXN0MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCe
-        eqg1Qeccv8hqj1BP9KEJX5QsFCxR62M8plPb5t4sLo8UYfZd6kFLcOP8xzwwvx/e
-        FY6Sux52enQ197o8aMwyP77hMhZqtd8NCgLJMVlUbRhwLti0SkHFPic0wAg+esfX
-        a6yhd5TxC+bti7MgV/ljA80XQxHH8xOjdOoGN0DHfQIDAQABoAAwDQYJKoZIhvcN
-        AQELBQADgYEAI4eMihRKSeNLt1DLg6l+WYU4ssRTEHpxwBRo0lh5IGEBjtL+NrPY
-        /A9AKfbkyW7BnKd9IT5wvenZajl5UzCveTCkqVDbSEOwLpUY3GeHf0jujml8gKFb
-        AFrlaOkOuDai+an0EdbeLef1kYh8CWd573MPvKTwOsiaGP/EACrlIEM=
-        -----END CERTIFICATE REQUEST-----""")
-
+class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
     def setUp(self):
         super(TestValidators, self).setUp()
 
@@ -553,11 +539,11 @@ class TestValidators(unittest.TestCase):
         )
 
     def test_csr_signature(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         self.assertEqual(None, custom.csr_signature(csr=csr))
 
     def test_csr_signature_bad_sig(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         with mock.patch.object(x509_csr.X509Csr, '_get_signature',
                                return_value=(b'A'*49)):
             with self.assertRaisesRegexp(errors.ValidationError,
@@ -565,7 +551,7 @@ class TestValidators(unittest.TestCase):
                 custom.csr_signature(csr=csr)
 
     def test_csr_signature_bad_algo(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_data)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         with mock.patch.object(x509_csr.X509Csr, '_get_signing_algorithm',
                                return_value=rfc2459.id_dsa_with_sha1):
             with self.assertRaisesRegexp(errors.ValidationError,
