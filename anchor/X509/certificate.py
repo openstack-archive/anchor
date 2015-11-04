@@ -228,8 +228,8 @@ class X509Certificate(signature.SignatureMixin):
         self._cert['tbsCertificate']['signature'] = algo_id
 
     def _embed_signature(self, algo_id, signature):
-        self._cert['signatureValue'] = "'%s'B" % (
-            utils.bytes_to_bin(signature),)
+        self._cert['signatureValue'] = "'%s'H" % (
+            str(binascii.hexlify(signature).decode('ascii')),)
         self._cert['signatureAlgorithm'] = algo_id
 
     def _get_signature(self):

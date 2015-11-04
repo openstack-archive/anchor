@@ -136,20 +136,6 @@ def _pad_byte(bits):
     return ((8-r) % 8)*'0' + bits
 
 
-def bytes_to_bin(bytes):
-    """Convert byte string to bit string."""
-    return "".join([_pad_byte(_int_to_bin(_ord(byte))) for byte in bytes])
-
-
-def _int_to_bin(n):
-    if n == 0 or n == 1:
-        return str(n)
-    elif n % 2 == 0:
-        return _int_to_bin(n // 2) + "0"
-    else:
-        return _int_to_bin(n // 2) + "1"
-
-
 def get_hash_class(md):
     return getattr(hashes, md.upper(), None)
 
