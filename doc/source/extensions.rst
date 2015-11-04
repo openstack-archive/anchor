@@ -16,6 +16,8 @@ Anchor can parse and analyse the following extensions:
 
 * Basic Constraints
 * Key Usage
+* Extended Key Usage
+* Name Constraints
 * Subject Alternative Name
 
 The following extensions are listed as required or preferred, but due to
