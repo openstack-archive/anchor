@@ -22,9 +22,6 @@
       "signing_ca": "local",
       "validators": {
         "standards_compliance": {},
-        "ca_status": {
-          "ca_requested": false
-        },
         "source_cidrs": {
           "cidrs": ["127.0.0.0/8"]
         }
