@@ -172,6 +172,26 @@ class X509Csr(signature.SignatureMixin):
 
         ext_attr['vals'][0] = encoder.encode(exts)
 
+    def get_subject_dns_ids(self):
+        names = []
+        for ext in self.get_extensions(extension.X509ExtensionSubjectAltName):
+            for dns_id in ext.get_dns_ids():
+                names.append(dns_id)
+        return names
+
+    def get_subject_ip_ids(self):
+        names = []
+        for ext in self.get_extensions(extension.X509ExtensionSubjectAltName):
+            for ip in ext.get_ips():
+                names.append(ip)
+        return names
+
+    def has_unknown_san_entries(self):
+        for ext in self.get_extensions(extension.X509ExtensionSubjectAltName):
+            if ext.has_unknown_entries():
+                return True
+        return False
+
     def get_public_key_algo(self):
         csr_info = self._csr['certificationRequestInfo']
         key_info = csr_info['subjectPublicKeyInfo']

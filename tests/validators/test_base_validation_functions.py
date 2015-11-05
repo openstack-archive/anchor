@@ -63,3 +63,20 @@ class TestBaseValidators(tests.DefaultRequestMixin, unittest.TestCase):
     def test_check_networks_passthrough(self):
         good_ip = netaddr.IPAddress('10.2.3.4')
         self.assertTrue(utils.check_networks(good_ip, []))
+
+    def test_check_compare_name_pattern(self):
+        cases = [
+            ("example.com", "example.com", False, True),
+            ("*.example.com", "*.example.com", False, True),
+            ("*.example.com", "%.example.com", True, True),
+            ("*.example.com", "%.example.com", False, False),
+            ("abc.example.com", "%.example.com", False, True),
+            ("abc.def.example.com", "%.example.com", False, False),
+            ("abc.def.example.com", "%.%.example.com", False, True),
+            ("host-123.example.com", "host-%.example.com", False, True),
+        ]
+        for value, pattern, wildcard, result in cases:
+            self.assertEqual(
+                result,
+                utils.compare_name_pattern(value, pattern, wildcard),
+                "checking %s against %s failed" % (value, pattern))

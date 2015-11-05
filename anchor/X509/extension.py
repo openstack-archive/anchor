@@ -323,6 +323,13 @@ class X509ExtensionSubjectAltName(X509Extension):
             ips.append(utils.asn1_to_netaddr(name.getComponent()))
         return ips
 
+    @uses_ext_value
+    def has_unknown_entries(self, ext_value=None):
+        for name in ext_value:
+            if name.getName() not in ('dNSName', 'iPAddress'):
+                return True
+        return False
+
     @modifies_ext_value
     def add_dns_id(self, dns_id, validate=True, ext_value=None):
         if validate:

@@ -243,3 +243,81 @@ def public_key(csr=None, allowed_keys=None, **kwargs):
 
     if csr.get_public_key_size() < min_size:
         raise v_errors.ValidationError("Key size too small")
+
+
+def _split_names_by_type(names):
+    """Identify ips and network ranges in a list of strings."""
+    allowed_domains = []
+    allowed_ips = []
+    allowed_ranges = []
+    for name in names:
+        ip = utils.maybe_ip(name)
+        if ip:
+            allowed_ips.append(ip)
+            continue
+        net = utils.maybe_range(name)
+        if net:
+            allowed_ranges.append(net)
+            continue
+        allowed_domains.append(name)
+
+    return (allowed_domains, allowed_ips, allowed_ranges)
+
+
+def whitelist_names(csr=None, names=[], allow_cn_id=False, allow_dns_id=False,
+                    allow_ip_id=False, allow_wildcard=False, **kwargs):
+    """Ensure names match the whitelist in the allowed name slots."""
+
+    allowed_domains, allowed_ips, allowed_ranges = _split_names_by_type(names)
+
+    for dns_id in csr.get_subject_dns_ids():
+        if not allow_dns_id:
+            raise v_errors.ValidationError("IP-ID not allowed")
+        valid = False
+        for allowed_domain in allowed_domains:
+            if utils.compare_name_pattern(dns_id, allowed_domain,
+                                          allow_wildcard):
+                valid = True
+                break
+        if not valid:
+            raise v_errors.ValidationError(
+                "Value `%s` not allowed in DNS-ID" % (dns_id,))
+
+    for ip_id in csr.get_subject_ip_ids():
+        if not allow_ip_id:
+            raise v_errors.ValidationError("IP-ID not allowed")
+        if ip_id in allowed_ips:
+            continue
+        for net in allowed_ranges:
+            if ip_id in net:
+                continue
+        raise v_errors.ValidationError(
+            "Value `%s` not allowed in IP-ID" % (ip_id,))
+
+    for cn_id in csr.get_subject_cn():
+        if not allow_cn_id:
+            raise v_errors.ValidationError("CN-ID not allowed")
+        ip = utils.maybe_ip(cn_id)
+        if ip:
+            # current CN is an ip address
+            if ip in allowed_ips:
+                continue
+            if any((ip in net) for net in allowed_ranges):
+                continue
+            raise v_errors.ValidationError(
+                "Value `%s` not allowed in CN-ID" % (cn_id,))
+        else:
+            # current CN is a domain
+            valid = False
+            for allowed_domain in allowed_domains:
+                if utils.compare_name_pattern(cn_id, allowed_domain,
+                                              allow_wildcard):
+                    valid = True
+                    break
+            if valid:
+                continue
+            raise v_errors.ValidationError(
+                "Value `%s` not allowed in CN-ID" % (cn_id,))
+
+    if csr.has_unknown_san_entries():
+        raise v_errors.ValidationError("Request contains unknown SAN entries")
