@@ -72,3 +72,66 @@ def check_networks(ip, allowed_networks):
         return True
 
     return False
+
+
+def maybe_ip(name):
+    try:
+        return netaddr.IPAddress(name)
+    except ValueError:
+        # happens when trying to pass a subnet prefix
+        return None
+    except netaddr.AddrFormatError:
+        return None
+
+
+def maybe_range(name):
+    try:
+        return netaddr.IPNetwork(name)
+    except netaddr.AddrFormatError:
+        return None
+
+
+def compare_name_pattern(name, pattern, allow_wildcard):
+    """Compare domain names including wildcards.
+
+    Wilcard means local Anchor wildcard which is '%'. This allows the pattern
+    to match an actual wildcard entry (*) or name which can be expanded.
+    Partial matches using % are allowed, but % matches only in one label.
+
+    In practice that means:
+    name:                    pattern:              wildard: result:
+    example.com              example.com           -        match
+    *.example.com            *.example.com         -        match
+    *.example.com            %.example.com         true     match
+    *.example.com            %.example.com         false    fail
+    abc.example.com          %.example.com         -        match
+    abc.def.example.com      %.example.com         -        fail
+    abc.def.example.com      %.%.example.com       -        match
+    host-123.example.com     host-%.example.com    -        match
+    """
+
+    name_labels = name.split('.')
+    patt_labels = pattern.split('.')
+    if len(name_labels) != len(patt_labels):
+        return False
+
+    for nl, pl in zip(name_labels, patt_labels):
+        if '%' in pl:
+            pre, _, post = pl.partition('%')
+
+            if not nl.startswith(pre):
+                return False
+            nl = nl[len(pre):]  # strip the pre part of pattern
+
+            if not nl.endswith(post):
+                return False
+            if len(post) > 0:
+                nl = nl[:-len(post)]  # strip the post part of pattern
+
+            if '*' in nl and not allow_wildcard:
+                return False
+        else:
+            if nl != pl:
+                return False
+
+    return True

@@ -39,6 +39,19 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
     def tearDown(self):
         super(TestValidators, self).tearDown()
 
+    def _csr_with_cn(self, cn):
+        csr = x509_csr.X509Csr()
+        name = csr.get_subject()
+        name.add_name_entry(x509_name.OID_commonName, cn)
+        return csr
+
+    def _csr_with_san_dns(self, dns):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_dns_id(dns)
+        csr.add_extension(ext)
+        return csr
+
     def test_check_networks_good(self):
         allowed_networks = ['15/8', '74.125/16']
         self.assertTrue(utils.check_networks(
@@ -595,3 +608,90 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         with self.assertRaises(errors.ValidationError):
             custom.public_key(csr=csr, allowed_keys={'XXX': 0})
+
+    def test_whitelist_names_empty_list(self):
+        # empty whitelist should block everything
+        csr = self._csr_with_san_dns('example.com')
+
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, domains=[],)
+
+    def test_whitelist_names_full_dnsid_match(self):
+        csr = self._csr_with_san_dns('example.com')
+        custom.whitelist_names(csr=csr, allow_dns_id=True,
+                               names=['example.com'])
+
+    def test_whitelist_names_partial_dnsid_match(self):
+        csr = self._csr_with_san_dns('good-123.example.com')
+        custom.whitelist_names(csr=csr, allow_dns_id=True,
+                               names=['good-%.example.com'])
+
+    def test_whitelist_names_full_dnsid_fail(self):
+        csr = self._csr_with_san_dns('bad.example.com')
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_dns_id=True,
+                                   names=['good.example.com'])
+
+    def test_whitelist_names_full_ipid_match(self):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_ip(netaddr.IPAddress('1.2.3.4'))
+        csr.add_extension(ext)
+
+        custom.whitelist_names(csr=csr, allow_ip_id=True, names=['1.2.3.4'])
+
+    def test_whitelist_names_full_ipid_fail(self):
+        csr = x509_csr.X509Csr()
+        ext = x509_ext.X509ExtensionSubjectAltName()
+        ext.add_ip(netaddr.IPAddress('4.3.2.1'))
+        csr.add_extension(ext)
+
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_ip_id=True,
+                                   names=['1.2.3.4'])
+
+    def test_whitelist_names_cn_not_allowed(self):
+        csr = self._csr_with_cn("bad.example.com")
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, names=[],)
+
+    def test_whitelist_names_cn_ip_fail(self):
+        csr = self._csr_with_cn("4.3.2.1")
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_cn_id=True,
+                                   names=["1.2.3.4"])
+
+    def test_whitelist_names_cn_ip_match(self):
+        csr = self._csr_with_cn("1.2.3.4")
+        custom.whitelist_names(csr=csr, allow_cn_id=True, names=["1.2.3.4"])
+
+    def test_whitelist_names_cn_ip_net_fail(self):
+        csr = self._csr_with_cn("4.3.2.1")
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_cn_id=True, names=["1/8"])
+
+    def test_whitelist_names_cn_ip_net_match(self):
+        csr = self._csr_with_cn("1.2.3.4")
+        custom.whitelist_names(csr=csr, allow_cn_id=True, names=["1/8"])
+
+    def test_whitelist_names_cn_name_fail(self):
+        csr = self._csr_with_cn("bad.example.com")
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_cn_id=True,
+                                   names=["good.example.com"])
+
+    def test_whitelist_names_cn_name_match(self):
+        csr = self._csr_with_cn("good.example.com")
+        custom.whitelist_names(csr=csr, allow_cn_id=True,
+                               names=["good.example.com"])
+
+    def test_whitelist_names_cn_partial_name_fail(self):
+        csr = self._csr_with_cn("bad.example.com")
+        with self.assertRaises(errors.ValidationError):
+            custom.whitelist_names(csr=csr, allow_cn_id=True,
+                                   names=[".good.example.com"])
+
+    def test_whitelist_names_cn_partial_name_match(self):
+        csr = self._csr_with_cn("good.example.com")
+        custom.whitelist_names(csr=csr, allow_cn_id=True,
+                               names=["%.example.com"])

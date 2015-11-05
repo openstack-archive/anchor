@@ -21,17 +21,54 @@ The following validators are implemented at the moment:
     Any requests produced using standard tooling that fail this check should be
     reported as Anchor issues.
 
+``whitelist_names``
+    Verifies: CSR. Parameters:
+
+    - ``names``: list of names/ips/ip ranges allowed in various fields
+    - ``allow_cn_id``: allow name in subject CN
+    - ``allow_dns_id``: allow name in SAN dns entry
+    - ``allow_ip_id``: allow name in SAN IP entry
+    - ``allow_wildcard``: allow wildcard certificate to match '%'
+
+    IDs available in various places in the certificate are matched against the
+    patterns in the ``names`` list. These can be:
+
+    - IP addresses: ``1.2.3.4``
+    - IP ranges: ``1.2.3.0/24``
+    - complete names: ``some.example.com``
+    - names with wildcards: ``%.example.com``, ``partial-%.example.com``
+
+    Wildcard (``%``) rules: It matches only a single name label, or part of
+    one. It can be used only in domain names, not IPs. Only one wildcard is
+    allowed in a label, but multiple in a name, so ``%.%.example.com`` is
+    valid.
+
+    Pattern wildcard (``%``) may match a domain wildcard character (``*``)
+    only if ``allow_wildcard`` is set to true.
+
+    This match will fail if the CSR contains any SAN type not included here.
+
+``blacklist_names``
+    Verifies: CSR. Parameters: ``allowed_domains``, ``allowed_networks``.
+
+    Ensures that the CN and subject alternative names do not contain anything
+    configured in the ``domains``.
+
 ``common_name``
     Verifies: CSR. Parameters: ``allowed_domains``, ``allowed_networks``.
 
     Ensures that the CN matches one of names in ``allowed_domains`` or IP
     ranges in ``allowed_networks``.
 
+    Deprecated: use ``whitelist_names`` / ``blacklist_names`` instead.
+
 ``alternative_names``
     Verifies: CSR. Parameters: ``allowed_domains``.
 
     Ensures that names specified in the subject alternative names extension
     match one of the names in ``allowed_domains``.
+
+    Deprecated: use ``whitelist_names`` / ``blacklist_names`` instead.
 
 ``alternative_names_ip``
     Verifies: CSR. Parameters: ``allowed_domains``, ``allowed_networks``.
@@ -40,11 +77,7 @@ The following validators are implemented at the moment:
     match one of the names in ``allowed_domains`` or IP ranges in
     ``allowed_networks``.
 
-``blacklist_names``
-    Verifies: CSR. Parameters: ``allowed_domains``, ``allowed_networks``.
-
-    Ensures that the CN and subject alternative names do not contain anything
-    configured in the ``domains``.
+    Deprecated: use ``whitelist_names`` / ``blacklist_names`` instead.
 
 ``server_group``
     Verifies: Auth, CSR. Parameters: ``group_prefixes``.
@@ -59,8 +92,7 @@ The following validators are implemented at the moment:
     Only CN is checked and if there are no dashes in the CN, validation
     succeeds.
 
-    This is not a well designed validator and may not be safe to use! A better
-    version is on the TODO list.
+    Deprecated: use ``whitelist_names`` / ``blacklist_names`` instead.
 
 ``extensions``
     Verifies: CSR. Parameters: ``allowed_extensions``.
