@@ -96,6 +96,11 @@ class AnchorConf():
 conf = AnchorConf(logger)
 
 
+def config_for_audit():
+    """Get configuration for a given name."""
+    return conf.audit
+
+
 def config_for_registration_authority(ra_name):
     """Get configuration for a given name."""
     return conf.registration_authority[ra_name]

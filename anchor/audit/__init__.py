@@ -13,6 +13,10 @@
 
 import logging
 
+from anchor import jsonloader
+
+import oslo_config
+import oslo_messaging
 from pycadf import cadftaxonomy
 from pycadf import event
 from pycadf import identifier
@@ -20,12 +24,20 @@ from pycadf import resource
 
 
 logger = logging.getLogger(__name__)
+target = None
+notifier = None
 
 
-def _emit_event(ev):
+def _emit_event(event_type, payload):
     # no actual implementation yet
-    if not ev.is_valid():
-        logger.error("created invalid audit event: %s", ev)
+    if not payload.is_valid():
+        logger.error("created invalid audit event: %s", payload)
+
+    if target == 'messaging':
+        notifier.audit({}, event_type, payload)
+    else:
+        logger.info('Event type: %(event_type)s Payload: %(payload)s',
+                    {'event_type': event_type, 'payload': payload})
 
 
 def _event_defaults(result):
@@ -77,7 +89,7 @@ def emit_auth_event(ra_name, username, result):
     auth_res = _auth_resource(ra_name)
     params['observer'] = auth_res
     params['target'] = auth_res
-    _emit_event(event.Event(**params))
+    _emit_event('audit.auth', event.Event(**params))
 
 
 def emit_signing_event(ra_name, username, result, fingerprint=None):
@@ -88,4 +100,34 @@ def emit_signing_event(ra_name, username, result, fingerprint=None):
     params['target'] = _certificate_resource(fingerprint)
     # add when pycadf merges event names
     # params['name'] = "certificate signing"
-    _emit_event(event.Event(**params))
+    _emit_event('audit.sign', event.Event(**params))
+
+
+def _dump_logging():
+    print("Handlers")
+    for v in logging._handlerList:
+        h = v()
+        print("name: %s, level: %s, formatter: %s" % (h.name, h.level, h.formatter))
+
+    print("Loggers")
+    for k,v in logging.root.manager.loggerDict.items():
+        if isinstance(v, logging.PlaceHolder):
+            print("%s, placeholder" % (k,))
+        else:
+            print("%s, level: %s, type: %s, handlers: %s" % (k, v.level, v.__class__, v.handlers))
+
+
+def init_audit():
+    global target
+    global notifier
+    audit_conf = jsonloader.config_for_audit()
+    target = audit_conf.get('target', 'log')
+    if target == 'messaging':
+        l = logger
+        print(l, l.name, l.level, l.propagate) ; l = l.parent
+        print(l, l.name, l.level, l.propagate) ; l = l.parent
+        print(l, l.name, l.level, l.propagate) ; l = l.parent
+        cfg = oslo_config.cfg.ConfigOpts()
+        notifier = oslo_messaging.Notifier(
+            oslo_messaging.get_transport(cfg, url=audit_conf['url']),
+            'anchor', driver='log', topic='notifications')
