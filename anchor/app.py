@@ -22,6 +22,7 @@ import paste
 from paste import translogger  # noqa
 import pecan
 
+from anchor import audit
 from anchor import jsonloader
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,26 @@ def validate_config(conf):
     for name in conf.authentication.keys():
         logger.info("Checking config for authentication method: %s", name)
         validate_authentication_config(name, conf)
+
+    validate_audit_config(conf)
+
+
+def validate_audit_config(conf):
+    valid_targets = ('messaging', 'log')
+
+    if not conf.config.get('audit'):
+        # no audit configuration - that's ok
+        return
+
+    audit_conf = conf.audit
+    if audit_conf.get('target', 'log') not in valid_targets:
+        raise ConfigValidationException(
+            "Audit target not known (expected one of %s)" % (
+                ", ".join(valid_targets),))
+
+    if audit_conf.get('target') == 'messaging':
+        if audit_conf.get('url') is None:
+            raise ConfigValidationException("Audit url required")
 
 
 def validate_authentication_config(name, conf):
@@ -233,5 +254,7 @@ def setup_app(config):
         logging=config.logging,
         **app_conf
     )
+
+    audit.init_audit()
 
     return paste.translogger.TransLogger(app, setup_console_handler=False)
