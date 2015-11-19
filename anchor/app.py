@@ -194,7 +194,7 @@ def load_config():
     - the contents of 'ANCHOR_CONF' environment variable
     - a local 'config.json' file in the invocation folder
     - a HOME/.config/anchor/config.json file
-    - a /etc/anchor/config.json fiile
+    - a /etc/anchor/config.json file
     """
     config_name = 'ANCHOR_CONF'
     local_config_path = 'config.json'
