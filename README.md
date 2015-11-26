@@ -61,7 +61,7 @@ For development, an additional `--reload` parameter may be used. It will cause
 the service to reload every time a source file is changed, however it requires
 installing an additional `watchdog` python module.
 
-In the default configuration, Anchor will wait for web requests on port 5000 on
+In the default configuration, Anchor will wait for web requests on port 5016 on
 local network interface. This can be adjusted in the `config.py` file.
 
 Preparing a test environment
@@ -84,7 +84,7 @@ Next, a new certificate request may be generated:
 That reqest can be submitted using curl (while `pecan serve config.py` is
 running):
 
-    curl http://0.0.0.0:5000/v1/sign/default -F user='myusername' \
+    curl http://0.0.0.0:5016/v1/sign/default -F user='myusername' \
         -F secret='simplepassword' -F encoding=pem \
         -F 'csr=<anchor-test.example.com.csr'
 
@@ -122,7 +122,7 @@ of anchor, build using the --no-cache option:
 
 Start the service in the container and serve Anchor on port 8080:
 
-    docker run -p 8080:5000 anchor-dev
+    docker run -p 8080:5016 anchor-dev
 
 The anchor application should be accessible on port 8080. If you are running
 docker natively on Linux, that will be 8080 on localhost (127.0.0.1). If you
@@ -151,7 +151,7 @@ using a better frontend.
 
 To run Anchor using uwsgi you can use the following command:
 
-    uwsgi --http-socket :5000 --venv path/to/venv --pecan config.py -p 4
+    uwsgi --http-socket :5016 --venv path/to/venv --pecan config.py -p 4
 
 In case a more complex scripted configuration is needed, for example to handle
 custom headers, rate limiting, or source filtering a complete HTTP proxy like
