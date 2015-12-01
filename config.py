@@ -37,6 +37,9 @@ logging = {
         "wsgi": {
             "level": "INFO"
         },
+        "oslo_messaging": {
+            "level": "DEBUG"
+        },
     },
     "root": {
         "handlers": ["console"],

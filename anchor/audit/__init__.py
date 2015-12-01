@@ -13,6 +13,10 @@
 
 import logging
 
+from anchor import jsonloader
+
+import oslo_config
+import oslo_messaging
 from pycadf import cadftaxonomy
 from pycadf import event
 from pycadf import identifier
@@ -20,12 +24,17 @@ from pycadf import resource
 
 
 logger = logging.getLogger(__name__)
+target = None
+notifier = None
 
 
-def _emit_event(ev):
-    # no actual implementation yet
-    if not ev.is_valid():
-        logger.error("created invalid audit event: %s", ev)
+def _emit_event(event_type, payload):
+    if not payload.is_valid():
+        logger.error("created invalid audit event: %s", payload)
+        return
+
+    if notifier is not None:
+        notifier.info({}, event_type, payload.as_dict())
 
 
 def _event_defaults(result):
@@ -77,7 +86,7 @@ def emit_auth_event(ra_name, username, result):
     auth_res = _auth_resource(ra_name)
     params['observer'] = auth_res
     params['target'] = auth_res
-    _emit_event(event.Event(**params))
+    _emit_event('audit.auth', event.Event(**params))
 
 
 def emit_signing_event(ra_name, username, result, fingerprint=None):
@@ -88,4 +97,20 @@ def emit_signing_event(ra_name, username, result, fingerprint=None):
     params['target'] = _certificate_resource(fingerprint)
     # add when pycadf merges event names
     # params['name'] = "certificate signing"
-    _emit_event(event.Event(**params))
+    _emit_event('audit.sign', event.Event(**params))
+
+
+def init_audit():
+    global target
+    global notifier
+    audit_conf = jsonloader.config_for_audit()
+    if audit_conf is None:
+        return
+
+    target = audit_conf.get('target', 'log')
+    cfg = oslo_config.cfg.ConfigOpts()
+    if target == 'messaging':
+        transport = oslo_messaging.get_transport(cfg, url=audit_conf['url'])
+    else:
+        transport = oslo_messaging.get_transport(cfg)
+    notifier = oslo_messaging.Notifier(transport, 'anchor', driver=target)
