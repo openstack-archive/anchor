@@ -12,6 +12,7 @@
 # under the License.
 
 import logging
+import uuid
 
 from anchor import jsonloader
 
@@ -26,6 +27,8 @@ from pycadf import resource
 logger = logging.getLogger(__name__)
 target = None
 notifier = None
+
+ANCHOR_UUID_NS = uuid.UUID('0ff9c8c5-f57e-47aa-bd3d-5407eb907c74')
 
 
 def _emit_event(event_type, payload):
@@ -45,13 +48,25 @@ def _event_defaults(result):
         }
 
 
-def _user_resource(username):
+def _user_resource(username, result):
+    if result:
+        res_id = uuid.uuid5(ANCHOR_UUID_NS, result.username)
+        user = result.username
+    else:
+        if username:
+            res_id = uuid.uuid5(ANCHOR_UUID_NS, username.encode('utf-8',
+                                                                'replace'))
+            user = username
+        else:
+            # Authentication was a failure, but there was no username
+            # provided either. This can happen with failed token authentication
+            # for example.
+            res_id = uuid.uuid4()
+            user = None
     return resource.Resource(
-        # TODO(stan): generate id from username if it's known
-        # this should also get username from keystone tokens to work correctly
-        id=identifier.generate_uuid(),
+        id=str(res_id),
         typeURI=cadftaxonomy.ACCOUNT_USER,
-        name=username)
+        name=user)
 
 
 def _auth_resource(ra_name):
@@ -80,9 +95,10 @@ def _certificate_resource(fingerprint):
 
 
 def emit_auth_event(ra_name, username, result):
-    params = _event_defaults(result)
+    success = result is not None
+    params = _event_defaults(success)
     params['action'] = 'authenticate'
-    params['initiator'] = _user_resource(username)
+    params['initiator'] = _user_resource(username, result)
     auth_res = _auth_resource(ra_name)
     params['observer'] = auth_res
     params['target'] = auth_res
@@ -92,7 +108,7 @@ def emit_auth_event(ra_name, username, result):
 def emit_signing_event(ra_name, username, result, fingerprint=None):
     params = _event_defaults(result)
     params['action'] = 'evaluate'
-    params['initiator'] = _user_resource(username)
+    params['initiator'] = _user_resource(username, result)
     params['observer'] = _policy_resource(ra_name)
     params['target'] = _certificate_resource(fingerprint)
     # add when pycadf merges event names

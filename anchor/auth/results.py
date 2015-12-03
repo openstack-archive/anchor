@@ -13,7 +13,17 @@
 
 from __future__ import absolute_import
 
-import collections
 
+class AuthDetails(object):
+    def __init__(self, username=None, groups=None, user_id=None,
+                 project_id=None):
+        self.username = username
+        self.groups = groups or []
+        self.user_id = user_id
+        self.project_id = project_id
 
-AuthDetails = collections.namedtuple('AuthDetails', ['username', 'groups'])
+    def __eq__(self, other):
+        return (self.username == other.username and
+                self.groups == other.groups and
+                self.user_id == other.user_id and
+                self.project_id == other.project_id)

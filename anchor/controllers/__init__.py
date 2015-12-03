@@ -53,10 +53,10 @@ class SignInstanceController(GenericInstanceController):
                                         pecan.request.POST.get('user'),
                                         pecan.request.POST.get('secret'))
             audit.emit_auth_event(ra_name, pecan.request.POST.get('user'),
-                                  True)
+                                  auth_result)
         except http_status.HTTPUnauthorized:
             audit.emit_auth_event(ra_name, pecan.request.POST.get('user'),
-                                  False)
+                                  None)
             raise
 
         try:
@@ -68,10 +68,10 @@ class SignInstanceController(GenericInstanceController):
 
             cert, fingerprint = certificate_ops.dispatch_sign(ra_name, csr)
             audit.emit_signing_event(ra_name, pecan.request.POST.get('user'),
-                                     True, fingerprint=fingerprint)
+                                     auth_result, fingerprint=fingerprint)
         except Exception:
             audit.emit_signing_event(ra_name, pecan.request.POST.get('user'),
-                                     False)
+                                     auth_result)
             raise
         return cert
 
