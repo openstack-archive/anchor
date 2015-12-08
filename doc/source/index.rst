@@ -19,6 +19,7 @@ Contents:
    ephemeralPKI
    validators
    fixups
+   audit
 
 
 Indices and tables
