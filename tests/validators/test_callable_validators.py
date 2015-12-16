@@ -418,7 +418,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         ext.set_ca(False)
         csr.add_extension(ext)
 
-        self.assertEqual(None, internal.ca_status(csr=csr))
+        self.assertIsNone(internal.ca_status(csr=csr))
 
     def test_ca_status_forbidden(self):
         csr = x509_csr.X509Csr()
@@ -437,7 +437,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         ext.set_path_len_constraint(1)
         csr.add_extension(ext)
 
-        self.assertEqual(None, internal.ca_status(csr=csr))
+        self.assertIsNone(internal.ca_status(csr=csr))
 
     def test_ca_status_key_usage_bad1(self):
         csr = x509_csr.X509Csr()
@@ -555,7 +555,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_csr_signature(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
-        self.assertEqual(None, custom.csr_signature(csr=csr))
+        self.assertIsNone(custom.csr_signature(csr=csr))
 
     def test_csr_signature_bad_sig(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
@@ -575,8 +575,8 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_public_key_good_rsa(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
-        self.assertEqual(None, custom.public_key(csr=csr,
-                                                 allowed_keys={'RSA': 1024}))
+        self.assertIsNone(custom.public_key(csr=csr,
+                                            allowed_keys={'RSA': 1024}))
 
     def test_public_key_good_dsa(self):
         dsa_key_pem = """
@@ -596,8 +596,8 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
                               asn1Spec=rfc2459.SubjectPublicKeyInfo())[0]
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         csr._csr['certificationRequestInfo']['subjectPublicKeyInfo'] = spki
-        self.assertEqual(None, custom.public_key(csr=csr,
-                                                 allowed_keys={'DSA': 1024}))
+        self.assertIsNone(custom.public_key(csr=csr,
+                                            allowed_keys={'DSA': 1024}))
 
     def test_public_key_too_short(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
