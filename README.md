@@ -110,12 +110,12 @@ that have been made in the repo:
 
     docker build -t anchor .
 
-To start the service in the container and serve Anchor on port 8080:
+To start the service in the container and serve Anchor on port 5016:
 
-    docker run -p 8080:5016 anchor
+    docker run -p 5016:5016 anchor
 
-The anchor application should be accessible on port 8080. If you are
-running docker natively on Linux, that will be 8080 on localhost
+The anchor application should be accessible on port 5016. If you are
+running docker natively on Linux, that will be 5016 on localhost
 (127.0.0.1). If you are running docker under Microsoft Windows or Apple
 OSX it will be running in a docker machine. To find the docker machine
 IP address run:
