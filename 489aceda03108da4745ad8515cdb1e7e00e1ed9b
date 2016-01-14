@@ -1,0 +1,9 @@
+Code-Review+1: Michael McCune <msm@redhat.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hpe.com>
+Workflow+1: Robert Clark <robert.clark@hp.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 14 Jan 2016 16:36:04 +0000
+Reviewed-on: https://review.openstack.org/267614
+Project: openstack/anchor
+Branch: refs/heads/master
