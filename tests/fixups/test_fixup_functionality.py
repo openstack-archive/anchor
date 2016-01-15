@@ -32,7 +32,7 @@ class TestFixupFunctionality(tests.DefaultConfigMixin,
         super(TestFixupFunctionality, self).setUp()
         jsonloader.conf.load_extensions()
         self.csr = signing_request.X509Csr.from_buffer(
-            TestFixupFunctionality.csr_sample)
+            TestFixupFunctionality.csr_sample_bytes)
 
     def test_with_noop(self):
         """Ensure single fixup is processed."""

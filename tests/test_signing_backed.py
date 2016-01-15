@@ -33,7 +33,7 @@ class UnknownExtension(extension.X509Extension):
 class SigningBackendExtensions(tests.DefaultConfigMixin,
                                tests.DefaultRequestMixin, unittest.TestCase):
     def test_copy_good_extensions(self):
-        csr = signing_request.X509Csr.from_buffer(self.csr_sample)
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
         ext = extension.X509ExtensionSubjectAltName()
         ext.add_dns_id("example.com")
         csr.add_extension(ext)
@@ -44,7 +44,7 @@ class SigningBackendExtensions(tests.DefaultConfigMixin,
             extension.X509ExtensionSubjectAltName)))
 
     def test_ignore_unknown_extensions(self):
-        csr = signing_request.X509Csr.from_buffer(self.csr_sample)
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
         ext = UnknownExtension()
         csr.add_extension(ext)
 
@@ -53,7 +53,7 @@ class SigningBackendExtensions(tests.DefaultConfigMixin,
         self.assertEqual(2, len(cert.get_extensions()))
 
     def test_fail_critical_unknown_extensions(self):
-        csr = signing_request.X509Csr.from_buffer(self.csr_sample)
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
         ext = UnknownExtension()
         ext.set_critical(True)
         csr.add_extension(ext)

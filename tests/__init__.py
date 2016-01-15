@@ -79,7 +79,7 @@ class DefaultRequestMixin(object):
     # CN=server1.example.com
     # 2048 RSA, basicConstraints, keyUsage exts
     csr_sample_cn = 'server1.example.com'
-    csr_sample = textwrap.dedent(u"""
+    csr_sample = textwrap.dedent("""
         -----BEGIN CERTIFICATE REQUEST-----
         MIIDDjCCAfYCAQAwgZwxCzAJBgNVBAYTAlVLMQ8wDQYDVQQIEwZOYXJuaWExEjAQ
         BgNVBAcTCUZ1bmt5dG93bjEXMBUGA1UEChMOQW5jaG9yIFRlc3RpbmcxEDAOBgNV
@@ -99,3 +99,4 @@ class DefaultRequestMixin(object):
         DxpZNBHlkA6LWaRqAtWws3uvom7IjHGgSr7UITrOR5iO5Hrm85X7K0AT6Bu75RZL
         +uYLLfj9Nb/iznREl9E3a/fN
         -----END CERTIFICATE REQUEST-----""")
+    csr_sample_bytes = csr_sample.encode('ascii')
