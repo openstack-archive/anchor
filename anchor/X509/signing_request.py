@@ -20,9 +20,9 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
 from pyasn1_modules import pem
-from pyasn1_modules import rfc2314  # PKCS#10 / CSR
-from pyasn1_modules import rfc2459  # X509
 
+from anchor.asn1 import rfc5280
+from anchor.asn1 import rfc6402
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name
@@ -42,7 +42,7 @@ class X509Csr(signature.SignatureMixin):
     """An X509 Certificate Signing Request."""
     def __init__(self, csr=None):
         if csr is None:
-            self._csr = rfc2314.CertificationRequest()
+            self._csr = rfc6402.CertificationRequest()
         else:
             self._csr = csr
 
@@ -53,7 +53,7 @@ class X509Csr(signature.SignatureMixin):
                 f, startMarker='-----BEGIN CERTIFICATE REQUEST-----',
                 endMarker='-----END CERTIFICATE REQUEST-----')
             csr = decoder.decode(der_content,
-                                 asn1Spec=rfc2314.CertificationRequest())[0]
+                                 asn1Spec=rfc6402.CertificationRequest())[0]
             return X509Csr(csr)
         except Exception:
             raise X509CsrError("Could not read X509 certificate from "
@@ -132,12 +132,12 @@ class X509Csr(signature.SignatureMixin):
         :return: a list of X509Extension objects
         """
         ext_attrs = [a for a in self.get_attributes()
-                     if a['type'] == OID_extensionRequest]
+                     if a['attrType'] == OID_extensionRequest]
         if len(ext_attrs) == 0:
             return []
         else:
-            exts_der = ext_attrs[0]['vals'][0].asOctets()
-            exts = decoder.decode(exts_der, asn1Spec=rfc2459.Extensions())[0]
+            exts_der = ext_attrs[0]['attrValues'][0].asOctets()
+            exts = decoder.decode(exts_der, asn1Spec=rfc5280.Extensions())[0]
             return [extension.construct_extension(e) for e in exts
                     if ext_type is None or e['extnID'] == ext_type._oid]
 
@@ -147,18 +147,18 @@ class X509Csr(signature.SignatureMixin):
             raise errors.X509Error("ext is not an anchor X509Extension")
         attributes = self.get_attributes()
         ext_attrs = [a for a in attributes
-                     if a['type'] == OID_extensionRequest]
+                     if a['attrType'] == OID_extensionRequest]
         if not ext_attrs:
             new_attr_index = len(attributes)
             attributes[new_attr_index] = None
             ext_attr = attributes[new_attr_index]
-            ext_attr['type'] = OID_extensionRequest
-            ext_attr['vals'] = None
-            exts = rfc2459.Extensions()
+            ext_attr['attrType'] = OID_extensionRequest
+            ext_attr['attrValues'] = None
+            exts = rfc5280.Extensions()
         else:
             ext_attr = ext_attrs[0]
-            exts = decoder.decode(ext_attr['vals'][0].asOctets(),
-                                  asn1Spec=rfc2459.Extensions())[0]
+            exts = decoder.decode(ext_attr['attrValues'][0].asOctets(),
+                                  asn1Spec=rfc5280.Extensions())[0]
 
         # the end is the default position
         new_ext_index = len(exts)
@@ -170,7 +170,7 @@ class X509Csr(signature.SignatureMixin):
 
         exts[new_ext_index] = new_ext._ext
 
-        ext_attr['vals'][0] = encoder.encode(exts)
+        ext_attr['attrValues'][0] = encoder.encode(exts)
 
     def get_subject_dns_ids(self):
         names = []

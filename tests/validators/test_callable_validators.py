@@ -22,6 +22,7 @@ import netaddr
 from pyasn1.codec.der import decoder
 from pyasn1_modules import rfc2459
 
+from anchor.asn1 import rfc5280
 from anchor.validators import custom
 from anchor.validators import errors
 from anchor.validators import internal
@@ -354,7 +355,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionExtendedKeyUsage()
-        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        ext.set_usage(rfc5280.id_kp_serverAuth, True)
         csr.add_extension(ext)
 
         self.assertEqual(
@@ -370,7 +371,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionExtendedKeyUsage()
-        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        ext.set_usage(rfc5280.id_kp_serverAuth, True)
         csr.add_extension(ext)
 
         self.assertEqual(
@@ -386,7 +387,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionExtendedKeyUsage()
-        ext.set_usage(rfc2459.id_kp_serverAuth, True)
+        ext.set_usage(rfc5280.id_kp_serverAuth, True)
         csr.add_extension(ext)
 
         self.assertEqual(
@@ -402,7 +403,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
 
         csr = x509_csr.X509Csr()
         ext = x509_ext.X509ExtensionExtendedKeyUsage()
-        ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        ext.set_usage(rfc5280.id_kp_clientAuth, True)
         csr.add_extension(ext)
 
         with self.assertRaises(errors.ValidationError) as e:
@@ -593,7 +594,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         """
         dsa_key_der = base64.b64decode(dsa_key_pem)
         spki = decoder.decode(dsa_key_der,
-                              asn1Spec=rfc2459.SubjectPublicKeyInfo())[0]
+                              asn1Spec=rfc5280.SubjectPublicKeyInfo())[0]
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
         csr._csr['certificationRequestInfo']['subjectPublicKeyInfo'] = spki
         self.assertIsNone(custom.public_key(csr=csr,

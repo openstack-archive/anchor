@@ -22,8 +22,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
-from pyasn1_modules import rfc2459
 
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 
 
@@ -112,7 +112,7 @@ class SignatureMixin(object):
             raise errors.X509Error(
                 "Unknown encryption/hash combination %s/%s" % (encryption, md))
 
-        algo_id = rfc2459.AlgorithmIdentifier()
+        algo_id = rfc5280.AlgorithmIdentifier()
         algo_id['algorithm'] = signature_type
         algo_params = ALGORITHM_PARAMETERS[signature_type]
         if algo_params is not None:
