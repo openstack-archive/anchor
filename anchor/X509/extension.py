@@ -22,26 +22,26 @@ from pyasn1.type import constraint as asn1_constraint
 from pyasn1.type import namedtype as asn1_namedtype
 from pyasn1.type import tag as asn1_tag
 from pyasn1.type import univ as asn1_univ
-from pyasn1_modules import rfc2459  # X509v3
 
 from anchor import util as a_utils
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 from anchor.X509 import utils
 
 
 # missing extended use ids from rfc5280
-id_kp_OCSPSigning = asn1_univ.ObjectIdentifier(rfc2459.id_kp.asTuple() + (9,))
+id_kp_OCSPSigning = asn1_univ.ObjectIdentifier(rfc5280.id_kp.asTuple() + (9,))
 anyExtendedKeyUsage = asn1_univ.ObjectIdentifier(
-    rfc2459.id_ce_extKeyUsage.asTuple() + (0,))
+    rfc5280.id_ce_extKeyUsage.asTuple() + (0,))
 
 
 # names matching openssl
 EXT_KEY_USAGE_NAMES = {
-    rfc2459.id_kp_serverAuth: "TLS Web Server Authentication",
-    rfc2459.id_kp_clientAuth: "TLS Web Client Authentication",
-    rfc2459.id_kp_codeSigning: "Code Signing",
-    rfc2459.id_kp_emailProtection: "E-mail Protection",
-    rfc2459.id_kp_timeStamping: "Time Stamping",
+    rfc5280.id_kp_serverAuth: "TLS Web Server Authentication",
+    rfc5280.id_kp_clientAuth: "TLS Web Client Authentication",
+    rfc5280.id_kp_codeSigning: "Code Signing",
+    rfc5280.id_kp_emailProtection: "E-mail Protection",
+    rfc5280.id_kp_timeStamping: "Time Stamping",
     id_kp_OCSPSigning: "OCSP Signing",
     anyExtendedKeyUsage: "Any Extended Key Usage",
 }
@@ -49,11 +49,11 @@ EXT_KEY_USAGE_NAMES_INV = dict((v, k) for k, v in EXT_KEY_USAGE_NAMES.items())
 
 
 EXT_KEY_USAGE_SHORT_NAMES = {
-    rfc2459.id_kp_serverAuth: "serverAuth",
-    rfc2459.id_kp_clientAuth: "clientAuth",
-    rfc2459.id_kp_codeSigning: "codeSigning",
-    rfc2459.id_kp_emailProtection: "emailProtection",
-    rfc2459.id_kp_timeStamping: "timeStamping",
+    rfc5280.id_kp_serverAuth: "serverAuth",
+    rfc5280.id_kp_clientAuth: "clientAuth",
+    rfc5280.id_kp_codeSigning: "codeSigning",
+    rfc5280.id_kp_emailProtection: "emailProtection",
+    rfc5280.id_kp_timeStamping: "timeStamping",
     id_kp_OCSPSigning: "ocspSigning",
     anyExtendedKeyUsage: "anyExtendedKeyUsage",
 }
@@ -62,22 +62,22 @@ EXT_KEY_USAGE_SHORT_NAMES_INV = dict((v, k) for k, v in
 
 
 EXTENSION_NAMES = {
-    rfc2459.id_ce_policyConstraints: 'policyConstraints',
-    rfc2459.id_ce_basicConstraints: 'basicConstraints',
-    rfc2459.id_ce_subjectDirectoryAttributes: 'subjectDirectoryAttributes',
-    rfc2459.id_ce_deltaCRLIndicator: 'deltaCRLIndicator',
-    rfc2459.id_ce_cRLDistributionPoints: 'cRLDistributionPoints',
-    rfc2459.id_ce_issuingDistributionPoint: 'issuingDistributionPoint',
-    rfc2459.id_ce_nameConstraints: 'nameConstraints',
-    rfc2459.id_ce_certificatePolicies: 'certificatePolicies',
-    rfc2459.id_ce_policyMappings: 'policyMappings',
-    rfc2459.id_ce_privateKeyUsagePeriod: 'privateKeyUsagePeriod',
-    rfc2459.id_ce_keyUsage: 'keyUsage',
-    rfc2459.id_ce_authorityKeyIdentifier: 'authorityKeyIdentifier',
-    rfc2459.id_ce_subjectKeyIdentifier: 'subjectKeyIdentifier',
-    rfc2459.id_ce_certificateIssuer: 'certificateIssuer',
-    rfc2459.id_ce_subjectAltName: 'subjectAltName',
-    rfc2459.id_ce_issuerAltName: 'issuerAltName',
+    rfc5280.id_ce_policyConstraints: 'policyConstraints',
+    rfc5280.id_ce_basicConstraints: 'basicConstraints',
+    rfc5280.id_ce_subjectDirectoryAttributes: 'subjectDirectoryAttributes',
+    rfc5280.id_ce_deltaCRLIndicator: 'deltaCRLIndicator',
+    rfc5280.id_ce_cRLDistributionPoints: 'cRLDistributionPoints',
+    rfc5280.id_ce_issuingDistributionPoint: 'issuingDistributionPoint',
+    rfc5280.id_ce_nameConstraints: 'nameConstraints',
+    rfc5280.id_ce_certificatePolicies: 'certificatePolicies',
+    rfc5280.id_ce_policyMappings: 'policyMappings',
+    rfc5280.id_ce_privateKeyUsagePeriod: 'privateKeyUsagePeriod',
+    rfc5280.id_ce_keyUsage: 'keyUsage',
+    rfc5280.id_ce_authorityKeyIdentifier: 'authorityKeyIdentifier',
+    rfc5280.id_ce_subjectKeyIdentifier: 'subjectKeyIdentifier',
+    rfc5280.id_ce_certificateIssuer: 'certificateIssuer',
+    rfc5280.id_ce_subjectAltName: 'subjectAltName',
+    rfc5280.id_ce_issuerAltName: 'issuerAltName',
 }
 
 
@@ -143,12 +143,12 @@ class NameConstraints(asn1_univ.Sequence):
     componentType = asn1_namedtype.NamedTypes(
         asn1_namedtype.OptionalNamedType(
             'permittedSubtrees',
-            rfc2459.GeneralSubtrees().subtype(
+            rfc5280.GeneralSubtrees().subtype(
                 implicitTag=asn1_tag.Tag(asn1_tag.tagClassContext,
                                          asn1_tag.tagFormatConstructed, 0))),
         asn1_namedtype.OptionalNamedType(
             'excludedSubtrees',
-            rfc2459.GeneralSubtrees().subtype(
+            rfc5280.GeneralSubtrees().subtype(
                 implicitTag=asn1_tag.Tag(asn1_tag.tagClassContext,
                                          asn1_tag.tagFormatConstructed, 1)))
     )
@@ -174,11 +174,11 @@ class X509Extension(object):
         if ext is None:
             if self.spec is None:
                 raise errors.X509Error("cannot create generic extension")
-            self._ext = rfc2459.Extension()
+            self._ext = rfc5280.Extension()
             self._ext['extnID'] = self._oid
             self._set_value(self._get_default_value())
         else:
-            if not isinstance(ext, rfc2459.Extension):
+            if not isinstance(ext, rfc5280.Extension):
                 raise errors.X509Error("extension has incorrect type")
             self._ext = ext
 
@@ -209,13 +209,13 @@ class X509Extension(object):
         self._ext['critical'] = critical
 
     def _get_value(self):
-        value_der = decoder.decode(self._ext['extnValue'])[0]
-        return decoder.decode(value_der, asn1Spec=self.spec())[0]
+        return decoder.decode(self._ext['extnValue'].asOctets(),
+                              asn1Spec=self.spec())[0]
 
     def _set_value(self, value):
         if not isinstance(value, self.spec):
             raise errors.X509Error("extension value has incorrect type")
-        self._ext['extnValue'] = encoder.encode(rfc2459.univ.OctetString(
+        self._ext['extnValue'] = encoder.encode(rfc5280.univ.OctetString(
             encoder.encode(value)))
 
     def as_der(self):
@@ -227,7 +227,7 @@ class X509Extension(object):
 
 class X509ExtensionBasicConstraints(X509Extension):
     spec = BasicConstraints
-    _oid = rfc2459.id_ce_basicConstraints
+    _oid = rfc5280.id_ce_basicConstraints
 
     @uses_ext_value
     def get_ca(self, ext_value=None):
@@ -253,8 +253,8 @@ class X509ExtensionBasicConstraints(X509Extension):
 
 
 class X509ExtensionKeyUsage(X509Extension):
-    spec = rfc2459.KeyUsage
-    _oid = rfc2459.id_ce_keyUsage
+    spec = rfc5280.KeyUsage
+    _oid = rfc5280.id_ce_keyUsage
 
     fields = dict(spec.namedValues.namedValues)
     inv_fields = dict((v, k) for k, v in spec.namedValues.namedValues)
@@ -300,8 +300,8 @@ class X509ExtensionKeyUsage(X509Extension):
 
 
 class X509ExtensionSubjectAltName(X509Extension):
-    spec = rfc2459.SubjectAltName
-    _oid = rfc2459.id_ce_subjectAltName
+    spec = rfc5280.SubjectAltName
+    _oid = rfc5280.id_ce_subjectAltName
 
     @uses_ext_value
     def get_dns_ids(self, ext_value=None):
@@ -360,7 +360,7 @@ class X509ExtensionSubjectAltName(X509Extension):
 
 class X509ExtensionNameConstraints(X509Extension):
     spec = NameConstraints
-    _oid = rfc2459.id_ce_nameConstraints
+    _oid = rfc5280.id_ce_nameConstraints
 
     def _get_permitted(self, ext_value):
         return ext_value['permittedSubtrees'] or []
@@ -420,8 +420,8 @@ class X509ExtensionNameConstraints(X509Extension):
 
 
 class X509ExtensionExtendedKeyUsage(X509Extension):
-    spec = rfc2459.ExtKeyUsageSyntax
-    _oid = rfc2459.id_ce_extKeyUsage
+    spec = rfc5280.ExtKeyUsageSyntax
+    _oid = rfc5280.id_ce_extKeyUsage
 
     _valid = list(EXT_KEY_USAGE_NAMES.keys())
 
@@ -458,11 +458,11 @@ class X509ExtensionExtendedKeyUsage(X509Extension):
 
 
 EXTENSION_CLASSES = {
-    rfc2459.id_ce_basicConstraints: X509ExtensionBasicConstraints,
-    rfc2459.id_ce_keyUsage: X509ExtensionKeyUsage,
-    rfc2459.id_ce_extKeyUsage: X509ExtensionExtendedKeyUsage,
-    rfc2459.id_ce_subjectAltName: X509ExtensionSubjectAltName,
-    rfc2459.id_ce_nameConstraints: X509ExtensionNameConstraints,
+    rfc5280.id_ce_basicConstraints: X509ExtensionBasicConstraints,
+    rfc5280.id_ce_keyUsage: X509ExtensionKeyUsage,
+    rfc5280.id_ce_extKeyUsage: X509ExtensionExtendedKeyUsage,
+    rfc5280.id_ce_subjectAltName: X509ExtensionSubjectAltName,
+    rfc5280.id_ce_nameConstraints: X509ExtensionNameConstraints,
 }
 
 
@@ -474,7 +474,7 @@ def construct_extension(ext):
     should be used based on the extension id.
     If the type is unknown, generic X509Extension is used instead.
     """
-    if not isinstance(ext, rfc2459.Extension):
+    if not isinstance(ext, rfc5280.Extension):
         raise errors.X509Error("extension has incorrect type")
     ext_class = EXTENSION_CLASSES.get(ext['extnID'], X509Extension)
     return ext_class(ext)

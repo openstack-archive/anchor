@@ -18,8 +18,8 @@ import logging
 import netaddr
 from pyasn1.type import univ as pyasn1_univ
 from pyasn1_modules import rfc2437  # PKCS#1
-from pyasn1_modules import rfc2459  # X509
 
+from anchor.asn1 import rfc5280  # X509
 from anchor.validators import errors as v_errors
 from anchor.validators import utils
 from anchor.X509 import errors
@@ -227,7 +227,7 @@ def public_key(csr=None, allowed_keys=None, **kwargs):
     algo = csr.get_public_key_algo()
     algo_names = {
         rfc2437.rsaEncryption: 'RSA',
-        rfc2459.id_dsa: 'DSA',
+        rfc5280.id_dsa: 'DSA',
         }
     algo_name = algo_names.get(algo)
     if algo_name is None:

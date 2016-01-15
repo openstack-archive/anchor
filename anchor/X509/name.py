@@ -17,59 +17,59 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import error as asn1_error
 from pyasn1.type import univ as asn1_univ
-from pyasn1_modules import rfc2459
 
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 
-OID_commonName = rfc2459.id_at_commonName
-OID_localityName = rfc2459.id_at_localityName
-OID_stateOrProvinceName = rfc2459.id_at_stateOrProvinceName
-OID_organizationName = rfc2459.id_at_organizationName
-OID_organizationalUnitName = rfc2459.id_at_organizationalUnitName
-OID_countryName = rfc2459.id_at_countryName
-OID_pkcs9_emailAddress = rfc2459.emailAddress
-OID_surname = rfc2459.id_at_sutname
-OID_givenName = rfc2459.id_at_givenName
+OID_commonName = rfc5280.id_at_commonName
+OID_localityName = rfc5280.id_at_localityName
+OID_stateOrProvinceName = rfc5280.id_at_stateOrProvinceName
+OID_organizationName = rfc5280.id_at_organizationName
+OID_organizationalUnitName = rfc5280.id_at_organizationalUnitName
+OID_countryName = rfc5280.id_at_countryName
+OID_pkcs9_emailAddress = rfc5280.id_emailAddress
+OID_surname = rfc5280.id_at_surname
+OID_givenName = rfc5280.id_at_givenName
 
 name_oids = {
-    rfc2459.id_at_name: rfc2459.X520name,
-    rfc2459.id_at_sutname: rfc2459.X520name,
-    rfc2459.id_at_givenName: rfc2459.X520name,
-    rfc2459.id_at_initials: rfc2459.X520name,
-    rfc2459.id_at_generationQualifier: rfc2459.X520name,
-    rfc2459.id_at_commonName: rfc2459.X520CommonName,
-    rfc2459.id_at_localityName: rfc2459.X520LocalityName,
-    rfc2459.id_at_stateOrProvinceName: rfc2459.X520StateOrProvinceName,
-    rfc2459.id_at_organizationName: rfc2459.X520OrganizationName,
-    rfc2459.id_at_organizationalUnitName: rfc2459.X520OrganizationalUnitName,
-    rfc2459.id_at_title: rfc2459.X520Title,
-    rfc2459.id_at_dnQualifier: rfc2459.X520dnQualifier,
-    rfc2459.id_at_countryName: rfc2459.X520countryName,
-    rfc2459.emailAddress: rfc2459.Pkcs9email,
+    rfc5280.id_at_name: rfc5280.X520name,
+    rfc5280.id_at_surname: rfc5280.X520name,
+    rfc5280.id_at_givenName: rfc5280.X520name,
+    rfc5280.id_at_initials: rfc5280.X520name,
+    rfc5280.id_at_generationQualifier: rfc5280.X520name,
+    rfc5280.id_at_commonName: rfc5280.X520CommonName,
+    rfc5280.id_at_localityName: rfc5280.X520LocalityName,
+    rfc5280.id_at_stateOrProvinceName: rfc5280.X520StateOrProvinceName,
+    rfc5280.id_at_organizationName: rfc5280.X520OrganizationName,
+    rfc5280.id_at_organizationalUnitName: rfc5280.X520OrganizationalUnitName,
+    rfc5280.id_at_title: rfc5280.X520Title,
+    rfc5280.id_at_dnQualifier: rfc5280.X520dnQualifier,
+    rfc5280.id_at_countryName: rfc5280.X520countryName,
+    rfc5280.id_emailAddress: rfc5280.EmailAddress,
 }
 
 code_names = {
-    rfc2459.id_at_commonName: "CN",
-    rfc2459.id_at_localityName: "L",
-    rfc2459.id_at_stateOrProvinceName: "ST",
-    rfc2459.id_at_organizationName: "O",
-    rfc2459.id_at_organizationalUnitName: "OU",
-    rfc2459.id_at_countryName: "C",
-    rfc2459.id_at_givenName: "GN",
-    rfc2459.id_at_sutname: "SN",
-    rfc2459.emailAddress: "emailAddress",
+    rfc5280.id_at_commonName: "CN",
+    rfc5280.id_at_localityName: "L",
+    rfc5280.id_at_stateOrProvinceName: "ST",
+    rfc5280.id_at_organizationName: "O",
+    rfc5280.id_at_organizationalUnitName: "OU",
+    rfc5280.id_at_countryName: "C",
+    rfc5280.id_at_givenName: "GN",
+    rfc5280.id_at_surname: "SN",
+    rfc5280.id_emailAddress: "emailAddress",
 }
 
 short_names = {
-    rfc2459.id_at_commonName: "commonName",
-    rfc2459.id_at_localityName: "localityName",
-    rfc2459.id_at_stateOrProvinceName: "stateOrProvinceName",
-    rfc2459.id_at_organizationName: "organizationName",
-    rfc2459.id_at_organizationalUnitName: "organizationalUnitName",
-    rfc2459.id_at_countryName: "countryName",
-    rfc2459.id_at_givenName: "givenName",
-    rfc2459.id_at_sutname: "surname",
-    rfc2459.emailAddress: "emailAddress",
+    rfc5280.id_at_commonName: "commonName",
+    rfc5280.id_at_localityName: "localityName",
+    rfc5280.id_at_stateOrProvinceName: "stateOrProvinceName",
+    rfc5280.id_at_organizationName: "organizationName",
+    rfc5280.id_at_organizationalUnitName: "organizationalUnitName",
+    rfc5280.id_at_countryName: "countryName",
+    rfc5280.id_at_givenName: "givenName",
+    rfc5280.id_at_surname: "surname",
+    rfc5280.id_emailAddress: "emailAddress",
 }
 
 
@@ -119,12 +119,12 @@ class X509Name(object):
 
     def __init__(self, name_obj=None):
         if name_obj is not None:
-            if not isinstance(name_obj, rfc2459.RDNSequence):
+            if not isinstance(name_obj, rfc5280.RDNSequence):
                 raise TypeError("name is not an RDNSequence")
             # TODO(stan): actual copy
             self._name_obj = name_obj
         else:
-            self._name_obj = rfc2459.RDNSequence()
+            self._name_obj = rfc5280.RDNSequence()
 
     def __str__(self):
         return '/' + '/'.join("%s=%s" % (e.get_code(), e.get_value())
@@ -143,19 +143,19 @@ class X509Name(object):
     def add_name_entry(self, oid, text):
         if not isinstance(oid, asn1_univ.ObjectIdentifier):
             raise errors.X509Error("oid '%s' is not valid" % (oid,))
-        entry = rfc2459.RelativeDistinguishedName()
-        entry[0] = rfc2459.AttributeTypeAndValue()
+        entry = rfc5280.RelativeDistinguishedName()
+        entry[0] = rfc5280.AttributeTypeAndValue()
         entry[0]['type'] = oid
         name_type = name_oids[oid]
         try:
-            if name_type in (rfc2459.X520countryName, rfc2459.Pkcs9email):
+            if name_type in (rfc5280.X520countryName, rfc5280.EmailAddress):
                 val = name_type(text)
             else:
                 val = name_type()
                 val['utf8String'] = text
         except asn1_error.ValueConstraintError:
             raise errors.X509Error("Name '%s' is not valid" % text)
-        entry[0]['value'] = rfc2459.AttributeValue(encoder.encode(val))
+        entry[0]['value'] = rfc5280.AttributeValue(encoder.encode(val))
         self._name_obj[len(self)] = entry
 
     def get_entries_by_oid(self, oid):

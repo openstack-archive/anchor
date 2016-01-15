@@ -23,8 +23,8 @@ from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
 from pyasn1_modules import pem
-from pyasn1_modules import rfc2459  # X509v3
 
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name
@@ -54,8 +54,8 @@ class X509Certificate(signature.SignatureMixin):
     """X509 certificate class."""
     def __init__(self, certificate=None):
         if certificate is None:
-            self._cert = rfc2459.Certificate()
-            self._cert['tbsCertificate'] = rfc2459.TBSCertificate()
+            self._cert = rfc5280.Certificate()
+            self._cert['tbsCertificate'] = rfc5280.TBSCertificate()
         else:
             self._cert = certificate
 
@@ -64,7 +64,7 @@ class X509Certificate(signature.SignatureMixin):
         try:
             der_content = pem.readPemFromFile(f)
             certificate = decoder.decode(der_content,
-                                         asn1Spec=rfc2459.Certificate())[0]
+                                         asn1Spec=rfc5280.Certificate())[0]
             return X509Certificate(certificate)
         except Exception:
             raise X509CertificateError("Could not read X509 certificate from "
@@ -147,7 +147,7 @@ class X509Certificate(signature.SignatureMixin):
     def set_pubkey(self, pkey):
         """Set the public key field.
 
-        :param pkey: The public key, rfc2459.SubjectPublicKeyInfo description
+        :param pkey: The public key, rfc5280.SubjectPublicKeyInfo description
         """
         self._cert['tbsCertificate']['subjectPublicKeyInfo'] = pkey
 
@@ -166,7 +166,7 @@ class X509Certificate(signature.SignatureMixin):
         """
         val = subject._name_obj
         if self._cert['tbsCertificate']['subject'] is None:
-            self._cert['tbsCertificate']['subject'] = rfc2459.Name()
+            self._cert['tbsCertificate']['subject'] = rfc5280.Name()
         self._cert['tbsCertificate']['subject'][0] = val
 
     def set_issuer(self, issuer):
@@ -176,7 +176,7 @@ class X509Certificate(signature.SignatureMixin):
         """
         val = issuer._name_obj
         if self._cert['tbsCertificate']['issuer'] is None:
-            self._cert['tbsCertificate']['issuer'] = rfc2459.Name()
+            self._cert['tbsCertificate']['issuer'] = rfc5280.Name()
         self._cert['tbsCertificate']['issuer'][0] = val
 
     def get_issuer(self):
@@ -228,7 +228,7 @@ class X509Certificate(signature.SignatureMixin):
         self._cert['tbsCertificate']['signature'] = algo_id
 
     def _embed_signature(self, algo_id, signature):
-        self._cert['signatureValue'] = "'%s'H" % (
+        self._cert['signature'] = "'%s'H" % (
             str(binascii.hexlify(signature).decode('ascii')),)
         self._cert['signatureAlgorithm'] = algo_id
 
