@@ -17,8 +17,8 @@
 import unittest
 
 from pyasn1.codec.der import encoder
-from pyasn1_modules import rfc2459
 
+from anchor.asn1 import rfc5280
 from anchor.validators import errors
 from anchor.validators import standards
 from anchor.X509 import extension
@@ -48,15 +48,15 @@ class TestExtensionDuplicates(unittest.TestCase):
         csr = signing_request.X509Csr()
         ext = extension.X509ExtensionSubjectAltName()
         ext.add_dns_id('example.com')
-        exts = rfc2459.Extensions()
+        exts = rfc5280.Extensions()
         exts[0] = ext._ext
         exts[1] = ext._ext
         # Anchor doesn't allow this normally, so tests need to cheat
         attrs = csr.get_attributes()
         attrs[0] = None
-        attrs[0]['type'] = signing_request.OID_extensionRequest
-        attrs[0]['vals'] = None
-        attrs[0]['vals'][0] = encoder.encode(exts)
+        attrs[0]['attrType'] = signing_request.OID_extensionRequest
+        attrs[0]['attrValues'] = None
+        attrs[0]['attrValues'][0] = encoder.encode(exts)
         with self.assertRaises(errors.ValidationError):
             standards._no_extension_duplicates(csr)
 

@@ -18,8 +18,9 @@ import unittest
 
 import netaddr
 from pyasn1.codec.der import encoder
-from pyasn1_modules import rfc2459  # X509v3
+from pyasn1.type import univ
 
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 from anchor.X509 import extension
 
@@ -34,16 +35,16 @@ class TestExtensionBase(unittest.TestCase):
             extension.X509Extension("foobar")
 
     def test_unknown_extension_str(self):
-        asn1 = rfc2459.Extension()
-        asn1['extnID'] = rfc2459.univ.ObjectIdentifier('1.2.3.4')
+        asn1 = rfc5280.Extension()
+        asn1['extnID'] = univ.ObjectIdentifier('1.2.3.4')
         asn1['critical'] = False
         asn1['extnValue'] = "foobar"
         ext = extension.X509Extension(asn1)
         self.assertEqual("1.2.3.4: <unknown>", str(ext))
 
     def test_construct(self):
-        asn1 = rfc2459.Extension()
-        asn1['extnID'] = rfc2459.univ.ObjectIdentifier('1.2.3.4')
+        asn1 = rfc5280.Extension()
+        asn1['extnID'] = univ.ObjectIdentifier('1.2.3.4')
         asn1['critical'] = False
         asn1['extnValue'] = "foobar"
         ext = extension.construct_extension(asn1)
@@ -54,8 +55,8 @@ class TestExtensionBase(unittest.TestCase):
             extension.construct_extension("foobar")
 
     def test_critical(self):
-        asn1 = rfc2459.Extension()
-        asn1['extnID'] = rfc2459.univ.ObjectIdentifier('1.2.3.4')
+        asn1 = rfc5280.Extension()
+        asn1['extnID'] = univ.ObjectIdentifier('1.2.3.4')
         asn1['critical'] = False
         asn1['extnValue'] = "foobar"
         ext = extension.construct_extension(asn1)
@@ -64,8 +65,8 @@ class TestExtensionBase(unittest.TestCase):
         self.assertTrue(ext.get_critical())
 
     def test_serialise(self):
-        asn1 = rfc2459.Extension()
-        asn1['extnID'] = rfc2459.univ.ObjectIdentifier('1.2.3.4')
+        asn1 = rfc5280.Extension()
+        asn1['extnID'] = univ.ObjectIdentifier('1.2.3.4')
         asn1['critical'] = False
         asn1['extnValue'] = "foobar"
         ext = extension.construct_extension(asn1)
@@ -196,42 +197,42 @@ class TestExtendedKeyUsage(unittest.TestCase):
         self.ext = extension.X509ExtensionExtendedKeyUsage()
 
     def test_get_all(self):
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
-        self.ext.set_usage(rfc2459.id_kp_codeSigning, True)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc5280.id_kp_codeSigning, True)
         usages = self.ext.get_all_usages()
         self.assertEqual(2, len(usages))
-        self.assertIn(rfc2459.id_kp_clientAuth, usages)
+        self.assertIn(rfc5280.id_kp_clientAuth, usages)
 
     def test_get_one(self):
-        self.assertFalse(self.ext.get_usage(rfc2459.id_kp_clientAuth))
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
-        self.assertTrue(self.ext.get_usage(rfc2459.id_kp_clientAuth))
+        self.assertFalse(self.ext.get_usage(rfc5280.id_kp_clientAuth))
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
+        self.assertTrue(self.ext.get_usage(rfc5280.id_kp_clientAuth))
 
     def test_set(self):
         self.assertEqual(0, len(self.ext.get_all_usages()))
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
         self.assertEqual(1, len(self.ext.get_all_usages()))
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
         self.assertEqual(1, len(self.ext.get_all_usages()))
-        self.ext.set_usage(rfc2459.id_kp_codeSigning, True)
+        self.ext.set_usage(rfc5280.id_kp_codeSigning, True)
         self.assertEqual(2, len(self.ext.get_all_usages()))
 
     def test_unset(self):
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, False)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, False)
         self.assertEqual(0, len(self.ext.get_all_usages()))
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, False)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, False)
         self.assertEqual(0, len(self.ext.get_all_usages()))
 
     def test_str(self):
-        self.ext.set_usage(rfc2459.id_kp_clientAuth, True)
-        self.ext.set_usage(rfc2459.id_kp_codeSigning, True)
+        self.ext.set_usage(rfc5280.id_kp_clientAuth, True)
+        self.ext.set_usage(rfc5280.id_kp_codeSigning, True)
         self.assertEqual(
             "extKeyUsage: TLS Web Client Authentication, Code Signing",
             str(self.ext))
 
     def test_invalid_usage(self):
         self.assertRaises(ValueError, self.ext.get_usage,
-                          rfc2459.univ.ObjectIdentifier('1.2.3.4'))
+                          univ.ObjectIdentifier('1.2.3.4'))
         self.assertRaises(ValueError, self.ext.set_usage, True,
-                          rfc2459.univ.ObjectIdentifier('1.2.3.4'))
+                          univ.ObjectIdentifier('1.2.3.4'))
