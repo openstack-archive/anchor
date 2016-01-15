@@ -228,7 +228,9 @@ def sign(csr, ca_conf):
     new_cert.set_serial_number(serial)
 
     exts = csr.get_extensions()
-    for i, ext in enumerate(exts):
+
+    ext_i = 0
+    for ext in exts:
         # this check is separate from standards validator - the signing backend
         # may know about more/fewer extensions than we do
         if ext.get_oid() not in extension.EXTENSION_CLASSES.keys():
@@ -241,8 +243,9 @@ def sign(csr, ca_conf):
                 logger.info("CSR submitted with non-critical unknown oid %s, "
                             "not including extension", (ext.get_oid(),))
         else:
-            logger.info("Adding certificate extension: %i %s", i, str(ext))
-            new_cert.add_extension(ext, i)
+            logger.info("Adding certificate extension: %i %s", ext_i, str(ext))
+            new_cert.add_extension(ext, ext_i)
+            ext_i += 1
 
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)
