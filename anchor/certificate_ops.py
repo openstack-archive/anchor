@@ -21,12 +21,14 @@ import uuid
 import pecan
 from webob import exc as http_status
 
+from anchor import cmc
 from anchor import jsonloader
+from anchor import util
 from anchor import validation
 from anchor.X509 import certificate
 from anchor.X509 import extension
 from anchor.X509 import signing_request
-from anchor.X509 import utils
+from anchor.X509 import utils as x509_utils
 
 
 logger = logging.getLogger(__name__)
@@ -41,10 +43,10 @@ class SigningError(Exception):
     pass
 
 
-def parse_csr(csr, encoding):
+def parse_csr(data, encoding):
     """Loads the user provided CSR into the backend X509 library.
 
-       :param csr: CSR as provided by the API user
+       :param data: CSR as provided by the API user
        :param encoding: encoding for the CSR (must be PEM today)
        :return: CSR object from backend X509 library or aborts
     """
@@ -53,17 +55,27 @@ def parse_csr(csr, encoding):
         logger.error("parse_csr failed: bad encoding ({})".format(encoding))
         pecan.abort(400, "invalid CSR")
 
-    if csr is None:
+    if data is None:
         logger.error("parse_csr failed: missing CSR")
         pecan.abort(400, "invalid CSR")
 
-    # load the CSR into the backend X509 library
+    # get DER version
+    der = util.extract_pem(data.encode('ascii'))
+    if der is None:
+        logger.error("perse_csr failed: PEM contentents not found")
+        pecan.abort(400, "PEM contents not found")
+
+    # try to unpack the certificate from CMC wrappers
     try:
-        out_req = signing_request.X509Csr.from_buffer(csr)
-        return out_req
-    except Exception as e:
-        logger.exception("Exception while parsing the CSR: %s", e)
-        pecan.abort(400, "CSR cannot be parsed")
+        csr = cmc.parse_request(der)
+        return signing_request.X509Csr(csr)
+    except cmc.CMCParsingError:
+        # it's not CMC data, that's fine, it's likely the CSR itself
+        try:
+            return signing_request.X509Csr.from_buffer(der, 'der')
+        except Exception as e:
+            logger.exception("Exception while parsing the CSR: %s", e)
+            pecan.abort(400, "CSR cannot be parsed")
 
 
 def validate_csr(ra_name, auth_result, csr, request):
@@ -208,7 +220,7 @@ def sign(csr, ca_conf):
         raise SigningError("Cannot load the signing CA: %s" % (e,))
 
     try:
-        key = utils.get_private_key_from_file(ca_conf['key_path'])
+        key = x509_utils.get_private_key_from_file(ca_conf['key_path'])
     except Exception as e:
         raise SigningError("Cannot load the signing CA key: %s" % (e,))
 

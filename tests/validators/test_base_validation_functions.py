@@ -29,7 +29,7 @@ class TestBaseValidators(tests.DefaultRequestMixin, unittest.TestCase):
     def setUp(self):
         super(TestBaseValidators, self).setUp()
         self.csr = signing_request.X509Csr.from_buffer(
-            self.csr_sample)
+            self.csr_sample_bytes)
 
     def tearDown(self):
         super(TestBaseValidators, self).tearDown()
