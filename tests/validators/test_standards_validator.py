@@ -29,7 +29,7 @@ import tests
 
 class TestStandardsValidator(tests.DefaultRequestMixin, unittest.TestCase):
     def test_passing(self):
-        csr = signing_request.X509Csr.from_buffer(self.csr_sample)
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
         standards.standards_compliance(csr=csr)
 
 
