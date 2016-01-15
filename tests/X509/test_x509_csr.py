@@ -49,7 +49,8 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
     def setUp(self):
         super(TestX509Csr, self).setUp()
-        self.csr = signing_request.X509Csr.from_buffer(TestX509Csr.csr_sample)
+        self.csr = signing_request.X509Csr.from_buffer(
+            TestX509Csr.csr_sample_bytes)
 
     def tearDown(self):
         pass
@@ -87,7 +88,7 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_read_from_file(self):
         open_name = 'anchor.X509.signing_request.open'
-        f = io.StringIO(self.csr_sample)
+        f = io.BytesIO(self.csr_sample_bytes)
         with mock.patch(open_name, create=True) as mock_open:
             mock_open.return_value = f
             csr = signing_request.X509Csr.from_file("some_path")
@@ -98,8 +99,8 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_bad_data_throws(self):
         bad_data = (
-            u"some bad data is "
-            "EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m")
+            b"some bad data is "
+            b"EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m")
 
         csr = signing_request.X509Csr()
         self.assertRaises(x509_errors.X509Error,

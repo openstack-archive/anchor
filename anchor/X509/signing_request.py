@@ -21,13 +21,14 @@ from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
 from pyasn1_modules import pem
 
+from anchor import util
 from anchor.asn1 import rfc5280
 from anchor.asn1 import rfc6402
 from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name
 from anchor.X509 import signature
-from anchor.X509 import utils
+from anchor.X509 import utils as x509_utils
 
 
 OID_extensionRequest = asn1_univ.ObjectIdentifier('1.2.840.113549.1.9.14')
@@ -47,34 +48,40 @@ class X509Csr(signature.SignatureMixin):
             self._csr = csr
 
     @staticmethod
-    def from_open_file(f):
+    def from_open_file(f, encoding='pem'):
+        if encoding == 'pem':
+            try:
+                der_content = util.extract_pem(f.read())
+            except Exception:
+                raise X509CsrError("Data not in PEM format")
+        elif encoding == 'der':
+            der_content = f.read()
+        else:
+            raise X509CsrError("Unknown encoding")
+
         try:
-            der_content = pem.readPemFromFile(
-                f, startMarker='-----BEGIN CERTIFICATE REQUEST-----',
-                endMarker='-----END CERTIFICATE REQUEST-----')
             csr = decoder.decode(der_content,
                                  asn1Spec=rfc6402.CertificationRequest())[0]
             return X509Csr(csr)
         except Exception:
-            raise X509CsrError("Could not read X509 certificate from "
-                               "PEM data.")
+            raise X509CsrError("Could not read X509 certificate from data.")
 
     @staticmethod
-    def from_buffer(data):
+    def from_buffer(data, encoding='pem'):
         """Create this CSR from a buffer
 
         :param data: The data buffer
         """
-        return X509Csr.from_open_file(io.StringIO(data))
+        return X509Csr.from_open_file(io.BytesIO(data), encoding)
 
     @staticmethod
-    def from_file(path):
+    def from_file(path, encoding='pem'):
         """Create this CSR from a file on disk
 
         :param path: Path to the file on disk
         """
         with open(path, 'r') as f:
-            return X509Csr.from_open_file(f)
+            return X509Csr.from_open_file(f, encoding)
 
     def get_pubkey(self):
         """Get the public key from the CSR
@@ -207,7 +214,7 @@ class X509Csr(signature.SignatureMixin):
         return self._get_signing_algorithm()
 
     def _get_signature(self):
-        return utils.bin_to_bytes(self._csr['signature'])
+        return x509_utils.bin_to_bytes(self._csr['signature'])
 
     def _get_signing_algorithm(self):
         return self._csr['signatureAlgorithm']['algorithm']
@@ -215,7 +222,7 @@ class X509Csr(signature.SignatureMixin):
     def _get_public_key(self):
         csr_info = self._csr['certificationRequestInfo']
         key_info = csr_info['subjectPublicKeyInfo']
-        return utils.get_public_key_from_der(encoder.encode(key_info))
+        return x509_utils.get_public_key_from_der(encoder.encode(key_info))
 
     def _get_bytes_to_sign(self):
         return encoder.encode(self._csr['certificationRequestInfo'])

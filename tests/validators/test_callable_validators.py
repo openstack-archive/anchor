@@ -554,11 +554,11 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         )
 
     def test_csr_signature(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         self.assertIsNone(custom.csr_signature(csr=csr))
 
     def test_csr_signature_bad_sig(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         with mock.patch.object(x509_csr.X509Csr, '_get_signature',
                                return_value=(b'A'*49)):
             with self.assertRaisesRegexp(errors.ValidationError,
@@ -566,7 +566,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
                 custom.csr_signature(csr=csr)
 
     def test_csr_signature_bad_algo(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         with mock.patch.object(x509_csr.X509Csr, '_get_signing_algorithm',
                                return_value=rfc2459.id_dsa_with_sha1):
             with self.assertRaisesRegexp(errors.ValidationError,
@@ -574,7 +574,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
                 custom.csr_signature(csr=csr)
 
     def test_public_key_good_rsa(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         self.assertIsNone(custom.public_key(csr=csr,
                                             allowed_keys={'RSA': 1024}))
 
@@ -594,18 +594,18 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         dsa_key_der = base64.b64decode(dsa_key_pem)
         spki = decoder.decode(dsa_key_der,
                               asn1Spec=rfc2459.SubjectPublicKeyInfo())[0]
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         csr._csr['certificationRequestInfo']['subjectPublicKeyInfo'] = spki
         self.assertIsNone(custom.public_key(csr=csr,
                                             allowed_keys={'DSA': 1024}))
 
     def test_public_key_too_short(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         with self.assertRaises(errors.ValidationError):
             custom.public_key(csr=csr, allowed_keys={'RSA': 99999999})
 
     def test_public_key_wrong_algo(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample)
+        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
         with self.assertRaises(errors.ValidationError):
             custom.public_key(csr=csr, allowed_keys={'XXX': 0})
 
