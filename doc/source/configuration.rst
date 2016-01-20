@@ -168,6 +168,33 @@ Each validator has its own set of parameters described separately in the
 :doc:`fixups section </fixups>`
 
 
+Audit
+-----
+
+Audit has two possible targets: ``log`` for output in the standard logging
+stream and ``messaging`` for the openstack message queue. The first one doesn't
+require any extra options:
+
+.. code:: json
+
+  {
+    "audit": {
+      "target": "log"
+    }
+  }
+
+The message queue version requires defining a target in a way compatible with
+``oslo_messaging`` `transport URIs`_. For example:
+
+.. code:: json
+
+  {
+    "audit": {
+      "target": "messaging",
+      "url": "rabbit:guest@localhost:5672"
+    }
+  }
+
 Example configuration
 ---------------------
 
@@ -209,3 +236,5 @@ Example configuration
       }
     }
   }
+
+.. _transport URIs: https://wiki.openstack.org/wiki/Oslo/Messaging#Transports
