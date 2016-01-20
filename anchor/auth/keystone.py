@@ -41,11 +41,15 @@ def login(_, token):
 
     try:
         res = req.json()
-        user = res['token']['user']['name']
+        user = res['token']['user']
+        user_name = user['name']
+        user_id = user['id']
+        project_id = res['token']['project']['id']
 
         roles = [role['name'] for role in res['token']['roles']]
     except Exception:
         logger.exception("Keystone response was not in the expected format")
         return None
 
-    return results.AuthDetails(username=user, groups=roles)
+    return results.AuthDetails(username=user_name, groups=roles,
+                               user_id=user_id, project_id=project_id)

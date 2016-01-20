@@ -104,8 +104,11 @@ class AuthKeystoneTests(unittest.TestCase):
         self.user = self.json_response['token']['user']['name']
         self.roles = [role['name']
                       for role in self.json_response['token']['roles']]
+        self.user_id = self.json_response['token']['user']['id']
+        self.project_id = self.json_response['token']['project']['id']
         self.expected = results.AuthDetails(
-            username=self.user, groups=self.roles)
+            username=self.user, groups=self.roles,
+            user_id=self.user_id, project_id=self.project_id)
 
         self.keystone_url = self.data['auth'][
             'keystone']['url'] + '/v3/auth/tokens'
