@@ -20,3 +20,4 @@ cover/*
 .coverage
 doc/build
 .eggs/
+pep8.txt
