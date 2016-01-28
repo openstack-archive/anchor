@@ -110,7 +110,11 @@ class X509Name(object):
             """
             value = self._obj[0]['value']
             der = value.asOctets()
-            name_spec = name_oids[self.get_oid()]()
+            oid = self.get_oid()
+            if oid not in name_oids:
+                return 'UNKNOWN'
+
+            name_spec = name_oids[oid]()
 
             value = decoder.decode(der, asn1Spec=name_spec)[0]
             if hasattr(value, 'getComponent'):
