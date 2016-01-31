@@ -1,5 +1,5 @@
 Anchor
-============
+======
 
 Anchor is an ephemeral PKI service that, based on certain conditions,
 automates the verification of CSRs and signs certificates for clients.
@@ -283,5 +283,5 @@ namespace and can take parameters just like validators.
 Reporting bugs and contributing
 ===============================
 
-For bug reporting and contributing, please check the CONTRIBUTING.md
+For bug reporting and contributing, please check the CONTRIBUTING.rst
 file.
