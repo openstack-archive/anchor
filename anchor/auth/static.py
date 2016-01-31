@@ -17,8 +17,8 @@ import logging
 
 from anchor.auth import results
 from anchor import jsonloader
-from anchor import util
 
+from oslo_utils import secretutils as util
 
 logger = logging.getLogger(__name__)
 
