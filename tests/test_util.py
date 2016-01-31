@@ -17,32 +17,9 @@
 
 import unittest
 
-import mock
-
-from anchor import util
-
 
 class UtilTests(unittest.TestCase):
 
-    @mock.patch('hmac.compare_digest', create=True)
-    def test_compare_with_hmac(self, compare_digest):
-        compare_digest.return_value = True
-        self.assertTrue(util.constant_time_compare("", ""))
-
-    @mock.patch('hmac.compare_digest', create=True)
-    def test_compare_with_shim_eq(self, compare_digest):
-        compare_digest.side_effect = AttributeError(
-            "'hmac' has no attribute 'compare_digest'")
-        self.assertTrue(util.constant_time_compare("abc", "abc"))
-
-    @mock.patch('hmac.compare_digest', create=True)
-    def test_compare_with_shim_ne(self, compare_digest):
-        compare_digest.side_effect = AttributeError(
-            "'hmac' has no attribute 'compare_digest'")
-        self.assertFalse(util.constant_time_compare("abc", "def"))
-
-    @mock.patch('hmac.compare_digest', create=True)
-    def test_compare_with_shim_different_len(self, compare_digest):
-        compare_digest.side_effect = AttributeError(
-            "'hmac' has no attribute 'compare_digest'")
-        self.assertFalse(util.constant_time_compare("abc", ""))
+    def test_verify_domain(self):
+        # TODO(browne): implement me
+        pass
