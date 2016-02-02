@@ -197,6 +197,10 @@ class X509Certificate(signature.SignatureMixin):
         """
         self._cert['tbsCertificate']['serialNumber'] = serial
 
+    def get_serial_number(self,):
+        """Get the serial number"""
+        return self._cert['tbsCertificate']['serialNumber']
+
     def _get_extensions(self):
         if self._cert['tbsCertificate']['extensions'] is None:
             # this actually initialises the extensions tag rather than
