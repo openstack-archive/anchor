@@ -256,8 +256,21 @@ def sign(csr, ca_conf):
                             "not including extension", (ext.get_oid(),))
         else:
             logger.info("Adding certificate extension: %i %s", ext_i, str(ext))
+            # authority id will be replaced with current signer
+            # this cannot be a fixup, because they don't get access to the CA
+            if isinstance(ext, extension.X509ExtensionAuthorityKeyId):
+                continue
+
             new_cert.add_extension(ext, ext_i)
             ext_i += 1
+
+    ca_exts = ca.get_extensions(extension.X509ExtensionSubjectKeyId)
+    auth_key_id = extension.X509ExtensionAuthorityKeyId()
+    if ca_exts:
+        auth_key_id.set_key_id(ca_exts[0].get_key_id())
+    else:
+        auth_key_id.set_key_id(ca.get_key_id())
+    new_cert.add_extension(auth_key_id, ext_i)
 
     logger.info("Signing certificate for <%s> with serial <%s>",
                 csr.get_subject(), serial)

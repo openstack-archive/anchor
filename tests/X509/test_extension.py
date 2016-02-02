@@ -236,3 +236,28 @@ class TestExtendedKeyUsage(unittest.TestCase):
                           univ.ObjectIdentifier('1.2.3.4'))
         self.assertRaises(ValueError, self.ext.set_usage, True,
                           univ.ObjectIdentifier('1.2.3.4'))
+
+
+class TestAuthorityKeyId(unittest.TestCase):
+    def setUp(self):
+        self.ext = extension.X509ExtensionAuthorityKeyId()
+
+    def test_key_id(self):
+        key_id = b"12345678"
+        self.ext.set_key_id(key_id)
+        self.assertEqual(key_id, self.ext.get_key_id())
+
+    def test_name_serial(self):
+        s = 12345678
+        self.ext.set_serial(s)
+        self.assertEqual(s, self.ext.get_serial())
+
+
+class TestSubjectKeyId(unittest.TestCase):
+    def setUp(self):
+        self.ext = extension.X509ExtensionSubjectKeyId()
+
+    def test_key_id(self):
+        key_id = b"12345678"
+        self.ext.set_key_id(key_id)
+        self.assertEqual(key_id, self.ext.get_key_id())
