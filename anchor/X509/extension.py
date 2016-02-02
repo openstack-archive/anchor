@@ -456,12 +456,58 @@ class X509ExtensionExtendedKeyUsage(X509Extension):
         return "extKeyUsage: " + ", ".join(usages)
 
 
+class X509ExtensionAuthorityKeyId(X509Extension):
+    spec = rfc5280.AuthorityKeyIdentifier
+    _oid = rfc5280.id_ce_authorityKeyIdentifier
+
+    @uses_ext_value
+    def get_key_id(self, ext_value=None):
+        return ext_value['keyIdentifier'].asOctets()
+
+    @uses_ext_value
+    def get_serial(self, ext_value=None):
+        return ext_value['authorityCertSerialNumber']
+
+    @modifies_ext_value
+    def set_key_id(self, key, ext_value=None):
+        # new extension, pyasn1 cannot remove values
+        new_ext = self.spec()
+        new_ext['keyIdentifier'] = key
+        return new_ext
+
+    @modifies_ext_value
+    def set_serial(self, serial, ext_value=None):
+        # new extension, pyasn1 cannot remove values
+        new_ext = self.spec()
+        new_ext['authorityCertSerialNumber'] = int(serial)
+        return new_ext
+
+
+class X509ExtensionSubjectKeyId(X509Extension):
+    spec = rfc5280.SubjectKeyIdentifier
+    _oid = rfc5280.id_ce_subjectKeyIdentifier
+
+    @classmethod
+    def _get_default_value(cls):
+        return cls.spec(b"")
+
+    @uses_ext_value
+    def get_key_id(self, ext_value=None):
+        return ext_value.asOctets()
+
+    @modifies_ext_value
+    def set_key_id(self, key, ext_value=None):
+        return self.spec(key)
+
+
 EXTENSION_CLASSES = {
     rfc5280.id_ce_basicConstraints: X509ExtensionBasicConstraints,
     rfc5280.id_ce_keyUsage: X509ExtensionKeyUsage,
     rfc5280.id_ce_extKeyUsage: X509ExtensionExtendedKeyUsage,
     rfc5280.id_ce_subjectAltName: X509ExtensionSubjectAltName,
     rfc5280.id_ce_nameConstraints: X509ExtensionNameConstraints,
+    rfc5280.id_ce_authorityKeyIdentifier: X509ExtensionAuthorityKeyId,
+    rfc5280.id_ce_subjectKeyIdentifier: X509ExtensionSubjectKeyId,
 }
 
 
