@@ -51,6 +51,8 @@ class X509Csr(signature.SignatureMixin):
         if encoding == 'pem':
             try:
                 der_content = util.extract_pem(f.read())
+            except IOError:
+                raise X509CsrError("Could not read from file %s" % f)
             except Exception:
                 raise X509CsrError("Data not in PEM format")
         elif encoding == 'der':
