@@ -1,6 +1,22 @@
 Anchor
 ======
 
+.. image:: https://img.shields.io/pypi/v/anchor.svg
+    :target: https://pypi.python.org/pypi/anchor/
+    :alt: Latest Version
+
+.. image:: https://img.shields.io/pypi/pyversions/anchor.svg
+    :target: https://pypi.python.org/pypi/anchor/
+    :alt: Python Versions
+
+.. image:: https://img.shields.io/pypi/format/anchor.svg
+    :target: https://pypi.python.org/pypi/anchor/
+    :alt: Format
+
+.. image:: https://img.shields.io/badge/license-Apache%202-blue.svg
+    :target: https://git.openstack.org/cgit/openstack/anchor/plain/LICENSE
+    :alt: License
+
 Anchor is an ephemeral PKI service that, based on certain conditions,
 automates the verification of CSRs and signs certificates for clients.
 The validity period can be set in the config file with hour resolution.
