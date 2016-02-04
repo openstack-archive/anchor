@@ -1,0 +1,51 @@
+   AttributeCertificateVersion1
+       { iso(1) member-body(2) us(840) rsadsi(113549)
+         pkcs(1) pkcs-9(9) smime(16) modules(0) v1AttrCert(15) }
+
+   DEFINITIONS EXPLICIT TAGS ::=
+   BEGIN
+
+   -- EXPORTS All
+
+   -- fake imports
+     -- Imports from RFC 3280 [PROFILE], Appendix A.1
+AlgorithmIdentifier ::= ANY
+Attribute ::= ANY
+CertificateSerialNumber ::= INTEGER
+Extensions ::= ANY
+UniqueIdentifier ::= BIT STRING
+
+     -- Imports from RFC 3280 [PROFILE], Appendix A.2
+GeneralNames ::= ANY
+
+     -- Imports from RFC 3281 [ACPROFILE], Appendix B
+AttCertValidityPeriod ::= ANY
+IssuerSerial ::= ANY
+
+   -- Definition extracted from X.509-1997 [X.509-97], but
+   -- different type names are used to avoid collisions.
+
+
+   AttributeCertificateV1 ::= SEQUENCE {
+     acInfo AttributeCertificateInfoV1,
+     signatureAlgorithm AlgorithmIdentifier,
+     signature BIT STRING }
+
+   AttributeCertificateInfoV1 ::= SEQUENCE {
+     version AttCertVersionV1 DEFAULT v1,
+     subject CHOICE {
+       baseCertificateID [0] IssuerSerial,
+         -- associated with a Public Key Certificate
+       subjectName [1] GeneralNames },
+         -- associated with a name
+     issuer GeneralNames,
+     signature AlgorithmIdentifier,
+     serialNumber CertificateSerialNumber,
+     attCertValidityPeriod AttCertValidityPeriod,
+     attributes SEQUENCE OF Attribute,
+     issuerUniqueID UniqueIdentifier OPTIONAL,
+     extensions Extensions OPTIONAL }
+
+   AttCertVersionV1 ::= INTEGER { v1(0) }
+
+   END -- of AttributeCertificateVersion1
