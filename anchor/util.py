@@ -13,6 +13,7 @@
 
 from __future__ import absolute_import
 
+import base64
 import hmac
 import re
 
@@ -74,3 +75,28 @@ def verify_domain(domain, allow_wildcards=False):
                 raise ValueError(
                     "domain <%s> contains invalid characters "
                     "(RFC1034/3.5)" % (domain,))
+
+
+def extract_pem(data, use_markers=True):
+    """Extract and unpack PEM data
+
+    Anything between the BEGIN and END lines will be unpacked using base64. The
+    specific BEGIN/END content name is ignored since it's not standard anyway.
+    """
+    if not isinstance(data, bytes):
+        raise TypeError("data must be bytes")
+    lines = data.splitlines()
+    seen_start = not use_markers
+    b64_content = b""
+    for line in lines:
+        if line.startswith(b"-----END ") and line.endswith(b"-----"):
+            break
+        if seen_start:
+            b64_content += line
+        if line.startswith(b"-----BEGIN ") and line.endswith(b"-----"):
+            seen_start = True
+
+    if not b64_content:
+        return None
+    decoder = getattr(base64, 'decodebytes', base64.decodestring)
+    return decoder(b64_content)
