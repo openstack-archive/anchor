@@ -51,8 +51,14 @@ class X509Csr(signature.SignatureMixin):
         if encoding == 'pem':
             try:
                 der_content = util.extract_pem(f.read())
+            except IOError:
+                raise X509CsrError("Could not read from source %s" % f)
             except Exception:
-                raise X509CsrError("Data not in PEM format")
+                raise X509CsrError(
+                    "Data source not readable or not in PEM format")
+
+            if not der_content:
+                raise X509CsrError("No PEM data found")
         elif encoding == 'der':
             der_content = f.read()
         else:
@@ -79,8 +85,11 @@ class X509Csr(signature.SignatureMixin):
 
         :param path: Path to the file on disk
         """
-        with open(path, 'r') as f:
-            return X509Csr.from_open_file(f, encoding)
+        try:
+            with open(path, 'r') as f:
+                return X509Csr.from_open_file(f, encoding)
+        except IOError:
+            raise X509CsrError("Could not read file %s" % path)
 
     def get_pubkey(self):
         """Get the public key from the CSR

@@ -97,15 +97,45 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
             entries = name.get_entries_by_oid(x509_name.OID_countryName)
             self.assertEqual(entries[0].get_value(), "UK")
 
+    def test_open_failure_throws(self):
+        open_name = 'anchor.X509.signing_request.open'
+        with mock.patch(open_name, create=True) as mock_open:
+            mock_open.side_effect = IOError(2, "No such file or direcory",
+                                            "some_path")
+            self.assertRaisesRegexp(x509_errors.X509Error,
+                                    "Could not read file",
+                                    signing_request.X509Csr.from_file,
+                                    "some_path")
+
+    def test_read_failure_throws(self):
+        f = mock.Mock()
+        f.read.side_effect = IOError(5, "Read failed")
+        self.assertRaisesRegexp(x509_errors.X509Error,
+                                "Could not read from source",
+                                signing_request.X509Csr.from_open_file,
+                                f)
+
+    def test_bad_pem_throws(self):
+        bad_data = (
+            b"-----BEGIN SOMETHING-----\n"
+            b"++++++\n"
+            b"-----END SOMETHING-----\n"
+            )
+
+        csr = signing_request.X509Csr()
+        self.assertRaisesRegexp(x509_errors.X509Error, "not in PEM format",
+                                csr.from_buffer,
+                                bad_data)
+
     def test_bad_data_throws(self):
         bad_data = (
             b"some bad data is "
             b"EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m")
 
         csr = signing_request.X509Csr()
-        self.assertRaises(x509_errors.X509Error,
-                          csr.from_buffer,
-                          bad_data)
+        self.assertRaisesRegexp(x509_errors.X509Error, "No PEM data found",
+                                csr.from_buffer,
+                                bad_data)
 
     def test_get_subject_countryName(self):
         name = self.csr.get_subject()
