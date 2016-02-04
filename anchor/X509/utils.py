@@ -22,8 +22,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 import netaddr
 from pyasn1.type import useful as asn1_useful
-from pyasn1_modules import rfc2459
 
+from anchor.asn1 import rfc5280
 from anchor.X509 import errors
 
 
@@ -102,7 +102,7 @@ def timestamp_to_asn1_time(t):
     """
 
     d = datetime.datetime.utcfromtimestamp(t)
-    asn1time = rfc2459.Time()
+    asn1time = rfc5280.Time()
     if d.year <= 2049:
         time_str = d.strftime("%y%m%d%H%M%SZ").encode('ascii')
         asn1time['utcTime'] = time_str
@@ -157,7 +157,7 @@ def get_private_key_from_file(path):
 
 def asn1_to_netaddr(octet_string):
     """Translate the ASN1 IP format to netaddr object."""
-    if not isinstance(octet_string, rfc2459.univ.OctetString):
+    if not isinstance(octet_string, rfc5280.univ.OctetString):
         raise TypeError("not an OctetString")
 
     ip_bytes = octet_string.asOctets()

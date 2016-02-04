@@ -18,7 +18,7 @@ import logging
 import netaddr
 from pyasn1.type import univ as pyasn1_univ
 from pyasn1_modules import rfc2437  # PKCS#1
-from pyasn1_modules import rfc2459  # X509
+from pyasn1_modules import rfc2459
 
 from anchor.validators import errors as v_errors
 from anchor.validators import utils
@@ -44,7 +44,7 @@ def common_name(csr, allowed_domains=[], allowed_networks=[], **kwargs):
     if len(CNs) > 1:
         raise v_errors.ValidationError("Too many CNs in the request")
 
-    # rfc5280#section-4.2.1.6 says so
+    # rfc2459#section-4.2.1.6 says so
     if len(CNs) == 0 and not alt_present:
         raise v_errors.ValidationError("Alt subjects have to exist if the main"
                                        " subject doesn't")
