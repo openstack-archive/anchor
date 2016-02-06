@@ -25,6 +25,7 @@ from __future__ import absolute_import
 
 from anchor import util
 from anchor.validators import errors
+from anchor.X509 import errors as x509_errors
 from anchor.X509 import extension
 
 
@@ -33,6 +34,7 @@ def standards_compliance(csr=None, **kwargs):
     _no_extension_duplicates(csr)
     _critical_flags(csr)
     _valid_domains(csr)
+    _csr_signature(csr)
     # TODO(stan): validate srv/uri, distinct DNs, email format, identity keys
 
 
@@ -80,3 +82,12 @@ def _valid_domains(csr):
             util.verify_domain(domain, allow_wildcards=True)
         except ValueError as e:
             raise errors.ValidationError(str(e))
+
+
+def _csr_signature(csr):
+    """Ensure that the CSR has a valid self-signature."""
+    try:
+        if not csr.verify():
+            raise errors.ValidationError("Signature on the CSR is not valid")
+    except x509_errors.X509Error:
+        raise errors.ValidationError("Signature on the CSR is not valid")
