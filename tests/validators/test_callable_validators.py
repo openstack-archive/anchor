@@ -20,7 +20,6 @@ import unittest
 import mock
 import netaddr
 from pyasn1.codec.der import decoder
-from pyasn1_modules import rfc2459
 
 from anchor.asn1 import rfc5280
 from anchor.validators import custom
@@ -553,26 +552,6 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
                 csr=csr,
             )
         )
-
-    def test_csr_signature(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
-        self.assertIsNone(custom.csr_signature(csr=csr))
-
-    def test_csr_signature_bad_sig(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
-        with mock.patch.object(x509_csr.X509Csr, '_get_signature',
-                               return_value=(b'A'*49)):
-            with self.assertRaisesRegexp(errors.ValidationError,
-                                         "Signature on the CSR is not valid"):
-                custom.csr_signature(csr=csr)
-
-    def test_csr_signature_bad_algo(self):
-        csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
-        with mock.patch.object(x509_csr.X509Csr, '_get_signing_algorithm',
-                               return_value=rfc2459.id_dsa_with_sha1):
-            with self.assertRaisesRegexp(errors.ValidationError,
-                                         "Signature on the CSR is not valid"):
-                custom.csr_signature(csr=csr)
 
     def test_public_key_good_rsa(self):
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
