@@ -21,6 +21,7 @@ import unittest
 import mock
 from pyasn1_modules import rfc2459
 
+from anchor.signers import cryptography_io
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
@@ -158,7 +159,8 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_sign(self):
         key = utils.get_private_key_from_pem(self.key_rsa_data)
-        self.csr.sign(key)
+        signer = cryptography_io.make_signer(key, 'RSA', 'SHA256')
+        self.csr.sign('RSA', 'SHA256', signer)
         # 10 bytes is definitely enough for non malicious case, right?
         self.assertEqual(b'\x16\xbd!\x9b\xfb\xfd\x10\xa1\xaf\x92',
                          self.csr._get_signature()[:10])
