@@ -17,10 +17,14 @@
 import textwrap
 import unittest
 
+import mock
 from pyasn1.type import univ as asn1_univ
 
+from anchor import errors
 from anchor import signers
 from anchor.signers import cryptography_io
+from anchor.signers import pkcs11
+from anchor import util
 from anchor.X509 import certificate
 from anchor.X509 import extension
 from anchor.X509 import signing_request
@@ -95,3 +99,167 @@ class TestCryptographyBackend(tests.DefaultConfigMixin,
     def test_sign_bad_key(self):
         with self.assertRaises(signers.SigningError):
             cryptography_io.make_signer("BAD", "sha256", "RSA")
+
+
+class TestPKCSBackend(unittest.TestCase):
+    def setUp(self):
+        self.good_conf = {
+            "cert_path": "tests/CA/root-ca.crt",
+            "output_path": "/somepath",
+            "signing_hash": "sha256",
+            "valid_hours": 24,
+            "slot": 5,
+            "pin": "somepin",
+            "key_id": "aabbccddeeff",
+            "pkcs11_path": "/somepath/library.so",
+            }
+
+    def test_conf_checks_package(self):
+        with mock.patch.object(util, 'check_file_exists', return_value=True):
+            with mock.patch.object(pkcs11, 'import_pkcs',
+                                   side_effect=ImportError()):
+                with self.assertRaises(errors.ConfigValidationException):
+                    pkcs11.conf_validator("name", self.good_conf)
+
+    def test_conf_checks_fields(self):
+        for key in self.good_conf:
+            conf = self.good_conf.copy()
+            del conf[key]
+            with self.assertRaises(errors.ConfigValidationException):
+                pkcs11.conf_validator("name", conf)
+
+    def test_conf_checks_file_permissions(self):
+        with mock.patch.object(util, 'check_file_exists', return_value=False):
+            with self.assertRaises(errors.ConfigValidationException):
+                pkcs11.conf_validator("name", self.good_conf)
+
+    def test_conf_checks_library_loading(self):
+        class MockExc(Exception):
+            pass
+
+        lib = mock.Mock()
+        lib.load.side_effect = MockExc()
+        mod = mock.Mock()
+        mod.PyKCS11Error = MockExc
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(util, 'check_file_exists', return_value=True):
+            with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+                with self.assertRaises(errors.ConfigValidationException):
+                    pkcs11.conf_validator("name", self.good_conf)
+
+    def test_conf_checks_valid_slot(self):
+        class MockExc(Exception):
+            pass
+
+        lib = mock.Mock()
+        lib.getSlotList.return_value = [4, 6]
+        mod = mock.Mock()
+        mod.PyKCS11Error = MockExc
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(util, 'check_file_exists', return_value=True):
+            with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+                with self.assertRaises(errors.ConfigValidationException):
+                    pkcs11.conf_validator("name", self.good_conf)
+
+    def test_conf_checks_valid_pin(self):
+        class MockExc(Exception):
+            pass
+
+        session = mock.Mock()
+        session.login.side_effect = MockExc()
+        lib = mock.Mock()
+        lib.getSlotList.return_value = [self.good_conf['slot']]
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Error = MockExc
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(util, 'check_file_exists', return_value=True):
+            with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+                with self.assertRaises(errors.ConfigValidationException):
+                    pkcs11.conf_validator("name", self.good_conf)
+
+    def test_conf_allows_valid(self):
+        session = mock.Mock()
+        lib = mock.Mock()
+        lib.getSlotList.return_value = [self.good_conf['slot']]
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(util, 'check_file_exists', return_value=True):
+            with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+                pkcs11.conf_validator("name", self.good_conf)
+
+    def test_make_signer_fails(self):
+        with mock.patch.object(pkcs11, 'make_signer',
+                               side_effect=signers.SigningError):
+            with self.assertRaises(signers.SigningError):
+                pkcs11.sign(mock.Mock(), self.good_conf)
+
+    def test_sign_login_fails(self):
+        class MockExc(Exception):
+            pass
+
+        session = mock.Mock()
+        session.login.side_effect = MockExc()
+        lib = mock.Mock()
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Error = MockExc
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+            with self.assertRaisesRegexp(signers.SigningError,
+                                         "pkcs11 session"):
+                pkcs11.sign(mock.Mock(), self.good_conf)
+
+    def test_sign_key_missing(self):
+        class MockExc(Exception):
+            pass
+
+        session = mock.Mock()
+        session.findObjects.return_value = []
+        lib = mock.Mock()
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+            with self.assertRaisesRegexp(signers.SigningError,
+                                         "requested key"):
+                pkcs11.sign(mock.Mock(), self.good_conf)
+
+    def test_sign_bad_hash(self):
+        session = mock.Mock()
+        session.findObjects.return_value = [object()]
+        lib = mock.Mock()
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Lib.return_value = lib
+        self.good_conf['signing_hash'] = 'unknown'
+
+        with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+            with self.assertRaisesRegexp(signers.SigningError,
+                                         "hash is not supported"):
+                pkcs11.sign(mock.Mock(), self.good_conf)
+
+    def test_working_signer(self):
+        res = b"123"
+
+        session = mock.Mock()
+        session.findObjects.return_value = [object()]
+        session.sign.return_value = res
+        lib = mock.Mock()
+        lib.openSession.return_value = session
+        mod = mock.Mock()
+        mod.PyKCS11Lib.return_value = lib
+
+        with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
+            signer = pkcs11.make_signer((1, 2, 3), self.good_conf['slot'],
+                                        self.good_conf['pin'],
+                                        self.good_conf['pkcs11_path'],
+                                        self.good_conf['signing_hash'].upper())
+            self.assertEqual(res, signer(b"data"))
