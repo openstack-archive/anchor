@@ -15,8 +15,6 @@ from __future__ import absolute_import
 
 import logging
 import os
-import time
-import uuid
 
 import pecan
 from webob import exc as http_status
@@ -26,9 +24,7 @@ from anchor import jsonloader
 from anchor import util
 from anchor import validation
 from anchor.X509 import certificate
-from anchor.X509 import extension
 from anchor.X509 import signing_request
-from anchor.X509 import utils as x509_utils
 
 
 logger = logging.getLogger(__name__)
@@ -37,10 +33,6 @@ logger = logging.getLogger(__name__)
 # we only support the PEM encoding for now, but this may grow
 # to support things like DER in the future
 VALID_ENCODINGS = ['pem']
-
-
-class SigningError(Exception):
-    pass
 
 
 def parse_csr(data, encoding):
@@ -204,66 +196,3 @@ def fixup_csr(ra_name, csr, request):
         pecan.abort(500, "Could not finish all required modifications")
 
     return args['csr']
-
-
-def sign(csr, ca_conf):
-    """Generate an X.509 certificate and sign it.
-
-    :param csr: X509 certificate signing request
-    :param ca_conf: signing CA configuration
-    :return: signed certificate in PEM format
-    """
-    try:
-        ca = certificate.X509Certificate.from_file(
-            ca_conf['cert_path'])
-    except Exception as e:
-        raise SigningError("Cannot load the signing CA: %s" % (e,))
-
-    try:
-        key = x509_utils.get_private_key_from_file(ca_conf['key_path'])
-    except Exception as e:
-        raise SigningError("Cannot load the signing CA key: %s" % (e,))
-
-    new_cert = certificate.X509Certificate()
-    new_cert.set_version(2)
-
-    start_time = int(time.time())
-    end_time = start_time + (ca_conf['valid_hours'] * 60 * 60)
-    new_cert.set_not_before(start_time)
-    new_cert.set_not_after(end_time)
-
-    new_cert.set_pubkey(pkey=csr.get_pubkey())
-    new_cert.set_subject(csr.get_subject())
-    new_cert.set_issuer(ca.get_subject())
-
-    serial = int(uuid.uuid4().hex, 16)
-    new_cert.set_serial_number(serial)
-
-    exts = csr.get_extensions()
-
-    ext_i = 0
-    for ext in exts:
-        # this check is separate from standards validator - the signing backend
-        # may know about more/fewer extensions than we do
-        if ext.get_oid() not in extension.EXTENSION_CLASSES.keys():
-            if ext.get_critical():
-                logger.warning("CSR submitted with unknown extension oid %s, "
-                               "refusing to sign", ext.get_oid())
-                raise SigningError("Unknown critical extension %s" % (
-                    ext.get_oid(),))
-            else:
-                logger.info("CSR submitted with non-critical unknown oid %s, "
-                            "not including extension", (ext.get_oid(),))
-        else:
-            logger.info("Adding certificate extension: %i %s", ext_i, str(ext))
-            new_cert.add_extension(ext, ext_i)
-            ext_i += 1
-
-    logger.info("Signing certificate for <%s> with serial <%s>",
-                csr.get_subject(), serial)
-
-    new_cert.sign(key, ca_conf['signing_hash'])
-
-    cert_pem = new_cert.as_pem()
-
-    return cert_pem

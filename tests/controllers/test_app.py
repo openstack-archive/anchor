@@ -22,7 +22,9 @@ import unittest
 import mock
 
 from anchor import app
+from anchor import errors
 from anchor import jsonloader
+from anchor import util
 import tests
 
 
@@ -39,8 +41,8 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def test_self_test(self):
         self.assertTrue(True)
 
-    @mock.patch('anchor.app._check_file_exists')
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_exists')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_config_check_domains_good(self, a, b):
         self.sample_conf_ra['default_ra']['validators'] = {
             "common_name": {
@@ -54,8 +56,8 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         with mock.patch("os.stat", **config):
             self.assertEqual(app.validate_config(jsonloader.conf), None)
 
-    @mock.patch('anchor.app._check_file_exists')
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_exists')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_config_check_domains_bad(self, a, b):
         self.sample_conf_ra['default_ra']['validators'] = {
             "common_name": {
@@ -68,7 +70,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
             self.assertRaises(
-                app.ConfigValidationException,
+                errors.ConfigValidationException,
                 app.validate_config,
                 jsonloader.conf
             )
@@ -76,13 +78,13 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
     def test_check_file_permissions_good(self):
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
-            app._check_file_permissions("/mock/path")
+            util.check_file_permissions("/mock/path")
 
     def test_check_file_permissions_bad(self):
         config = {'return_value.st_mode': (stat.S_IWOTH | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
-            self.assertRaises(app.ConfigValidationException,
-                              app._check_file_permissions, "/mock/path")
+            self.assertRaises(errors.ConfigValidationException,
+                              util.check_file_permissions, "/mock/path")
 
     def test_validate_old_config(self):
         config = json.dumps({
@@ -91,45 +93,45 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
             "validators": {},
         })
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "old version of Anchor",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_no_registration_authorities(self,
                                                          mock_check_perm):
         del self.sample_conf['registration_authority']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No registration authorities present",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_no_auth(self, mock_check_perm):
         del self.sample_conf['authentication']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No authentication methods present",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_no_auth_backend(self, mock_check_perm):
         del self.sample_conf_auth['default_auth']['backend']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "Authentication method .* doesn't define "
                                 "backend",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_no_ra_auth(self, mock_check_perm):
         del self.sample_conf_ra['default_ra']['authentication']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No authentication .* for .* default_ra",
                                 app.validate_config, jsonloader.conf)
 
@@ -137,20 +139,20 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         del self.sample_conf['signing_ca']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No signing CA configurations present",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_no_ra_ca(self, mock_check_perm):
         del self.sample_conf_ra['default_ra']['signing_ca']
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No signing CA .* for .* default_ra",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     def test_validate_config_ca_config_reqs(self, mock_check_perm):
         ca_config_requirements = ["cert_path", "key_path", "output_path",
                                   "signing_hash", "valid_hours"]
@@ -162,7 +164,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         # with 'missing_req', perform validation. Each should raise in turn
         for req in ca_config_requirements:
             jsonloader.conf.load_str_data(config.replace(req, "missing_req"))
-            self.assertRaisesRegexp(app.ConfigValidationException,
+            self.assertRaisesRegexp(errors.ConfigValidationException,
                                     "CA config missing: %s" % req,
                                     app.validate_config, jsonloader.conf)
 
@@ -171,11 +173,11 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         config = json.dumps(self.sample_conf)
         jsonloader.conf.load_str_data(config)
         isfile.return_value = False
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "could not read file: tests/CA/root-ca.crt",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
@@ -187,11 +189,11 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
-        self.assertRaisesRegexp(app.ConfigValidationException,
+        self.assertRaisesRegexp(errors.ConfigValidationException,
                                 "No validators configured",
                                 app.validate_config, jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')
@@ -203,13 +205,13 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
         isfile.return_value = True
         access.return_value = True
         stat.return_value.st_mode = self.expected_key_permissions
-        with self.assertRaises(app.ConfigValidationException,
+        with self.assertRaises(errors.ConfigValidationException,
                                msg="Unknown validator <unknown_validator> "
                                    "found (for registration authority "
                                    "default)"):
             app.validate_config(jsonloader.conf)
 
-    @mock.patch('anchor.app._check_file_permissions')
+    @mock.patch('anchor.util.check_file_permissions')
     @mock.patch('os.path.isfile')
     @mock.patch('os.access')
     @mock.patch('os.stat')

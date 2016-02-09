@@ -15,7 +15,6 @@ from __future__ import absolute_import
 
 import logging
 import os
-import stat
 import sys
 
 import paste
@@ -23,13 +22,10 @@ from paste import translogger  # noqa
 import pecan
 
 from anchor import audit
+from anchor import errors
 from anchor import jsonloader
 
 logger = logging.getLogger(__name__)
-
-
-class ConfigValidationException(Exception):
-    pass
 
 
 def config_check_domains(validator_set):
@@ -37,43 +33,29 @@ def config_check_domains(validator_set):
         if 'allowed_domains' in step:
             for domain in step['allowed_domains']:
                 if not domain.startswith('.'):
-                    raise ConfigValidationException(
+                    raise errors.ConfigValidationException(
                         "Domain that does not start with "
                         "a '.' <{}>".format(domain))
-
-
-def _check_file_permissions(path):
-    # checks that file is owner readable only
-    expected_permissions = (stat.S_IRUSR | stat.S_IFREG)  # 0o100400
-    st = os.stat(path)
-    if st.st_mode != expected_permissions:
-        raise ConfigValidationException("CA file: %s has incorrect "
-                                        "permissions set, expected "
-                                        "owner readable only" % path)
-
-
-def _check_file_exists(path):
-    if not (os.path.isfile(path) and
-            os.access(path, os.R_OK)):
-        raise ConfigValidationException("could not read file: %s" %
-                                        path)
 
 
 def validate_config(conf):
     for old_name in ['auth', 'ca', 'validators']:
         if old_name in conf.config:
-            raise ConfigValidationException("The config seems to be for an "
-                                            "old version of Anchor. Please "
-                                            "check documentation.")
+            raise errors.ConfigValidationException(
+                "The config seems to be for an old version of Anchor. Please "
+                "check documentation.")
 
     if not conf.config.get('registration_authority'):
-        raise ConfigValidationException("No registration authorities present")
+        raise errors.ConfigValidationException(
+            "No registration authorities present")
 
     if not conf.config.get('signing_ca'):
-        raise ConfigValidationException("No signing CA configurations present")
+        raise errors.ConfigValidationException(
+            "No signing CA configurations present")
 
     if not conf.config.get('authentication'):
-        raise ConfigValidationException("No authentication methods present")
+        raise errors.ConfigValidationException(
+            "No authentication methods present")
 
     for name in conf.registration_authority.keys():
         logger.info("Checking config for registration authority: %s", name)
@@ -99,13 +81,13 @@ def validate_audit_config(conf):
 
     audit_conf = conf.audit
     if audit_conf.get('target', 'log') not in valid_targets:
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "Audit target not known (expected one of %s)" % (
                 ", ".join(valid_targets),))
 
     if audit_conf.get('target') == 'messaging':
         if audit_conf.get('url') is None:
-            raise ConfigValidationException("Audit url required")
+            raise errors.ConfigValidationException("Audit url required")
 
 
 def validate_authentication_config(name, conf):
@@ -115,11 +97,11 @@ def validate_authentication_config(name, conf):
     default_secret = "simplepassword"
 
     if not auth_conf.get('backend'):
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "Authentication method %s doesn't define backend" % name)
 
     if auth_conf['backend'] not in ('static', 'keystone', 'ldap'):
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "Authentication backend % unknown" % (auth_conf['backend'],))
 
     # Check for anchor being run with default user/secret
@@ -132,51 +114,45 @@ def validate_authentication_config(name, conf):
 
 def validate_signing_ca_config(name, conf):
     ca_conf = conf.signing_ca[name]
+    backend_name = ca_conf.get('backend')
+    if not backend_name:
+        raise errors.ConfigValidationException(
+            "Backend type not defined for RA '%s'" % name)
+    sign_func = jsonloader.conf.get_signing_backend(backend_name)
+    if not sign_func:
+        raise errors.ConfigValidationException(
+            "Backend '%s' could not be found" % backend_name)
 
-    # mandatory CA settings
-    ca_config_requirements = ["cert_path", "key_path", "output_path",
-                              "signing_hash", "valid_hours"]
-
-    for requirement in ca_config_requirements:
-        if requirement not in ca_conf.keys():
-            raise ConfigValidationException(
-                "CA config missing: %s (for signing CA %s)" % (requirement,
-                                                               name))
-
-    # all are specified, check the CA certificate and key are readable with
-    # sane permissions
-    _check_file_exists(ca_conf['cert_path'])
-    _check_file_exists(ca_conf['key_path'])
-
-    _check_file_permissions(ca_conf['key_path'])
+    if hasattr(sign_func, "_config_validator"):
+        sign_func._config_validator(name, ca_conf)
 
 
 def validate_registration_authority_config(ra_name, conf):
     ra_conf = conf.registration_authority[ra_name]
     auth_name = ra_conf.get('authentication')
     if not auth_name:
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "No authentication configured for registration authority: %s" %
             ra_name)
 
     if not conf.authentication.get(auth_name):
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "Authentication method %s configured for registration authority "
             "%s doesn't exist" % (auth_name, ra_name))
 
     ca_name = ra_conf.get('signing_ca')
     if not ca_name:
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "No signing CA configuration present for registration authority: "
             "%s" % ra_name)
 
     if not conf.signing_ca.get(ca_name):
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "Signing CA %s configured for registration authority %s doesn't "
             "exist" % (ca_name, ra_name))
 
     if not ra_conf.get("validators"):
-        raise ConfigValidationException(
+        raise errors.ConfigValidationException(
             "No validators configured for registration authority: %s" %
             ra_name)
 
@@ -186,7 +162,7 @@ def validate_registration_authority_config(ra_name, conf):
         try:
             jsonloader.conf.get_validator(step)
         except KeyError:
-            raise ConfigValidationException(
+            raise errors.ConfigValidationException(
                 "Unknown validator <{}> found (for registration "
                 "authority {})".format(step, ra_name))
 
@@ -199,7 +175,7 @@ def validate_registration_authority_config(ra_name, conf):
         try:
             jsonloader.conf.get_fixup(step)
         except KeyError:
-            raise ConfigValidationException(
+            raise errors.ConfigValidationException(
                 "Unknown fixup <{}> found (for registration "
                 "authority {})".format(step, ra_name))
 
