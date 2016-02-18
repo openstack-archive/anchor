@@ -19,6 +19,7 @@ import io
 
 from cryptography.hazmat import backends as cio_backends
 from cryptography.hazmat.primitives import hashes
+from pyasn1.codec.ber import encoder as ber_encoder
 from pyasn1.codec.der import decoder
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
@@ -197,6 +198,9 @@ class X509Certificate(signature.SignatureMixin):
         """
         self._cert['tbsCertificate']['serialNumber'] = serial
 
+    def get_serial_number(self,):
+        return self._cert['tbsCertificate']['serialNumber']
+
     def _get_extensions(self):
         if self._cert['tbsCertificate']['extensions'] is None:
             # this actually initialises the extensions tag rather than
@@ -261,3 +265,20 @@ class X509Certificate(signature.SignatureMixin):
                              backend=cio_backends.default_backend())
         hasher.update(self.as_der())
         return binascii.hexlify(hasher.finalize()).upper().decode('ascii')
+
+    def get_key_id(self):
+        """Construct a key identifier from public key.
+
+        Return the hash useful for keyIdentifier field, constructed as
+        described in RFC5280 section 4.2.1.2, method 1. The result is
+        SHA1(subjectPublicKey).
+        """
+        key_info = self._cert['tbsCertificate']['subjectPublicKeyInfo']
+        public_key = key_info['subjectPublicKey']
+        # get the actual bit string value, without the length and tags
+        value = ber_encoder.BitStringEncoder().encodeValue(
+            None, public_key, True, None)[0][1:]
+        digest = hashes.Hash(hashes.SHA1(),
+                             backend=cio_backends.default_backend())
+        digest.update(value)
+        return digest.finalize()

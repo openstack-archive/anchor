@@ -50,7 +50,7 @@ class SigningBackendExtensions(tests.DefaultConfigMixin,
 
         pem = certificate_ops.sign(csr, self.sample_conf_ca['default_ca'])
         cert = certificate.X509Certificate.from_buffer(pem)
-        self.assertEqual(2, len(cert.get_extensions()))
+        self.assertEqual(0, len(cert.get_extensions(UnknownExtension)))
 
     def test_fail_critical_unknown_extensions(self):
         csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
