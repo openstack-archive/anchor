@@ -113,8 +113,11 @@ def get_ca(ra_name):
     if not ca_path:
         pecan.abort(404, "CA certificate not available")
 
-    with open(ca_path) as f:
-        return f.read()
+    try:
+        with open(ca_path) as f:
+            return f.read()
+    except IOError:
+        pecan.abort(500, "CA certificate not available")
 
 
 def dispatch_sign(ra_name, csr):
