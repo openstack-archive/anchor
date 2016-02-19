@@ -122,3 +122,11 @@ class TestX509Name(unittest.TestCase):
         val = [str(e) for e in self.name]
         self.assertEqual("countryName: UK", val[0])
         self.assertEqual("givenName: test_GN", val[8])
+
+    def test_deep_clone(self):
+        orig = x509_name.X509Name()
+        orig.add_name_entry(x509_name.OID_countryName, "UK")
+        clone = x509_name.X509Name(orig._name_obj)
+        self.assertEqual(str(orig), str(clone))
+        clone.add_name_entry(x509_name.OID_stateOrProvinceName, "test_ST")
+        self.assertNotEqual(str(orig), str(clone))

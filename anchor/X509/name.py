@@ -121,8 +121,7 @@ class X509Name(object):
         if name_obj is not None:
             if not isinstance(name_obj, rfc5280.RDNSequence):
                 raise TypeError("name is not an RDNSequence")
-            # TODO(stan): actual copy
-            self._name_obj = name_obj
+            self._name_obj = name_obj.clone(cloneValueFlag=True)
         else:
             self._name_obj = rfc5280.RDNSequence()
 
