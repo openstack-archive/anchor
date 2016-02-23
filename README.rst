@@ -57,11 +57,12 @@ dependencies need to be present:
 * libssl (dev)
 
 When everything is in place, Anchor can be installed in one of three
-ways. For development with virtualenv, run:
+ways: a local development instance in a python virtual environment, a local
+production instance or a test instance in a docker container.
 
-    virtualenv .venv
-    source .venv/bin/activate
-    pip install .
+For a development instance with virtualenv, run:
+
+    virtualenv .venv && source .venv/bin/activate && pip install .
 
 For installing in production, either install a perpared system package,
 or install globally in the system:
