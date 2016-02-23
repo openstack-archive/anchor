@@ -50,20 +50,6 @@ SIGNING_ALGORITHMS = {
 SIGNING_ALGORITHMS_INV = dict((v, k) for k, v in SIGNING_ALGORITHMS.items())
 
 
-SIGNER_CONSTRUCTION = {
-    sha224WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                     hashes.SHA224())),
-    sha256WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                     hashes.SHA256())),
-    sha384WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                     hashes.SHA384())),
-    sha512WithRSAEncryption: (lambda key: key.signer(padding.PKCS1v15(),
-                                                     hashes.SHA512())),
-    id_dsa_with_sha224: (lambda key: key.signer(hashes.SHA224())),
-    id_dsa_with_sha256: (lambda key: key.signer(hashes.SHA256())),
-}
-
-
 VERIFIER_CONSTRUCTION = {
     sha224WithRSAEncryption: (lambda key, signature: key.verifier(
         signature, padding.PKCS1v15(), hashes.SHA224())),
@@ -96,16 +82,9 @@ class SignatureMixin(object):
     Both operations rely on the functions provided by the certificate and
     csr classes.
     """
-    def sign(self, key, md="sha256"):
+    def sign(self, encryption, md, signer):
         """Sign the current object."""
         md = md.upper()
-
-        if isinstance(key, rsa.RSAPrivateKey):
-            encryption = 'RSA'
-        elif isinstance(key, dsa.DSAPrivateKey):
-            encryption = 'DSA'
-        else:
-            raise errors.X509Error("Unknown key type: %s" % (key.__class__,))
 
         signature_type = SIGNING_ALGORITHMS.get((encryption, md))
         if signature_type is None:
@@ -120,9 +99,7 @@ class SignatureMixin(object):
 
         self._embed_signature_algorithm(algo_id)
         to_sign = self._get_bytes_to_sign()
-        signer = SIGNER_CONSTRUCTION[signature_type](key)
-        signer.update(to_sign)
-        signature = signer.finalize()
+        signature = signer(to_sign)
 
         self._embed_signature(algo_id, signature)
 

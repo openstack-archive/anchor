@@ -53,9 +53,11 @@ Backends are simple functions which need to take 2 parameters: the CSR in PEM
 format and the configuration block contents. Configuration can contain any keys
 required by the backend.
 
-The return value must be a signed certificate in PEM format. The backend may
-either throw a specific ``WebOb`` HTTP exception, or any other exception which
-will result in a generic 500 response.
+The return value must be a signed certificate in PEM format, however in most
+cases it's enough to implement the actual hash signing part and rely on
+``anchor.signer.sign_generic`` framework. The backend may either throw a
+specific ``WebOb`` HTTP exception, or SigningError exception which will result
+in a 500 response.
 
 For security, http exceptions from the signing backend should not expose any
 specific information about the reason for failure. Internal exceptions are
@@ -66,3 +68,6 @@ are applied to the submitted CSR in Anchor, they will invalidate the signature.
 Unless the backend is intended to work only with validators, and not any fixup
 operations in the future, the signature field should be ignored and the request
 treated as already correct/verified.
+
+Configuration is verified using the function provided using the
+``@signers.config_validator(f)`` decorator.

@@ -15,7 +15,11 @@ from __future__ import absolute_import
 
 import base64
 import hmac
+import os
 import re
+import stat
+
+from anchor import errors
 
 
 def constant_time_compare(val1, val2):
@@ -100,3 +104,20 @@ def extract_pem(data, use_markers=True):
         return None
     decoder = getattr(base64, 'decodebytes', base64.decodestring)
     return decoder(b64_content)
+
+
+def check_file_permissions(path):
+    # checks that file is owner readable only
+    expected_permissions = (stat.S_IRUSR | stat.S_IFREG)  # 0o100400
+    st = os.stat(path)
+    if st.st_mode != expected_permissions:
+        raise errors.ConfigValidationException("CA file: %s has incorrect "
+                                               "permissions set, expected "
+                                               "owner readable only" % path)
+
+
+def check_file_exists(path):
+    if not (os.path.isfile(path) and
+            os.access(path, os.R_OK)):
+        raise errors.ConfigValidationException("could not read file: %s" %
+                                               path)
