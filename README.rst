@@ -258,9 +258,11 @@ base.
 Signing backends
 ================
 
-Anchor allows the use of configurable signing backend. While it provides
-one implementation (based on cryptography.io and OpenSSL), other
-implementations may be configured.
+Anchor allows the use of configurable signing backend. Currently it provides two
+implementation: one based on cryptography.io ("anchor"), the other using PKCS#11
+libraries ("pkcs11"). The first one is used in the sample config. Other backends
+may have extra dependencies: pkcs11 requires the PyKCS11 module, not required by
+anchor by default.
 
 The resulting certificate is stored locally if the `output_path` is set
 to any string. This does not depend on the configured backend.
@@ -280,6 +282,7 @@ following options:
 Sample configuration for the default backend:
 
     "ca": {
+      "backend": "anchor"
       "cert_path": "CA/root-ca.crt",
       "key_path": "CA/root-ca-unwrapped.key",
       "output_path": "certs",
@@ -287,7 +290,8 @@ Sample configuration for the default backend:
       "valid_hours": 24
     }
 
-For more information, please refer to the documentation.
+Other backends may be created too. For more information, please refer to the
+documentation.
 
 Fixups
 ======
