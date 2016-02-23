@@ -16,7 +16,9 @@
 
 import unittest
 
+import mock
 from pyasn1.codec.der import encoder
+from pyasn1_modules import rfc2459
 
 from anchor.asn1 import rfc5280
 from anchor.validators import errors
@@ -160,3 +162,26 @@ class TestValidDomains(unittest.TestCase):
         csr = self._create_csr_with_domain_san('foo*.example.com')
         with self.assertRaises(errors.ValidationError):
             standards._valid_domains(csr)
+
+
+class TestCsrSignature(tests.DefaultRequestMixin, unittest.TestCase):
+    def test_csr_signature(self):
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
+        self.assertIsNone(standards._csr_signature(csr=csr))
+
+    def test_csr_signature_bad_sig(self):
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
+        with mock.patch.object(signing_request.X509Csr, '_get_signature',
+                               return_value=(b'A'*49)):
+            with self.assertRaisesRegexp(errors.ValidationError,
+                                         "Signature on the CSR is not valid"):
+                standards._csr_signature(csr=csr)
+
+    def test_csr_signature_bad_algo(self):
+        csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
+        with mock.patch.object(signing_request.X509Csr,
+                               '_get_signing_algorithm',
+                               return_value=rfc2459.id_dsa_with_sha1):
+            with self.assertRaisesRegexp(errors.ValidationError,
+                                         "Signature on the CSR is not valid"):
+                standards._csr_signature(csr=csr)

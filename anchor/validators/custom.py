@@ -22,7 +22,6 @@ from pyasn1_modules import rfc2459
 
 from anchor.validators import errors as v_errors
 from anchor.validators import utils
-from anchor.X509 import errors
 from anchor.X509 import extension
 from anchor.X509 import name as x509_name
 
@@ -205,15 +204,6 @@ def source_cidrs(request=None, cidrs=None, **kwargs):
     raise v_errors.ValidationError(
         "No network matched the request source '%s'" %
         request.client_addr)
-
-
-def csr_signature(csr=None, **kwargs):
-    """Ensure that the CSR has a valid self-signature."""
-    try:
-        if not csr.verify():
-            raise v_errors.ValidationError("Signature on the CSR is not valid")
-    except errors.X509Error:
-        raise v_errors.ValidationError("Signature on the CSR is not valid")
 
 
 def public_key(csr=None, allowed_keys=None, **kwargs):
