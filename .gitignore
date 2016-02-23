@@ -21,3 +21,5 @@ cover/*
 doc/build
 .eggs/
 pep8.txt
+AUTHORS
+ChangeLog
