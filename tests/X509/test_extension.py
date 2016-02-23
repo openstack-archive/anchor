@@ -72,6 +72,18 @@ class TestExtensionBase(unittest.TestCase):
         ext = extension.construct_extension(asn1)
         self.assertEqual(ext.as_der(), encoder.encode(asn1))
 
+    def test_broken_set_value(self):
+        class SomeExt(extension.X509Extension):
+            spec = rfc5280.Extension
+            _oid = univ.ObjectIdentifier('1.2.3.4')
+
+            @classmethod
+            def _get_default_value(cls):
+                return 1234
+
+        with self.assertRaisesRegexp(errors.X509Error, 'incorrect type'):
+            SomeExt()
+
 
 class TestBasicConstraints(unittest.TestCase):
     def setUp(self):
