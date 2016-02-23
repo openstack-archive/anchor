@@ -44,6 +44,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, cn)
+        csr.set_subject(name)
         return csr
 
     def _csr_with_san_dns(self, dns):
@@ -72,6 +73,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "dummy_value")
         name.add_name_entry(x509_name.OID_commonName, "dummy_value")
+        csr.set_subject(name)
 
         with self.assertRaises(errors.ValidationError) as e:
             custom.common_name(
@@ -95,6 +97,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "good.example.com")
+        csr.set_subject(name)
 
         self.assertEqual(
             None,
@@ -108,6 +111,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, 'bad.example.org')
+        csr.set_subject(name)
 
         with self.assertRaises(errors.ValidationError) as e:
             custom.common_name(
@@ -120,6 +124,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, '10.1.1.1')
+        csr.set_subject(name)
 
         self.assertEqual(
             None,
@@ -134,6 +139,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, '15.1.1.1')
+        csr.set_subject(name)
 
         with self.assertRaises(errors.ValidationError) as e:
             custom.common_name(
@@ -216,6 +222,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "master.example.com")
+        csr.set_subject(name)
 
         self.assertEqual(
             None,
@@ -230,6 +237,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "nv_master.example.com")
+        csr.set_subject(name)
 
         self.assertEqual(
             None,
@@ -248,6 +256,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "nv_master.example.com")
+        csr.set_subject(name)
 
         self.assertEqual(
             None,
@@ -265,6 +274,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "nv-master.example.com")
+        csr.set_subject(name)
 
         with self.assertRaises(errors.ValidationError) as e:
             custom.server_group(
@@ -520,6 +530,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         csr = x509_csr.X509Csr()
         name = csr.get_subject()
         name.add_name_entry(x509_name.OID_commonName, "bad.example.com")
+        csr.set_subject(name)
 
         with self.assertRaises(errors.ValidationError):
             custom.blacklist_names(
