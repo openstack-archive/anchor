@@ -135,3 +135,14 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
             with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.dispatch_sign('default_ra', csr_obj)
         self.assertEqual(cm.exception.code, 500)
+
+    def test_ca_cert_not_configured(self):
+        """Test CA cert read failure."""
+        config = "anchor.jsonloader.conf._config"
+        self.sample_conf_ca['default_ca']['cert_path'] = None
+        data = self.sample_conf
+
+        with mock.patch.dict(config, data):
+            with self.assertRaises(http_status.HTTPException) as cm:
+                certificate_ops.get_ca('default_ra')
+        self.assertEqual(cm.exception.code, 404)
