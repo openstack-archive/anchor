@@ -42,7 +42,7 @@ def _constant_time_compare(val1, val2):
        constant time only when the two strings have the same length. It
        short-circuits when they have different lengths.
 
-       This function was derrived from the django crypto utils.
+       This function was derived from the django crypto utils.
     """
     if len(val1) != len(val2):
         return False
