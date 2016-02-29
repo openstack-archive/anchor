@@ -254,7 +254,7 @@ class X509Certificate(signature.SignatureMixin):
     def get_fingerprint(self, md='sha256'):
         """Get the fingerprint of this X509 certificate.
 
-        :param md: The message digest algorthim used to compute the fingerprint
+        :param md: The message digest algorithm used to compute the fingerprint
         :return: The fingerprint encoded as a hex string
         """
         hash_class = utils.get_hash_class(md)
