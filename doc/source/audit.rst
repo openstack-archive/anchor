@@ -17,7 +17,7 @@ Capturing events in Ceilometer
 In order to get events processed by Ceilometer, two configuration files need to
 be provided - event pipeline and definitions. The default
 ``event_pipeline.yaml`` as described in Ceilometer documentation is compatible
-with Anchor. As for ``event_definitions.yaml``, it needs to include the
+with anchor. As for ``event_definitions.yaml``, it needs to include the
 ``audit.auth`` and ``audit.sign`` events.
 
 On the Ceilometer side, it needs the `notification agent`_ installed in order
