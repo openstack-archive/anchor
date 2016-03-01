@@ -198,7 +198,8 @@ def load_config():
     user_config_path = os.path.join(
         os.environ['HOME'], '.config', 'anchor', 'config.json')
 
-    sys_config_path = os.path.join(os.sep, 'etc', 'anchor', 'config.json')
+    prefix = os.environ.get('VIRTUAL_ENV', os.sep)
+    sys_config_path = os.path.join(prefix, 'etc', 'anchor', 'config.json')
 
     if 'registration_authority' not in jsonloader.conf.config:
         config_path = ""
