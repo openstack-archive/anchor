@@ -1,0 +1,18 @@
+#!/bin/sh
+
+STR="from distutils.sysconfig import get_python_lib; print(get_python_lib())"
+
+if [ -z "$VIRTUAL_ENV" ]; then
+  PKG_PATH=$(python -c "$STR")
+  echo $PKG_PATH
+  "/usr/bin/uwsgi" --http-socket :5000 --pecan \
+    ${PKG_PATH}/anchor/config.py -p 4
+else
+  PY_BIN="${VIRTUAL_ENV}/bin/python"
+  echo $PY_BIN
+  PKG_PATH=$($PY_BIN -c "$STR")
+  "${VIRTUAL_ENV}/bin/uwsgi" --http-socket :5000 \
+    --venv "${VIRTUAL_ENV}" \
+    --pecan ${PKG_PATH}/anchor/config.py \
+    -p 4
+fi
