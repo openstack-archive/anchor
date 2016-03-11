@@ -92,9 +92,7 @@ In order to test Anchor with the default configuration, the following
 can be done to create a test CA. The test certificate can be then used
 to sign the new certificates.
 
-    openssl req -out CA/root-ca.crt -keyout CA/root-ca-unwrapped.key \
-        -newkey rsa:4096 -subj "/CN=Anchor Test CA" -nodes -x509 -days 365
-    chmod 0400 CA/root-ca-unwrapped.key
+    bin/anchor_bootstrap CA "/CN=Anchor Test CA"
 
 Next, a new certificate request may be generated:
 

@@ -1,0 +1,29 @@
+#!/bin/sh
+
+if [ "$1" = "-h" -o "$1" = "--help" -o -z "$1" -o -z "$2" ]; then
+    echo "Usage: $0 directory subject"
+    echo
+    echo "Create initial, self-signed CA certificate and key for default Anchor"
+    echo "configuration. For example:"
+    echo
+    echo "  $0 ./CA \"/CN=Anchor test CA/O=Openstack\""
+    echo
+    exit 0
+fi
+
+CERT_FILE="$1/root-ca.crt"
+KEY_FILE="$1/root-ca-unwrapped.key"
+SUBJECT="$2"
+
+if [ -f "$CERT_FILE" ]; then
+    echo "Certificate already exists at '$CERT_FILE'."
+    exit 1
+fi
+
+if [ -f "$KEY_FILE" ]; then
+    echo "Key already exists at '$KEY_FILE'."
+    exit 1
+fi
+
+openssl req -x509 -newkey rsa:4096 -keyout "$KEY_FILE" -subj "$SUBJECT" -out "$CERT_FILE" -nodes -days 365
+chmod 0400 "$KEY_FILE"
