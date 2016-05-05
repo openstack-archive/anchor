@@ -21,7 +21,6 @@
       "authentication": "method_1",
       "signing_ca": "local",
       "validators": {
-        "standards_compliance": {},
         "source_cidrs": {
           "cidrs": ["127.0.0.0/8"]
         }
