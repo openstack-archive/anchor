@@ -86,6 +86,12 @@ def _valid_domains(csr):
 
 def _csr_signature(csr):
     """Ensure that the CSR has a valid self-signature."""
+    # first check for deprecated signatures - verification on those will fail
+    algo = csr.uses_deprecated_algorithm()
+    if algo:
+        raise errors.ValidationError("CSR rejected for using a known broken, "
+                                     "or deprecated algorithm: %s" % algo)
+
     try:
         if not csr.verify():
             raise errors.ValidationError("Signature on the CSR is not valid")

@@ -29,7 +29,15 @@ from anchor.X509 import errors
 
 LOG = logging.getLogger(__name__)
 
+DEPRECATED_ALGORITHM_NAMES = {
+    asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.2'): 'MD2 with RSA',
+    asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.3'): 'MD4 with RSA',
+    asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.4'): 'MD5 with RSA',
+    asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.5'): 'SHA1 with RSA',
+    asn1_univ.ObjectIdentifier('1.2.840.10040.4.3'): 'SHA1 with DSA',
+}
 
+# valid algorithms
 sha224WithRSAEncryption = asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.14')
 sha256WithRSAEncryption = asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.11')
 sha384WithRSAEncryption = asn1_univ.ObjectIdentifier('1.2.840.113549.1.1.12')
@@ -129,6 +137,14 @@ class SignatureMixin(object):
             return True
         except cio_exceptions.InvalidSignature:
             return False
+
+    def uses_deprecated_algorithm(self):
+        """Check for deprecated algorithm in signatures.
+
+        Returns the name of the algorithm found, or None if everything's ok.
+        """
+        name = DEPRECATED_ALGORITHM_NAMES.get(self._get_signing_algorithm())
+        return name
 
     def _get_bytes_to_sign(self):
         """Get bytes which are giong to be hashed and signed."""
