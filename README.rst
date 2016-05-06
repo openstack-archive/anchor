@@ -93,14 +93,15 @@ can be done to create a test CA. The test certificate can be then used
 to sign the new certificates.
 
     openssl req -out CA/root-ca.crt -keyout CA/root-ca-unwrapped.key \
-        -newkey rsa:4096 -subj "/CN=Anchor Test CA" -nodes -x509 -days 365
+        -newkey rsa:4096 -subj "/CN=Anchor Test CA" -nodes -x509 -days 365 \
+        -sha256
     chmod 0400 CA/root-ca-unwrapped.key
 
 Next, a new certificate request may be generated:
 
     openssl req -out anchor-test.example.com.csr -nodes \
         -keyout anchor-test.example.com.key -newkey rsa:2048 \
-        -subj "/CN=anchor-test.example.com"
+        -subj "/CN=anchor-test.example.com" -sha256
 
 That reqest can be submitted using curl (while `pecan serve config.py`
 is running):
