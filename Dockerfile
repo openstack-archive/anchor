@@ -11,4 +11,4 @@ RUN openssl req -out CA/root-ca.crt \
   -x509 \
   -days 365
 RUN chmod 0400 CA/root-ca-unwrapped.key
-ENTRYPOINT ["pecan", "serve", "/code/config.py"]
+ENTRYPOINT ["python","container_bootstrap.py"]
