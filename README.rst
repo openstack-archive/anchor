@@ -115,12 +115,49 @@ directory.
 
 Docker test environment
 =======================
-We have provided a Dockerfile that can be used to build a container that
-will run anchor
+We have published a docker image for anchor at
+https://hub.docker.com/r/openstacksecurity/anchor/  These instructions expect
+the reader to have a working Docker install already. Docker should *not* be
+used to serve Anchor in any production environments.
 
-These instructions expect the reader to have a working Docker install
-already. Docker should *not* be used to serve Anchor in any production
-environments.
+The behaviour of the Anchor container is controlled through docker volumes. To
+run a plain version of Anchor, with a default configuration and a dynamically
+generated private key simply invoke the container without any volumes. Note
+that Anchor exposes port 5016:
+
+docker run -p 5016:5016 openstacksecurity/anchor
+
+The recommended way to use the anchor container is to use a pre-compiled private
+key and certificate. You can read more about generating these (if you do not
+already have them) in this readme.
+
+Once a key and certificate have been created, they can be provided to Anchor
+using docker volumes. In this example we've stored the sensitive data in
+/var/keys (note, docker must be able to access the folder where you have stored
+your keys). When the container starts it looks for a mounted volume in '/key'
+and files called root-ca-unwrapped.key and root-ca.crt that it will use.
+
+docker run -p 5016:5016 -v /var/keys:/key anchor
+
+Anchor is highly configurable, you can read more about Anchor configuration in
+the documentation here:
+http://docs.openstack.org/developer/anchor/configuration.html the method for
+exposing configuration to Anchor is very similar as for keys, simply provide
+docker with the folder the config.json is within and create a volume called
+/config In the below example, Anchor will start with a custom configuration but
+as no key was provided it will generate one on the fly.
+
+docker run -p 5016:5016 -v /var/config:/config anchor
+
+Obviously it's possible to run Anchor with a custom configuration and a custom
+key/certificate by running the following (note in this case we've used -d to
+detach the container from our terminal)
+
+docker run -d -p 5016:5016 -v /var/config:/config -v /var/keys:/key anchor
+
+If you prefer to use locally built containers or want to modify the container
+build you can do that, we provide a simple Dockerfile to make the process
+easier.
 
 Assuming you are already in the anchor directory, build a container
 called 'anchor' that runs the anchor service, with any local changes
