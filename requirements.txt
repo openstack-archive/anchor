@@ -9,8 +9,8 @@ pecan>=1.0.0 # BSD
 Paste # MIT
 netaddr!=0.7.16,>=0.7.12 # BSD
 ldap3>=0.9.8.2 # LGPLv3
-requests!=2.9.0,>=2.8.1 # Apache-2.0
-stevedore>=1.9.0 # Apache-2.0
+requests>=2.10.0 # Apache-2.0
+stevedore>=1.10.0 # Apache-2.0
 pycadf!=2.0.0,>=1.1.0 # Apache-2.0
 oslo.config>=3.9.0 # Apache-2.0
 oslo.messaging>=4.5.0 # Apache-2.0
