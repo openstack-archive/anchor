@@ -21,7 +21,9 @@
       "authentication": "method_1",
       "signing_ca": "local",
       "validators": {
-        "standards_compliance": {},
+        "standards_compliance": {
+		  "label_re": "^[a-z](?:[-a-z0-9]*[a-z0-9])?$"
+		},
         "source_cidrs": {
           "cidrs": ["127.0.0.0/8"]
         }

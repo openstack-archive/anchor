@@ -331,11 +331,6 @@ class X509ExtensionSubjectAltName(X509Extension):
 
     @modifies_ext_value
     def add_dns_id(self, dns_id, validate=True, ext_value=None):
-        if validate:
-            try:
-                a_utils.verify_domain(dns_id, allow_wildcards=True)
-            except ValueError as e:
-                raise errors.X509Error("invalid domain provided: %s" % str(e))
         new_pos = len(ext_value)
         ext_value[new_pos] = None
         ext_value[new_pos]['dNSName'] = dns_id

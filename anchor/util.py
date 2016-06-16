@@ -21,12 +21,7 @@ import stat
 from anchor import errors
 
 
-# RFC1034 allows a simple " " too, but it's not allowed in certificates, so it
-# will not match
-RE_DOMAIN_LABEL = re.compile("^[a-z](?:[-a-z0-9]*[a-z0-9])?$", re.IGNORECASE)
-
-
-def verify_domain(domain, allow_wildcards=False):
+def verify_domain(domain, label_re_comp, allow_wildcards=False):
     labels = domain.split('.')
     if labels[-1] == "":
         # single trailing . is ok, ignore
@@ -44,7 +39,7 @@ def verify_domain(domain, allow_wildcards=False):
                     "domain <%s> has wildcard that's not in the "
                     "left-most label (RFC6125/6.4.3)" % (domain,))
         else:
-            if RE_DOMAIN_LABEL.match(label) is None:
+            if label_re_comp.match(label) is None:
                 raise ValueError(
                     "domain <%s> contains invalid characters "
                     "(RFC1034/3.5)" % (domain,))

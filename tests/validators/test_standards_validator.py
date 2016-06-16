@@ -162,6 +162,11 @@ class TestValidDomains(unittest.TestCase):
         csr = self._create_csr_with_domain_san('foo*.example.com')
         with self.assertRaises(errors.ValidationError):
             standards._valid_domains(csr)
+    
+    def test_custom_re(self):
+        csr = self._create_csr_with_domain_san('123.example.com.')
+        with self.assertRaises(errors.ValidationError):
+            standards._valid_domains(csr, "^\s\+$")
 
 
 class TestCsrSignature(tests.DefaultRequestMixin, unittest.TestCase):

@@ -28,12 +28,22 @@ from anchor.validators import errors
 from anchor.X509 import errors as x509_errors
 from anchor.X509 import extension
 
+import re
 
-def standards_compliance(csr=None, **kwargs):
+
+# RFC1034 allows a simple " " too, but it's not allowed in certificates, so it
+# will not match
+#
+# This pattern is RFC1034 compatible otherwise, but since newer RFCs actually
+# allow any binary value as the domain label, some operators may want to relax
+# the pattern in the configuration, for example to allow leading digits or
+# hyphens.
+def standards_compliance(csr=None, label_re="^[a-z](?:[-a-z0-9]*[a-z0-9])?$",
+                         **kwargs):
     """Collection of separate cases of standards validation."""
     _no_extension_duplicates(csr)
     _critical_flags(csr)
-    _valid_domains(csr)
+    _valid_domains(csr, label_re)
     _csr_signature(csr)
     # TODO(stan): validate srv/uri, distinct DNs, email format, identity keys
 
@@ -67,7 +77,7 @@ def _critical_flags(csr):
                     "(RFC5280/4.1.2.9)")
 
 
-def _valid_domains(csr):
+def _valid_domains(csr, label_re="^[a-z](?:[-a-z0-9]*[a-z0-9])?$"):
     """Format of the domin names
 
     See RFC5280 section 4.2.1.6 / RFC6125 / RFC1034
@@ -75,11 +85,13 @@ def _valid_domains(csr):
     sans = csr.get_extensions(extension.X509ExtensionSubjectAltName)
     if not sans:
         return
+    
+    label_re_comp = re.compile(label_re, re.IGNORECASE)
 
     ext = sans[0]
     for domain in ext.get_dns_ids():
         try:
-            util.verify_domain(domain, allow_wildcards=True)
+            util.verify_domain(domain, label_re_comp, allow_wildcards=True)
         except ValueError as e:
             raise errors.ValidationError(str(e))
 
