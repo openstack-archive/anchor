@@ -4,9 +4,6 @@ config.cfg
 .venv
 *.sw[op]
 certs/*.crt
-CA/serial
-CA/*.key
-CA/*.crt
 dist/*
 build/*
 .tox/*
@@ -23,3 +20,10 @@ doc/build
 pep8.txt
 AUTHORS
 ChangeLog
+
+# mentioned in README for test/bootstrap
+anchor-test.example.com.key
+anchor-test.example.com.csr
+CA/serial
+CA/*.key
+CA/*.crt
