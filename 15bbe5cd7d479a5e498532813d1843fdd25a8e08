@@ -1,0 +1,11 @@
+Code-Review+1: Ian Cordasco <ian.cordasco@rackspace.com>
+Code-Review+1: Fernando Diaz <diazjf@us.ibm.com>
+Code-Review+2: Stanislaw Pitucha <stanislaw.pitucha@hpe.com>
+Code-Review+2: Tim Kelsey <tim.kelsey@hpe.com>
+Workflow+1: Tim Kelsey <tim.kelsey@hpe.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 15 Jul 2016 15:15:00 +0000
+Reviewed-on: https://review.openstack.org/290836
+Project: openstack/anchor
+Branch: refs/heads/master
