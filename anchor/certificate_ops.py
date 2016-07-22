@@ -54,7 +54,7 @@ def parse_csr(data, encoding):
     # get DER version
     der = util.extract_pem(data.encode('ascii'))
     if der is None:
-        logger.error("perse_csr failed: PEM contentents not found")
+        logger.error("parse_csr failed: PEM contentents not found")
         pecan.abort(400, "PEM contents not found")
 
     # try to unpack the certificate from CMC wrappers

@@ -101,7 +101,7 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
     def test_open_failure_throws(self):
         open_name = 'anchor.X509.signing_request.open'
         with mock.patch(open_name, create=True) as mock_open:
-            mock_open.side_effect = IOError(2, "No such file or direcory",
+            mock_open.side_effect = IOError(2, "No such file or directory",
                                             "some_path")
             self.assertRaisesRegexp(x509_errors.X509Error,
                                     "Could not read file",
