@@ -54,7 +54,7 @@ def parse_csr(data, encoding):
     # get DER version
     der = util.extract_pem(data.encode('ascii'))
     if der is None:
-        logger.error("parse_csr failed: PEM contentents not found")
+        logger.error("parse_csr failed: PEM contents not found")
         pecan.abort(400, "PEM contents not found")
 
     # try to unpack the certificate from CMC wrappers
@@ -164,7 +164,7 @@ def _run_fixup(name, body, args):
         logger.debug("_run_fixup: success: <%s> ", name)
         return new_csr
     except Exception:
-        logger.exception("_run_fixup: FAILED: <%s>", name)
+        logger.exception("_run_fixup: failed: <%s>", name)
         return None
 
 
