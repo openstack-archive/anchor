@@ -23,7 +23,8 @@ from anchor import errors
 
 # RFC1034 allows a simple " " too, but it's not allowed in certificates, so it
 # will not match
-RE_DOMAIN_LABEL = re.compile("^[a-z](?:[-a-z0-9]*[a-z0-9])?$", re.IGNORECASE)
+RE_DOMAIN_LABEL = re.compile("^[a-z0-9](?:[-a-z0-9]*[a-z0-9])?$",
+                             re.IGNORECASE)
 
 
 def verify_domain(domain, allow_wildcards=False):
