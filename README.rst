@@ -157,7 +157,7 @@ In case a more complex scripted configuration is needed, for example to
 handle custom headers, rate limiting, or source filtering a complete
 HTTP proxy like Nginx may be needed. This is however out of scope for
 Anchor project. You can read more about production deployment in
-[Pecan documentation](http://pecan.readthedocs.org/en/latest/deployment.html).
+`Pecan documentation <http://pecan.readthedocs.org/en/latest/deployment.html>`_.
 
 Additionally, using an AppArmor profile for Anchor is a good idea to
 prevent exploits relying on one of the native libraries used by Anchor
