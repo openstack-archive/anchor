@@ -1,0 +1,8 @@
+Code-Review+2: Stanislaw Pitucha <stanislaw.pitucha@hpe.com>
+Workflow+1: Stanislaw Pitucha <stanislaw.pitucha@hpe.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Thu, 25 Aug 2016 05:24:59 +0000
+Reviewed-on: https://review.openstack.org/360245
+Project: openstack/anchor
+Branch: refs/heads/master
