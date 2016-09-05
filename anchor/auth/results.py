@@ -27,3 +27,6 @@ class AuthDetails(object):
                 self.groups == other.groups and
                 self.user_id == other.user_id and
                 self.project_id == other.project_id)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
