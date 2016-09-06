@@ -1,0 +1,10 @@
+Code-Review+2: Tim Kelsey <tim.kelsey@hpe.com>
+Code-Review+1: Rahul U Nair <rahulunair@gmail.com>
+Code-Review+1: Jiong Liu <liujiong@gohighsec.com>
+Workflow+1: Stanislaw Pitucha <stanislaw.pitucha@hpe.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 06 Sep 2016 17:19:24 +0000
+Reviewed-on: https://review.openstack.org/340095
+Project: openstack/anchor
+Branch: refs/heads/master
