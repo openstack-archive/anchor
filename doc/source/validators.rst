@@ -21,6 +21,10 @@ The following validators are implemented at the moment:
     Any requests produced using standard tooling that fail this check should be
     reported as Anchor issues.
 
+    Parameters:
+
+    - ``label_re``: pattern for acceptable domain label format
+
 ``whitelist_names``
     Verifies: CSR. Parameters:
 

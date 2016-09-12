@@ -146,11 +146,6 @@ class TestSubjectAltName(unittest.TestCase):
         self.ext.add_ip(self.ip)
         self.assertEqual([self.domain], self.ext.get_dns_ids())
 
-    def test_add_dns_id_validation(self):
-        self.ext.add_dns_id("good.exapmle.com")
-        with self.assertRaises(errors.X509Error):
-            self.ext.add_dns_id("-blah")
-
     def test_ips(self):
         self.ext.add_dns_id(self.domain)
         self.ext.add_ip(self.ip)
