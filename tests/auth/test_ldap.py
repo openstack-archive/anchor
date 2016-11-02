@@ -16,7 +16,7 @@
 
 import unittest
 
-import ldap3
+from ldap3.core import exceptions as ldap3_exc
 import mock
 from webob import exc as http_status
 
@@ -98,7 +98,7 @@ class AuthLdapTests(tests.DefaultConfigMixin, unittest.TestCase):
         jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
 
-        mock_connection.side_effect = ldap3.LDAPBindError()
+        mock_connection.side_effect = ldap3_exc.LDAPBindError()
 
         with mock.patch.dict(config, self.sample_conf):
             with self.assertRaises(http_status.HTTPUnauthorized):
@@ -110,7 +110,7 @@ class AuthLdapTests(tests.DefaultConfigMixin, unittest.TestCase):
         jsonloader.conf.load_extensions()
         config = "anchor.jsonloader.conf._config"
 
-        mock_connection.side_effect = ldap3.LDAPSocketOpenError()
+        mock_connection.side_effect = ldap3_exc.LDAPSocketOpenError()
 
         with mock.patch.dict(config, self.sample_conf):
             with self.assertRaises(http_status.HTTPUnauthorized):

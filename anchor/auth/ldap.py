@@ -15,6 +15,7 @@ from __future__ import absolute_import
 import logging
 
 import ldap3
+from ldap3.core import exceptions as ldap3_exc
 from ldap3.utils import dn
 
 from anchor.auth import results
@@ -65,10 +66,10 @@ def login(ra_name, user, secret):
         user_attrs = ldc.response[0]['attributes']
         user_groups = user_get_groups(user_attrs)
         return results.AuthDetails(username=user, groups=user_groups)
-    except ldap3.LDAPSocketOpenError:
+    except ldap3_exc.LDAPSocketOpenError:
         logger.error("cannot connect to LDAP host '%s' (authority '%s')",
                      conf['host'], ra_name)
         return None
-    except ldap3.LDAPBindError:
+    except ldap3_exc.LDAPBindError:
         logger.info("failed ldap auth for user %s", user)
         return None
