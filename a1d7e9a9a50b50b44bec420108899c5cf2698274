@@ -1,0 +1,10 @@
+Code-Review+2: Robert Clark <hyakuhei@gmail.com>
+Code-Review+1: Eric Brown <browne@vmware.com>
+Code-Review+1: Ian Cordasco <sigmavirus24@gmail.com>
+Workflow+1: Stanislaw Pitucha <viraptor@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Wed, 21 Dec 2016 04:15:33 +0000
+Reviewed-on: https://review.openstack.org/282932
+Project: openstack/anchor
+Branch: refs/heads/master
