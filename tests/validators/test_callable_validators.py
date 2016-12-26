@@ -14,11 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import base64
 import unittest
 
 import mock
 import netaddr
+from oslo_serialization import base64
 from pyasn1.codec.der import decoder
 
 from anchor.asn1 import rfc5280
@@ -582,7 +582,7 @@ class TestValidators(tests.DefaultRequestMixin, unittest.TestCase):
         ox6WOB2kdxa+tRgpK1Bs6FqJgI7AWMYVSxgjpx+9Q/j6aZe6+r8m6k9HOU0cw+0L
         7PFU2eVGvF/DYA==
         """
-        dsa_key_der = base64.b64decode(dsa_key_pem)
+        dsa_key_der = base64.decode_as_bytes(dsa_key_pem)
         spki = decoder.decode(dsa_key_der,
                               asn1Spec=rfc5280.SubjectPublicKeyInfo())[0]
         csr = x509_csr.X509Csr.from_buffer(self.csr_sample_bytes)
