@@ -1,7 +1,7 @@
 Fixups
 ======
 
-Fixups can be used to modify submitted CSRs before sigining. That means for
+Fixups can be used to modify submitted CSRs before signing. That means for
 example adding extra name elements, or extensions. Each fixup is loaded from
 the "anchor.fixups" namespace using stevedore and gets access to the parsed CSR
 and the configuration.
