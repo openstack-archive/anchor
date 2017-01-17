@@ -13,12 +13,11 @@
 
 from __future__ import absolute_import
 
-import logging
-
 import netaddr
 
 from anchor.validators import errors
 from anchor.X509 import extension
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

@@ -13,7 +13,6 @@
 
 from __future__ import absolute_import
 
-import logging
 import os
 
 import pecan
@@ -25,6 +24,7 @@ from anchor import util
 from anchor import validation
 from anchor.X509 import certificate
 from anchor.X509 import signing_request
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

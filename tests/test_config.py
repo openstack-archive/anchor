@@ -15,9 +15,9 @@
 # under the License.
 
 from anchor import jsonloader
+from oslo_log import log as logging
 
 import json
-import logging
 import sys
 import unittest
 

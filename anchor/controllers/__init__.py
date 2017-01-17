@@ -11,8 +11,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
-
 import pecan
 from pecan import rest
 from webob import exc as http_status
@@ -21,6 +19,7 @@ from anchor import audit
 from anchor import auth
 from anchor import certificate_ops
 from anchor import jsonloader
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

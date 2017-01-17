@@ -13,12 +13,11 @@
 
 from __future__ import absolute_import
 
-import logging
-
 from anchor.auth import results
 from anchor import jsonloader
 
 from oslo_utils import secretutils as util
+from oslo_log import log as logging
 
 logger = logging.getLogger(__name__)
 

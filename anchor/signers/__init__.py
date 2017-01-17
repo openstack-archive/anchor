@@ -1,9 +1,9 @@
-import logging
 import time
 import uuid
 
 from anchor.X509 import certificate
 from anchor.X509 import extension
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

@@ -12,7 +12,6 @@
 # under the License.
 
 from __future__ import absolute_import
-import logging
 
 import ldap3
 from ldap3.core import exceptions as ldap3_exc
@@ -20,6 +19,7 @@ from ldap3.utils import dn
 
 from anchor.auth import results
 from anchor import jsonloader
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

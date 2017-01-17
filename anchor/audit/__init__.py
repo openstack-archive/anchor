@@ -11,13 +11,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import logging
 import uuid
 
 from anchor import jsonloader
 
 import oslo_config
 import oslo_messaging
+from oslo_log import log as logging
 from pycadf import cadftaxonomy
 from pycadf import event
 from pycadf import identifier

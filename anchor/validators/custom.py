@@ -13,9 +13,8 @@
 
 from __future__ import absolute_import
 
-import logging
-
 import netaddr
+from oslo_log import log as logging
 from pyasn1.type import univ as pyasn1_univ
 from pyasn1_modules import rfc2437  # PKCS#1
 from pyasn1_modules import rfc2459

@@ -13,7 +13,6 @@
 
 from __future__ import absolute_import
 
-import logging
 import os
 import sys
 
@@ -24,6 +23,7 @@ import pecan
 from anchor import audit
 from anchor import errors
 from anchor import jsonloader
+from oslo_log import log as logging
 
 logger = logging.getLogger(__name__)
 

@@ -13,11 +13,10 @@
 
 from __future__ import absolute_import
 
-import logging
-
 from anchor import jsonloader
 from anchor.validators import errors
 from anchor.validators import internal
+from oslo_log import log as logging
 
 logger = logging.getLogger(__name__)
 

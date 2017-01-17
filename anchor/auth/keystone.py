@@ -13,12 +13,11 @@
 
 from __future__ import absolute_import
 
-import logging
-
 import requests
 
 from anchor.auth import results
 from anchor import jsonloader
+from oslo_log import log as logging
 
 
 logger = logging.getLogger(__name__)

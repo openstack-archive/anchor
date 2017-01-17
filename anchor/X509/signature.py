@@ -13,13 +13,12 @@
 
 from __future__ import absolute_import
 
-import logging
-
 from cryptography import exceptions as cio_exceptions
 from cryptography.hazmat.primitives.asymmetric import dsa
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import hashes
+from oslo_log import log as logging
 from pyasn1.codec.der import encoder
 from pyasn1.type import univ as asn1_univ
 
