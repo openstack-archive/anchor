@@ -49,9 +49,9 @@ Valid options for this backend are:
 pkcs11
 ------
 
-This backend uses a provided pkcs11 library for the signing operation. The final
-certificate is created in the same way as with `anchor` backend with regards to
-extensions and fixups.
+This backend uses a provided pkcs11 library for the signing operation. The
+final certificate is created in the same way as with `anchor` backend with
+regards to extensions and fixups.
 
 The interface doesn't rely on any special functionality of the store. Only the
 RSA private key needs to be available as a secret. The only used mechanism is
@@ -71,10 +71,10 @@ A sample configuration for the ``signing_ca`` block looks like this:
       "output_path": "certs",
       "signing_hash": "sha256",
       "valid_hours": 24,
-	  "slot": 18,
-	  "pin": "the_pin",
-	  "key_id": "b22f6e84a7b29db389b57a24384b95cca0bb4bc0",
-	  "pkcs11_path": "/usr/lib/.../pkcs11/...-pkcs11.so"
+      "slot": 18,
+      "pin": "the_pin",
+      "key_id": "b22f6e84a7b29db389b57a24384b95cca0bb4bc0",
+      "pkcs11_path": "/usr/lib/.../pkcs11/...-pkcs11.so"
     }
   }
 
