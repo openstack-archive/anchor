@@ -75,7 +75,7 @@ Running the service
 In order to run the service, it needs to be started via the `pecan`
 application server. The only extra parameter is a config file:
 
-    pecan serve config.py
+    pecan serve anchor/config.py
 
 For development, an additional `--reload` parameter may be used. It will
 cause the service to reload every time a source file is changed, however
