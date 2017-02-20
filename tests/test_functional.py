@@ -26,9 +26,9 @@ import pecan
 from pecan import testing as pecan_testing
 import stevedore
 
+from anchor import config
 from anchor import jsonloader
 from anchor.X509 import certificate as X509_cert
-import config
 import tests
 
 

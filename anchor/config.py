@@ -1,6 +1,6 @@
 server = {
     'port': '5016',
-    'host': '0.0.0.0'
+    'host': '0.0.0.0'  # nosec
 }
 
 # Pecan Application Configurations
