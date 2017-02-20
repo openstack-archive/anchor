@@ -1,0 +1,9 @@
+Code-Review+2: Robert Clark <hyakuhei@gmail.com>
+Code-Review+1: Jeremy Liu <liujiong@gohighsec.com>
+Workflow+1: Doug Chivers <dougchivers@gmail.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Mon, 20 Feb 2017 14:22:19 +0000
+Reviewed-on: https://review.openstack.org/430094
+Project: openstack/anchor
+Branch: refs/heads/master
