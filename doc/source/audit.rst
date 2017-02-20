@@ -2,7 +2,7 @@ Audit
 =====
 
 Anchor produces audit messages using the PyCADF library and aims for CADF
-compatibility. The two events being emited right now are ``audit.sign`` and
+compatibility. The two events being emitted right now are ``audit.sign`` and
 ``audit.auth``, used for certificate signing and authentication events
 respectively.
 
