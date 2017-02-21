@@ -169,13 +169,25 @@ To start the service in the container and serve Anchor on port 5016:
 
     docker run -p 5016:5016 anchor
 
-The anchor application should be accessible on port 5016. If you are
-running docker natively on Linux, that will be 5016 on localhost
-(127.0.0.1). If you are running docker under Microsoft Windows or Apple
-OSX it will be running in a docker machine. To find the docker machine
-IP address run:
+When Anchor is running in a container, certificate requests will not pass
+validation unless the docker network is added as a source_cidr in the Anchor
+configuration and then passed into the container. Find the network by starting
+the container, inspecting the docker network and finding the anchor container:
 
-    docker-machine ip default
+    docker run -p 5016:5016 --name=anchor anchor
+    docker network inspect bridge
+
+Under the 'containers' section, find the 'anchor' container and find the
+IPv4Address. For example:
+
+    "Containers": {
+      "6998a....5f4a57": {
+         "Name": "anchor",
+            "MacAddress": "02:42:ac:11:00:03",
+            "IPv4Address": "172.17.0.3/16",
+
+Add this network as a source_cidr to the config.json, and pass it to the
+docker container as described above.
 
 Running Anchor in production
 ============================
