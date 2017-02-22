@@ -143,9 +143,10 @@ Anchor is highly configurable, you can read more about Anchor configuration in
 the documentation here:
 http://docs.openstack.org/developer/anchor/configuration.html the method for
 exposing configuration to Anchor is very similar as for keys, simply provide
-docker with the folder the config.json is within and create a volume called
-/config In the below example, Anchor will start with a custom configuration but
-as no key was provided it will generate one on the fly.
+docker with the absolute path for the directory the Anchor config.json is in
+and create a volume called /config In the below example, Anchor will start
+with a custom configuration but as no key was provided it will generate one
+on the fly.
 
 docker run -p 5016:5016 -v /var/config:/config anchor
 
