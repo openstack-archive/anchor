@@ -81,7 +81,7 @@ class TestExtensionBase(unittest.TestCase):
             def _get_default_value(cls):
                 return 1234
 
-        with self.assertRaisesRegexp(errors.X509Error, 'incorrect type'):
+        with self.assertRaisesRegex(errors.X509Error, 'incorrect type'):
             SomeExt()
 
 

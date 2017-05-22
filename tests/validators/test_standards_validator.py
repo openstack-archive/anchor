@@ -178,8 +178,8 @@ class TestCsrSignature(tests.DefaultRequestMixin, unittest.TestCase):
         csr = signing_request.X509Csr.from_buffer(self.csr_sample_bytes)
         with mock.patch.object(signing_request.X509Csr, '_get_signature',
                                return_value=(b'A'*49)):
-            with self.assertRaisesRegexp(errors.ValidationError,
-                                         "Signature on the CSR is not valid"):
+            with self.assertRaisesRegex(errors.ValidationError,
+                                        "Signature on the CSR is not valid"):
                 standards._csr_signature(csr=csr)
 
     def test_csr_signature_old_algo(self):
@@ -187,8 +187,8 @@ class TestCsrSignature(tests.DefaultRequestMixin, unittest.TestCase):
         with mock.patch.object(signing_request.X509Csr,
                                '_get_signing_algorithm',
                                return_value=rfc2459.id_dsa_with_sha1):
-            with self.assertRaisesRegexp(errors.ValidationError,
-                                         "CSR rejected for using a known "
-                                         "broken, or deprecated algorithm: "
-                                         "SHA1 with DSA"):
+            with self.assertRaisesRegex(errors.ValidationError,
+                                        "CSR rejected for using a known "
+                                        "broken, or deprecated algorithm: "
+                                        "SHA1 with DSA"):
                 standards._csr_signature(csr=csr)

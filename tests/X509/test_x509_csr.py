@@ -103,18 +103,18 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
         with mock.patch(open_name, create=True) as mock_open:
             mock_open.side_effect = IOError(2, "No such file or directory",
                                             "some_path")
-            self.assertRaisesRegexp(x509_errors.X509Error,
-                                    "Could not read file",
-                                    signing_request.X509Csr.from_file,
-                                    "some_path")
+            self.assertRaisesRegex(x509_errors.X509Error,
+                                   "Could not read file",
+                                   signing_request.X509Csr.from_file,
+                                   "some_path")
 
     def test_read_failure_throws(self):
         f = mock.Mock()
         f.read.side_effect = IOError(5, "Read failed")
-        self.assertRaisesRegexp(x509_errors.X509Error,
-                                "Could not read from source",
-                                signing_request.X509Csr.from_open_file,
-                                f)
+        self.assertRaisesRegex(x509_errors.X509Error,
+                               "Could not read from source",
+                               signing_request.X509Csr.from_open_file,
+                               f)
 
     def test_bad_pem_throws(self):
         bad_data = (
@@ -124,9 +124,9 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
             )
 
         csr = signing_request.X509Csr()
-        self.assertRaisesRegexp(x509_errors.X509Error, "not in PEM format",
-                                csr.from_buffer,
-                                bad_data)
+        self.assertRaisesRegex(x509_errors.X509Error, "not in PEM format",
+                               csr.from_buffer,
+                               bad_data)
 
     def test_bad_data_throws(self):
         bad_data = (
@@ -134,9 +134,9 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
             b"EHRlc3RAYW5jaG9yLnRlc3QwTDANBgkqhkiG9w0BAQEFAAM7ADA4AjEA6m")
 
         csr = signing_request.X509Csr()
-        self.assertRaisesRegexp(x509_errors.X509Error, "No PEM data found",
-                                csr.from_buffer,
-                                bad_data)
+        self.assertRaisesRegex(x509_errors.X509Error, "No PEM data found",
+                               csr.from_buffer,
+                               bad_data)
 
     def test_get_subject_countryName(self):
         name = self.csr.get_subject()

@@ -212,8 +212,8 @@ class TestPKCSBackend(unittest.TestCase):
         mod.PyKCS11Lib.return_value = lib
 
         with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
-            with self.assertRaisesRegexp(signers.SigningError,
-                                         "pkcs11 session"):
+            with self.assertRaisesRegex(signers.SigningError,
+                                        "pkcs11 session"):
                 pkcs11.sign(mock.Mock(), self.good_conf)
 
     def test_sign_key_missing(self):
@@ -228,8 +228,8 @@ class TestPKCSBackend(unittest.TestCase):
         mod.PyKCS11Lib.return_value = lib
 
         with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
-            with self.assertRaisesRegexp(signers.SigningError,
-                                         "requested key"):
+            with self.assertRaisesRegex(signers.SigningError,
+                                        "requested key"):
                 pkcs11.sign(mock.Mock(), self.good_conf)
 
     def test_sign_bad_hash(self):
@@ -242,8 +242,8 @@ class TestPKCSBackend(unittest.TestCase):
         self.good_conf['signing_hash'] = 'unknown'
 
         with mock.patch.object(pkcs11, 'import_pkcs', return_value=mod):
-            with self.assertRaisesRegexp(signers.SigningError,
-                                         "hash is not supported"):
+            with self.assertRaisesRegex(signers.SigningError,
+                                        "hash is not supported"):
                 pkcs11.sign(mock.Mock(), self.good_conf)
 
     def test_working_signer(self):
