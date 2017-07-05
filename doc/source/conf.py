@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # Anchor documentation build configuration file, created by
 # sphinx-quickstart on Wed Jul 29 15:52:08 2015.
 #
