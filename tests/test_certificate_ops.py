@@ -41,7 +41,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         subject = result.get_subject()
         actual_cn = subject.get_entries_by_oid(
             x509_name.OID_commonName)[0].get_value()
-        self.assertEqual(actual_cn, self.csr_sample_cn)
+        self.assertEqual(self.csr_sample_cn, actual_cn)
 
     def test_parse_csr_success2(self):
         """Test basic success path for parse_csr."""
@@ -49,7 +49,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         subject = result.get_subject()
         actual_cn = subject.get_entries_by_oid(
             x509_name.OID_commonName)[0].get_value()
-        self.assertEqual(actual_cn, self.csr_sample_cn)
+        self.assertEqual(self.csr_sample_cn, actual_cn)
 
     def test_parse_csr_fail1(self):
         """Test invalid CSR format (wrong value) for parse_csr."""
@@ -107,7 +107,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.validate_csr('default_ra', None, csr_obj, None)
-        self.assertEqual(cm.exception.code, 400)
+        self.assertEqual(400, cm.exception.code)
 
     def test_ca_cert_read_failure(self):
         """Test CA certificate read failure."""
@@ -121,7 +121,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.dispatch_sign('default_ra', csr_obj)
-        self.assertEqual(cm.exception.code, 500)
+        self.assertEqual(500, cm.exception.code)
 
     def test_ca_key_read_failure(self):
         """Test CA key read failure."""
@@ -134,7 +134,7 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.dispatch_sign('default_ra', csr_obj)
-        self.assertEqual(cm.exception.code, 500)
+        self.assertEqual(500, cm.exception.code)
 
     def test_ca_cert_not_configured(self):
         """Test CA cert read failure."""
@@ -145,4 +145,4 @@ class CertificateOpsTests(tests.DefaultConfigMixin, tests.DefaultRequestMixin,
         with mock.patch.dict(config, data):
             with self.assertRaises(http_status.HTTPException) as cm:
                 certificate_ops.get_ca('default_ra')
-        self.assertEqual(cm.exception.code, 404)
+        self.assertEqual(404, cm.exception.code)

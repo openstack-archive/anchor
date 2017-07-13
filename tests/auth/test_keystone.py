@@ -125,19 +125,19 @@ class AuthKeystoneTests(unittest.TestCase):
                 m.get(self.keystone_url, json=self.json_response,
                       status_code=200)
                 requests.get(self.keystone_url)
-                self.assertEqual(keystone.login(
-                    None, self.keystone_token), self.expected)
+                self.assertEqual(self.expected, keystone.login(
+                                 None, self.keystone_token))
 
     def test_parse_keystone_auth_fail(self):
         with mock.patch.dict(self.config, self.data):
             with requests_mock.mock() as m:
                 m.get(self.keystone_url, status_code=401)
-                self.assertEqual(keystone.login(
-                    None, self.keystone_token), None)
+                self.assertEqual(None, keystone.login(
+                    None, self.keystone_token))
 
     def test_parse_keystone_ok_but_malformed_response(self):
         with mock.patch.dict(self.config, self.data):
             with requests_mock.mock() as m:
                 m.get(self.keystone_url, json={}, status_code=200)
-                self.assertEqual(keystone.login(
-                    None, self.keystone_token), None)
+                self.assertEqual(None, keystone.login(
+                    None, self.keystone_token))

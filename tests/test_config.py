@@ -58,12 +58,12 @@ class TestConfig(tests.DefaultConfigMixin, unittest.TestCase):
             jsonloader.conf.load_file_data('/tmp/impossible_path')
 
         self.assertEqual(
+            'default_auth',
             (jsonloader.conf.registration_authority['default_ra']
-                ['authentication']),
-            'default_auth')
+                ['authentication']))
         self.assertEqual(
-            jsonloader.conf.signing_ca['default_ca']['valid_hours'],
-            24)
+            24,
+            jsonloader.conf.signing_ca['default_ca']['valid_hours'])
 
     def test_load_file_cant_open(self):
         """Test failures when opening files."""
@@ -94,5 +94,5 @@ class TestConfig(tests.DefaultConfigMixin, unittest.TestCase):
         """Instances should be listed once config is loaded."""
         jsonloader.conf = jsonloader.AnchorConf(logger)
         jsonloader.conf.load_str_data(json.dumps(self.sample_conf))
-        self.assertEqual(list(jsonloader.registration_authority_names()),
-                         ['default_ra'])
+        self.assertEqual(['default_ra'],
+                         list(jsonloader.registration_authority_names()))

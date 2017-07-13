@@ -49,8 +49,8 @@ class AuthStaticTests(tests.DefaultConfigMixin, unittest.TestCase):
             valid_pass = self.sample_conf_auth['default_auth']['secret']
 
             expected = results.AuthDetails(username=valid_user, groups=[])
-            self.assertEqual(auth.validate('default_ra', valid_user,
-                                           valid_pass), expected)
+            self.assertEqual(expected, auth.validate('default_ra', valid_user,
+                                                     valid_pass))
             with self.assertRaises(http_status.HTTPUnauthorized):
                 auth.validate('default_ra', valid_user, 'badpass')
             with self.assertRaises(http_status.HTTPUnauthorized):

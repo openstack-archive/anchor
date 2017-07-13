@@ -55,8 +55,8 @@ class AuthLdapTests(tests.DefaultConfigMixin, unittest.TestCase):
 
         with mock.patch.dict(config, self.sample_conf):
             expected = results.AuthDetails(username='user', groups=[])
-            self.assertEqual(auth.validate('default_ra', 'user', 'pass'),
-                             expected)
+            self.assertEqual(expected,
+                             auth.validate('default_ra', 'user', 'pass'))
 
     @mock.patch('ldap3.Connection')
     def test_login_good_with_groups(self, mock_connection):
@@ -75,8 +75,8 @@ class AuthLdapTests(tests.DefaultConfigMixin, unittest.TestCase):
             expected = results.AuthDetails(
                 username='user',
                 groups=[u'some_group', u'other_group'])
-            self.assertEqual(auth.validate('default_ra', 'user', 'pass'),
-                             expected)
+            self.assertEqual(expected,
+                             auth.validate('default_ra', 'user', 'pass'))
 
     @mock.patch('ldap3.Connection')
     def test_login_search_fail(self, mock_connection):

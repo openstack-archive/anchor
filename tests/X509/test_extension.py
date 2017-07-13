@@ -90,8 +90,8 @@ class TestBasicConstraints(unittest.TestCase):
         self.ext = extension.X509ExtensionBasicConstraints()
 
     def test_str(self):
-        self.assertEqual(str(self.ext),
-                         "basicConstraints: CA: FALSE, pathLen: None")
+        self.assertEqual("basicConstraints: CA: FALSE, pathLen: None",
+                         str(self.ext))
 
     def test_ca(self):
         self.ext.set_ca(True)
@@ -188,15 +188,15 @@ class TestNameConstraints(unittest.TestCase):
 
     def test_excluded(self):
         self.ext.add_excluded('dNSName', 'example.com')
-        self.assertEqual(self.ext.get_excluded_range(0), (0, None))
-        self.assertEqual(self.ext.get_excluded_name(0),
-                         ('dNSName', b'example.com'))
+        self.assertEqual((0, None), self.ext.get_excluded_range(0))
+        self.assertEqual(('dNSName', b'example.com'),
+                         self.ext.get_excluded_name(0))
 
     def test_permitted(self):
         self.ext.add_permitted('dNSName', 'example.com')
-        self.assertEqual(self.ext.get_permitted_range(0), (0, None))
-        self.assertEqual(self.ext.get_permitted_name(0),
-                         ('dNSName', b'example.com'))
+        self.assertEqual((0, None), self.ext.get_permitted_range(0))
+        self.assertEqual(('dNSName', b'example.com'),
+                         self.ext.get_permitted_name(0))
 
 
 class TestExtendedKeyUsage(unittest.TestCase):

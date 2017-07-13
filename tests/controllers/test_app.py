@@ -55,7 +55,7 @@ class TestApp(tests.DefaultConfigMixin, unittest.TestCase):
 
         config = {'return_value.st_mode': (stat.S_IRUSR | stat.S_IFREG)}
         with mock.patch("os.stat", **config):
-            self.assertEqual(app.validate_config(jsonloader.conf), None)
+            self.assertEqual(None, app.validate_config(jsonloader.conf))
 
     @mock.patch('anchor.util.check_file_exists')
     @mock.patch('anchor.util.check_file_permissions')

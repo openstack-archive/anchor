@@ -52,64 +52,64 @@ class TestX509Name(unittest.TestCase):
 
     def test_name_to_string(self):
         val = str(self.name)
-        self.assertEqual(val, ("/C=UK/ST=test_ST/L=test_L/O=test_O/OU=test_OU"
-                               "/CN=test_CN/emailAddress=test_Email/"
-                               "SN=test_SN/GN=test_GN"))
+        self.assertEqual(("/C=UK/ST=test_ST/L=test_L/O=test_O/OU=test_OU"
+                          "/CN=test_CN/emailAddress=test_Email/"
+                          "SN=test_SN/GN=test_GN"), val)
 
     def test_get_countryName(self):
         entries = self.name.get_entries_by_oid(x509_name.OID_countryName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "countryName")
-        self.assertEqual(entries[0].get_value(), "UK")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("countryName", entries[0].get_name())
+        self.assertEqual("UK", entries[0].get_value())
 
     def test_get_stateOrProvinceName(self):
         entries = self.name.get_entries_by_oid(
             x509_name.OID_stateOrProvinceName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "test_ST")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("stateOrProvinceName", entries[0].get_name())
+        self.assertEqual("test_ST", entries[0].get_value())
 
     def test_get_subject_localityName(self):
         entries = self.name.get_entries_by_oid(x509_name.OID_localityName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "test_L")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("localityName", entries[0].get_name())
+        self.assertEqual("test_L", entries[0].get_value())
 
     def test_get_organizationName(self):
         entries = self.name.get_entries_by_oid(x509_name.OID_organizationName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationName")
-        self.assertEqual(entries[0].get_value(), "test_O")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("organizationName", entries[0].get_name())
+        self.assertEqual("test_O", entries[0].get_value())
 
     def test_get_organizationUnitName(self):
         entries = self.name.get_entries_by_oid(
             x509_name.OID_organizationalUnitName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationalUnitName")
-        self.assertEqual(entries[0].get_value(), "test_OU")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("organizationalUnitName", entries[0].get_name())
+        self.assertEqual("test_OU", entries[0].get_value())
 
     def test_get_commonName(self):
         entries = self.name.get_entries_by_oid(x509_name.OID_commonName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "commonName")
-        self.assertEqual(entries[0].get_value(), "test_CN")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("commonName", entries[0].get_name())
+        self.assertEqual("test_CN", entries[0].get_value())
 
     def test_get_emailAddress(self):
         entries = self.name.get_entries_by_oid(
             x509_name.OID_pkcs9_emailAddress)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "emailAddress")
-        self.assertEqual(entries[0].get_value(), "test_Email")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("emailAddress", entries[0].get_name())
+        self.assertEqual("test_Email", entries[0].get_value())
 
     def test_entry_to_string(self):
         entries = self.name.get_entries_by_oid(
             x509_name.OID_pkcs9_emailAddress)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(str(entries[0]), "emailAddress: test_Email")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("emailAddress: test_Email", str(entries[0]))
 
     def test_entry_length(self):
         num = len(self.name)
-        self.assertEqual(num, 9)
+        self.assertEqual(9, num)
 
     def test_entry_index_good(self):
         self.assertEqual("givenName: test_GN", str(self.name[8]))

@@ -63,7 +63,7 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
     def test_get_extensions(self):
         exts = self.csr.get_extensions()
-        self.assertEqual(len(exts), 2)
+        self.assertEqual(2, len(exts))
         self.assertFalse(exts[1].get_ca())
         self.assertIsNone(exts[1].get_path_len_constraint())
         self.assertTrue(exts[0].get_usage('digitalSignature'))
@@ -96,7 +96,7 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
 
             name = csr.get_subject()
             entries = name.get_entries_by_oid(x509_name.OID_countryName)
-            self.assertEqual(entries[0].get_value(), "UK")
+            self.assertEqual("UK", entries[0].get_value())
 
     def test_open_failure_throws(self):
         open_name = 'anchor.X509.signing_request.open'
@@ -141,51 +141,51 @@ class TestX509Csr(tests.DefaultRequestMixin, unittest.TestCase):
     def test_get_subject_countryName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_countryName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "countryName")
-        self.assertEqual(entries[0].get_value(), "UK")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("countryName", entries[0].get_name())
+        self.assertEqual("UK", entries[0].get_value())
 
     def test_get_subject_stateOrProvinceName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_stateOrProvinceName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "stateOrProvinceName")
-        self.assertEqual(entries[0].get_value(), "Narnia")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("stateOrProvinceName", entries[0].get_name())
+        self.assertEqual("Narnia", entries[0].get_value())
 
     def test_get_subject_localityName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_localityName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "localityName")
-        self.assertEqual(entries[0].get_value(), "Funkytown")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("localityName", entries[0].get_name())
+        self.assertEqual("Funkytown", entries[0].get_value())
 
     def test_get_subject_organizationName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_organizationName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationName")
-        self.assertEqual(entries[0].get_value(), "Anchor Testing")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("organizationName", entries[0].get_name())
+        self.assertEqual("Anchor Testing", entries[0].get_value())
 
     def test_get_subject_organizationUnitName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_organizationalUnitName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "organizationalUnitName")
-        self.assertEqual(entries[0].get_value(), "testing")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("organizationalUnitName", entries[0].get_name())
+        self.assertEqual("testing", entries[0].get_value())
 
     def test_get_subject_commonName(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_commonName)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "commonName")
-        self.assertEqual(entries[0].get_value(), self.csr_sample_cn)
+        self.assertEqual(1, len(entries))
+        self.assertEqual("commonName", entries[0].get_name())
+        self.assertEqual(self.csr_sample_cn, entries[0].get_value())
 
     def test_get_subject_emailAddress(self):
         name = self.csr.get_subject()
         entries = name.get_entries_by_oid(x509_name.OID_pkcs9_emailAddress)
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0].get_name(), "emailAddress")
-        self.assertEqual(entries[0].get_value(), "test@example.com")
+        self.assertEqual(1, len(entries))
+        self.assertEqual("emailAddress", entries[0].get_name())
+        self.assertEqual("test@example.com", entries[0].get_value())
 
     def test_sign(self):
         key = utils.get_private_key_from_pem(self.key_rsa_data)
