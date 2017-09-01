@@ -37,7 +37,7 @@ def print_help():
     To activate the Anchor virtualenv for the extent of your current shell
     session you can run:
 
-    $ source .venv/bin/activate
+    $ . .venv/bin/activate
 
     Or, if you prefer, you can run commands in the virtualenv on a case by case
     basis by running:
