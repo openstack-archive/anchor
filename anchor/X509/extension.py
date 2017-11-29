@@ -254,8 +254,8 @@ class X509ExtensionKeyUsage(X509Extension):
     spec = rfc5280.KeyUsage
     _oid = rfc5280.id_ce_keyUsage
 
-    fields = dict(spec.namedValues.namedValues)
-    inv_fields = dict((v, k) for k, v in spec.namedValues.namedValues)
+    fields = dict(spec.namedValues.items())
+    inv_fields = dict((v, k) for k, v in spec.namedValues.items())
 
     @classmethod
     def _get_default_value(cls):
