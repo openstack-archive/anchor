@@ -1,17 +1,17 @@
 # The order of packages is significant, because pip processes them in the order
 # of appearance. Changing the order has an impact on the overall integration
 # process, which may cause wedges in the gate later.
-cryptography!=1.3.0,>=1.0 # BSD/Apache-2.0
-pyasn1 # BSD
-pyasn1-modules # BSD
-WebOb>=1.6.0 # MIT
+cryptography!=2.0,>=1.9 # BSD/Apache-2.0
+pyasn1!=0.2.3,>=0.1.8 # BSD
+pyasn1-modules>=0.0.6 # BSD
+WebOb>=1.7.1 # MIT
 pecan!=1.0.2,!=1.0.3,!=1.0.4,!=1.2,>=1.0.0 # BSD
-Paste # MIT
-netaddr!=0.7.16,>=0.7.13 # BSD
+Paste>=2.0.2 # MIT
+netaddr>=0.7.18 # BSD
 ldap3>=1.0.2 # LGPLv3
-requests!=2.12.2,!=2.13.0,>=2.10.0 # Apache-2.0
-stevedore>=1.17.1 # Apache-2.0
+requests>=2.14.2 # Apache-2.0
+stevedore>=1.20.0 # Apache-2.0
 pycadf!=2.0.0,>=1.1.0 # Apache-2.0
-oslo.config!=3.18.0,>=3.14.0 # Apache-2.0
-oslo.messaging>=5.14.0 # Apache-2.0
-oslo.utils>=3.18.0 # Apache-2.0
+oslo.config>=5.2.0 # Apache-2.0
+oslo.messaging>=5.29.0 # Apache-2.0
+oslo.utils>=3.33.0 # Apache-2.0
