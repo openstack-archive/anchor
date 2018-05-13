@@ -2,15 +2,15 @@ Anchor
 ======
 
 .. image:: https://img.shields.io/pypi/v/anchor.svg
-    :target: https://pypi.python.org/pypi/anchor/
+    :target: https://pypi.org/project/anchor/
     :alt: Latest Version
 
 .. image:: https://img.shields.io/pypi/pyversions/anchor.svg
-    :target: https://pypi.python.org/pypi/anchor/
+    :target: https://pypi.org/project/anchor/
     :alt: Python Versions
 
 .. image:: https://img.shields.io/pypi/format/anchor.svg
-    :target: https://pypi.python.org/pypi/anchor/
+    :target: https://pypi.org/project/anchor/
     :alt: Format
 
 .. image:: https://img.shields.io/badge/license-Apache%202-blue.svg
