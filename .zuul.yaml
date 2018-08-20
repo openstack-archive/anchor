@@ -3,5 +3,5 @@
       - openstack-python-jobs
       - openstack-python35-jobs
       - openstack-pypy-jobs-nonvoting
-      - publish-openstack-sphinx-docs
+      - publish-openstack-docs-pti
       - check-requirements
